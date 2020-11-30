@@ -55,7 +55,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
 
     // Create the instrument and the populate the name for the engine builder.
     boost::shared_ptr<Instrument> vanilla;
-    string tradeTypeBuider = tradeType_;
+    string tradeTypeBuilder = tradeType_;
     Settlement::Type settlementType = parseSettlementType(option_.settlement());
     if (exerciseType == Exercise::European && settlementType == Settlement::Cash) {
 
@@ -113,7 +113,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
 
             // Allow for a separate pricing engine that takes care of payment on a date after expiry. Do this by
             // appending 'EuropeanCS' to the trade type.
-            tradeTypeBuider = tradeType_ + "EuropeanCS";
+            tradeTypeBuilder = tradeType_ + "EuropeanCS";
 
             // Update the maturity date.
             maturity_ = paymentDate;
@@ -128,15 +128,15 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
         // If not European or not cash settled, build QuantLib::VanillaOption.
         vanilla = boost::make_shared<QuantLib::VanillaOption>(payoff, exercise);
 
-        tradeTypeBuider = tradeType_ + (exerciseType == QuantLib::Exercise::Type::European ? "" : "American");
+        tradeTypeBuilder = tradeType_ + (exerciseType == QuantLib::Exercise::Type::European ? "" : "American");
     }
 
     // Only try to set an engine on the option instrument if it is not expired. This avoids errors in
     // engine builders that rely on the expiry date being in the future e.g. AmericanOptionFDEngineBuilder.
     string configuration = Market::defaultConfiguration;
     if (!vanilla->isExpired()) {
-        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuider);
-        QL_REQUIRE(builder, "No builder found for " << tradeTypeBuider);
+        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
+        QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
         boost::shared_ptr<VanillaOptionEngineBuilder> vanillaOptionBuilder =
             boost::dynamic_pointer_cast<VanillaOptionEngineBuilder>(builder);
 
