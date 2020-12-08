@@ -38,6 +38,7 @@
     <ClInclude Include="ored\portfolio\builders\asianoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\commodityasianoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\equityasianoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\fxasianoption.hpp" />
     <ClInclude Include="ored\portfolio\equityasianoption.hpp" />
     <ClInclude Include="ored\auto_link.hpp" />
     <ClInclude Include="ored\configuration\basecorrelationcurveconfig.hpp" />

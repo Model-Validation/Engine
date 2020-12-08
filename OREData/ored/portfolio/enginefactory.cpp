@@ -26,6 +26,7 @@
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
 #include <ored/portfolio/builders/cmsspread.hpp>
+#include <ored/portfolio/builders/commodityasianoption.hpp>
 #include <ored/portfolio/builders/commodityforward.hpp>
 #include <ored/portfolio/builders/commodityoption.hpp>
 #include <ored/portfolio/builders/cpicapfloor.hpp>
@@ -34,6 +35,7 @@
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/forwardbond.hpp>
+#include <ored/portfolio/builders/fxasianoption.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
@@ -154,6 +156,12 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<FxEuropeanCSOptionEngineBuilder>());
     registerBuilder(boost::make_shared<FxAmericanOptionFDEngineBuilder>());
     registerBuilder(boost::make_shared<FxAmericanOptionBAWEngineBuilder>());
+    registerBuilder(boost::make_shared<FxEuropeanAsianOptionMCDAAPEngineBuilder>());
+    registerBuilder(boost::make_shared<FxEuropeanAsianOptionMCDAASEngineBuilder>());
+    registerBuilder(boost::make_shared<FxEuropeanAsianOptionMCDGAPEngineBuilder>());
+    registerBuilder(boost::make_shared<FxEuropeanAsianOptionACGAPEngineBuilder>());
+    registerBuilder(boost::make_shared<FxEuropeanAsianOptionADGAPEngineBuilder>());
+    registerBuilder(boost::make_shared<FxEuropeanAsianOptionADGASEngineBuilder>());
 
     registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredIborLegEngineBuilder>());
@@ -191,6 +199,12 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<CommodityEuropeanCSOptionEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityAmericanOptionFDEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityAmericanOptionBAWEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionMCDAAPEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionMCDAASEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionMCDGAPEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionACGAPEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionADGAPEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionADGASEngineBuilder>());
 
     registerLegBuilder(boost::make_shared<FixedLegBuilder>());
     registerLegBuilder(boost::make_shared<ZeroCouponFixedLegBuilder>());
