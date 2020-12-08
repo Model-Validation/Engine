@@ -68,6 +68,15 @@ void OptionData::fromXML(XMLNode* node) {
         paymentData_ = OptionPaymentData();
         paymentData_->fromXML(n);
     }
+
+    asianData_ = boost::none;
+    XMLNode* n = XMLUtils::getChildNode(node, "AsianData");
+    if (payoffType_ == "Asian")
+        QL_REQUIRE(n, "AsianData node with fixings required for PayoffType Asian.");
+    if (n) {
+        asianData_ = OptionAsianData();
+        asianData_->fromXML(n);
+    }
 }
 
 XMLNode* OptionData::toXML(XMLDocument& doc) {
@@ -112,6 +121,10 @@ XMLNode* OptionData::toXML(XMLDocument& doc) {
 
     if (paymentData_) {
         XMLUtils::appendNode(node, paymentData_->toXML(doc));
+    }
+
+    if (asianData_) {
+        XMLUtils::appendNode(node, asianData_->toXML(doc));
     }
 
     return node;

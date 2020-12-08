@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <ored/portfolio/optionasiandata.hpp>
 #include <ored/portfolio/optionexercisedata.hpp>
 #include <ored/portfolio/optionpaymentdata.hpp>
 #include <ored/portfolio/schedule.hpp>
@@ -48,7 +49,8 @@ public:
                string exerciseFeeSettlementCalendar = "", string exerciseFeeSettlementConvention = "",
                string payoffType = "", const boost::optional<bool>& automaticExercise = boost::none,
                const boost::optional<OptionExerciseData>& exerciseData = boost::none,
-               const boost::optional<OptionPaymentData>& paymentData = boost::none)
+               const boost::optional<OptionPaymentData>& paymentData = boost::none,
+               const boost::optional<OptionAsianData>& asianData = boost::none)
         : longShort_(longShort), callPut_(callPut), payoffType_(payoffType), style_(style),
           payoffAtExpiry_(payoffAtExpiry), exerciseDates_(exerciseDates), noticePeriod_(noticePeriod),
           noticeCalendar_(noticeCalendar), noticeConvention_(noticeConvention), settlement_(settlement),
@@ -57,7 +59,8 @@ public:
           exerciseFeeTypes_(exerciseFeeTypes), exerciseFeeSettlementPeriod_(exerciseFeeSettlementPeriod),
           exerciseFeeSettlementCalendar_(exerciseFeeSettlementCalendar),
           exerciseFeeSettlementConvention_(exerciseFeeSettlementConvention), exercisePrices_(exercisePrices),
-          automaticExercise_(automaticExercise), exerciseData_(exerciseData), paymentData_(paymentData) {}
+          automaticExercise_(automaticExercise), exerciseData_(exerciseData), paymentData_(paymentData),
+          asianData_(asianData) {}
 
     //! \name Inspectors
     //@{
@@ -88,6 +91,7 @@ public:
     }
     const boost::optional<OptionExerciseData>& exerciseData() const { return exerciseData_; }
     const boost::optional<OptionPaymentData>& paymentData() const { return paymentData_; }
+    const boost::optional<OptionAsianData>& asianData() const { return asianData_; }
     //@}
 
     //! \name Serialisation
@@ -121,6 +125,7 @@ private:
     boost::optional<bool> automaticExercise_;
     boost::optional<OptionExerciseData> exerciseData_;
     boost::optional<OptionPaymentData> paymentData_;
+    boost::optional<OptionAsianData> asianData_;
 };
 } // namespace data
 } // namespace ore
