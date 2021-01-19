@@ -25,11 +25,14 @@
 #include <ql/errors.hpp>
 #include <string>
 
-
 namespace ore {
 namespace data {
 
 void EquityAsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+    // Checks
+    QL_REQUIRE(quantity_ > 0, "Equity Asian option requires a positive quatity");
+    QL_REQUIRE(strike_ > 0, "Equity Asian option requires a positive strike");
+
     // Set the assetName_ as it may have changed after lookup
     assetName_ = equityName();
 
@@ -39,9 +42,6 @@ void EquityAsianOption::build(const boost::shared_ptr<EngineFactory>& engineFact
 
     // Build the trade using shared functionality in the base class
     AsianOptionTrade::build(engineFactory);
-
-    // TODO: Improve LOG?
-    DLOG("Built trade for EquityAsianOption with asset name " << assetName_);
 }
 
 std::map<AssetClass, std::set<std::string>> EquityAsianOption::underlyingIndices() const {
@@ -59,8 +59,8 @@ void EquityAsianOption::fromXML(XMLNode* node) {
         tmp = XMLUtils::getChildNode(eqNode, "Name");
     equityUnderlying_.fromXML(tmp);
     currency_ = XMLUtils::getChildValue(eqNode, "Currency", true);
-    // Require explicit Strike if AsianType is Price
-    strike_ = XMLUtils::getChildValueAsDouble(eqNode, "Strike", option_.asianData()->asianType() == "Price");
+    // Require explicit Strike
+    strike_ = XMLUtils::getChildValueAsDouble(eqNode, "Strike", true);
     quantity_ = XMLUtils::getChildValueAsDouble(eqNode, "Quantity", true);
 }
 
@@ -72,7 +72,7 @@ XMLNode* EquityAsianOption::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(eqNode, option_.toXML(doc));
     XMLUtils::appendNode(eqNode, equityUnderlying_.toXML(doc));
     XMLUtils::addChild(doc, eqNode, "Currency", currency_);
-    XMLUtils::addChild(doc, eqNode, "Strike", strike_); // TODO: Check if failsafe check needed if not defined?
+    XMLUtils::addChild(doc, eqNode, "Strike", strike_);
     XMLUtils::addChild(doc, eqNode, "Quantity", quantity_);
 
     return node;

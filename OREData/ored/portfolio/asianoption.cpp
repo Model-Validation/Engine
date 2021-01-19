@@ -139,7 +139,7 @@ void AsianOptionTrade::build(const boost::shared_ptr<EngineFactory>& engineFacto
         ELOG("Asian options do not support deferred cash settlement payments, "
              << "i.e. where payment date > maturity date.");
         QL_FAIL("Asian options do not support deferred cash-settlement payments, i.e. where payment date > "
-                "maturity date.");
+                << "maturity date.");
     }
 
 
@@ -150,7 +150,7 @@ void AsianOptionTrade::build(const boost::shared_ptr<EngineFactory>& engineFacto
         boost::shared_ptr<AsianOptionEngineBuilder> asianOptionBuilder =
             boost::dynamic_pointer_cast<AsianOptionEngineBuilder>(builder);
 
-        asian->setPricingEngine(asianOptionBuilder->engine(assetName_, ccy, expiryDate_));
+        asian->setPricingEngine(asianOptionBuilder->engine(assetName_, ccy, expiryDate_, strike_));
 
         configuration = asianOptionBuilder->configuration(MarketContext::pricing);
     } else {
@@ -176,11 +176,15 @@ void AsianOptionTrade::build(const boost::shared_ptr<EngineFactory>& engineFacto
         DLOG("Option premium added for asian option " << id());
     }
 
-    // TODO: Change to EuropeanOptionWrapper etc?
+    // TODO: Use something like EuropeanOptionWrapper instead? After all, an asian option is not
+    // a vanilla instrument. However, the available European-/AmericanOptionWrapper is not directly
+    // applicable as it calls for both an instrument and an underlying instrument.
+    // Given how the asians are priced, though, we still manage fine using the VanillaInstrument wrapper
+    // for the time being.
     instrument_ = boost::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(asian, mult, additionalInstruments, additionalMultipliers));
     //instrument_ = boost::shared_ptr<InstrumentWrapper>(
-      //  new EuropeanOptionWrapper());
+    //    boost::make_shared<EuropeanOptionWrapper>(...));
 
     npvCurrency_ = currency_;
 

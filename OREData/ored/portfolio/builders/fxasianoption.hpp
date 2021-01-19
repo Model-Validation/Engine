@@ -30,19 +30,21 @@ namespace ore {
 namespace data {
 
 //! Discrete Monte Carlo Engine Builder for European Asian Fx Arithmetic Average Price Options
-/*! Pricing engines are cached by asset/currency
+/*! Pricing engines are cached by asset/currency/expiry/strike, where
+    expiry is null (Date()) if irrelevant and strike is 0 if irrelevant.
 
     \ingroup builders
  */
 class FxEuropeanAsianOptionMCDAAPEngineBuilder : public EuropeanAsianOptionMCDAAPEngineBuilder {
 public:
     FxEuropeanAsianOptionMCDAAPEngineBuilder()
-        : EuropeanAsianOptionMCDAAPEngineBuilder("BlackScholesMerton", {"FxAsianOptionArithmeticPrice"},
-                                                 AssetClass::EQ) {}
+        : EuropeanAsianOptionMCDAAPEngineBuilder("BlackScholesMerton", {"FxAsianOptionArithmeticPrice"}, AssetClass::FX,
+                                                 expiryDate_, strike_) {}
 };
 
 //! Discrete Monte Carlo Engine Builder for European Asian Fx Arithmetic Average Strike Options
-/*! Pricing engines are cached by asset/currency
+/*! Pricing engines are cached by asset/currency/expiry/strike, where
+    expiry is null (Date()) if irrelevant and strike is 0 if irrelevant.
 
     \ingroup builders
  */
@@ -50,19 +52,20 @@ class FxEuropeanAsianOptionMCDAASEngineBuilder : public EuropeanAsianOptionMCDAA
 public:
     FxEuropeanAsianOptionMCDAASEngineBuilder()
         : EuropeanAsianOptionMCDAASEngineBuilder("BlackScholesMerton", {"FxAsianOptionArithmeticStrike"},
-                                                 AssetClass::EQ) {}
+                                                 AssetClass::FX, expiryDate_, strike_) {}
 };
 
 //! Discrete Monte Carlo Engine Builder for European Asian Fx Geometric Average Price Options
-/*! Pricing engines are cached by asset/currency
+/*! Pricing engines are cached by asset/currency/expiry/strike, where
+    expiry is null (Date()) if irrelevant and strike is 0 if irrelevant.
 
     \ingroup builders
  */
 class FxEuropeanAsianOptionMCDGAPEngineBuilder : public EuropeanAsianOptionMCDGAPEngineBuilder {
 public:
     FxEuropeanAsianOptionMCDGAPEngineBuilder()
-        : EuropeanAsianOptionMCDGAPEngineBuilder("BlackScholesMerton", {"FxAsianOptionArithmeticPrice"},
-                                                 AssetClass::EQ) {}
+        : EuropeanAsianOptionMCDGAPEngineBuilder("BlackScholesMerton", {"FxAsianOptionArithmeticPrice"}, AssetClass::FX,
+                                                 expiryDate_, strike_) {}
 };
 
 //! Discrete Analytic Engine Builder for European Asian Fx Geometric Average Price Options
@@ -73,8 +76,8 @@ public:
 class FxEuropeanAsianOptionADGAPEngineBuilder : public EuropeanAsianOptionADGAPEngineBuilder {
 public:
     FxEuropeanAsianOptionADGAPEngineBuilder()
-        : EuropeanAsianOptionADGAPEngineBuilder("BlackScholesMerton", {"FxAsianOptionGeometricPrice"},
-                                                AssetClass::EQ) {}
+        : EuropeanAsianOptionADGAPEngineBuilder("BlackScholesMerton", {"FxAsianOptionGeometricPrice"}, AssetClass::FX) {
+    }
 };
 
 //! Discrete Analytic Engine Builder for European Asian Fx Geometric Average Strike Options
@@ -86,7 +89,7 @@ class FxEuropeanAsianOptionADGASEngineBuilder : public EuropeanAsianOptionADGASE
 public:
     FxEuropeanAsianOptionADGASEngineBuilder()
         : EuropeanAsianOptionADGASEngineBuilder("BlackScholesMerton", {"FxAsianOptionGeometricStrike"},
-                                                AssetClass::EQ) {}
+                                                AssetClass::FX) {}
 };
 
 //! Continuous Analytic Engine Builder for European Asian Fx Geometric Average Price Options
@@ -98,7 +101,7 @@ class FxEuropeanAsianOptionACGAPEngineBuilder : public EuropeanAsianOptionACGAPE
 public:
     FxEuropeanAsianOptionACGAPEngineBuilder()
         : EuropeanAsianOptionACGAPEngineBuilder("BlackScholesMerton", {"FxAsianOptionGeometricPrice"},
-                                                AssetClass::EQ) {}
+                                                AssetClass::FX) {}
 };
 
 } // namespace data

@@ -30,7 +30,8 @@ namespace ore {
 namespace data {
 
 //! Discrete Monte Carlo Engine Builder for European Asian Commodity Arithmetic Average Price Options
-/*! Pricing engines are cached by asset/currency
+/*! Pricing engines are cached by asset/currency/expiry/strike, where
+    expiry is null (Date()) if irrelevant and strike is 0 if irrelevant.
 
     \ingroup builders
  */
@@ -38,11 +39,12 @@ class CommodityEuropeanAsianOptionMCDAAPEngineBuilder : public EuropeanAsianOpti
 public:
     CommodityEuropeanAsianOptionMCDAAPEngineBuilder()
         : EuropeanAsianOptionMCDAAPEngineBuilder("BlackScholesMerton", {"CommodityAsianOptionArithmeticPrice"},
-                                                 AssetClass::EQ) {}
+                                                 AssetClass::COM, expiryDate_, strike_) {}
 };
 
 //! Discrete Monte Carlo Engine Builder for European Asian Commodity Arithmetic Average Strike Options
-/*! Pricing engines are cached by asset/currency
+/*! Pricing engines are cached by asset/currency/expiry/strike, where
+    expiry is null (Date()) if irrelevant and strike is 0 if irrelevant.
 
     \ingroup builders
  */
@@ -50,11 +52,12 @@ class CommodityEuropeanAsianOptionMCDAASEngineBuilder : public EuropeanAsianOpti
 public:
     CommodityEuropeanAsianOptionMCDAASEngineBuilder()
         : EuropeanAsianOptionMCDAASEngineBuilder("BlackScholesMerton", {"CommodityAsianOptionArithmeticStrike"},
-                                                 AssetClass::EQ) {}
+                                                 AssetClass::COM, expiryDate_, strike_) {}
 };
 
 //! Discrete Monte Carlo Engine Builder for European Asian Commodity Geometric Average Price Options
-/*! Pricing engines are cached by asset/currency
+/*! Pricing engines are cached by asset/currency/expiry/strike, where
+    expiry is null (Date()) if irrelevant and strike is 0 if irrelevant.
 
     \ingroup builders
  */
@@ -62,7 +65,7 @@ class CommodityEuropeanAsianOptionMCDGAPEngineBuilder : public EuropeanAsianOpti
 public:
     CommodityEuropeanAsianOptionMCDGAPEngineBuilder()
         : EuropeanAsianOptionMCDGAPEngineBuilder("BlackScholesMerton", {"CommodityAsianOptionArithmeticPrice"},
-                                                 AssetClass::EQ) {}
+                                                 AssetClass::COM, expiryDate_, strike_) {}
 };
 
 //! Discrete Analytic Engine Builder for European Asian Commodity Geometric Average Price Options
@@ -74,7 +77,7 @@ class CommodityEuropeanAsianOptionADGAPEngineBuilder : public EuropeanAsianOptio
 public:
     CommodityEuropeanAsianOptionADGAPEngineBuilder()
         : EuropeanAsianOptionADGAPEngineBuilder("BlackScholesMerton", {"CommodityAsianOptionGeometricPrice"},
-                                                AssetClass::EQ) {}
+                                                AssetClass::COM) {}
 };
 
 //! Discrete Analytic Engine Builder for European Asian Commodity Geometric Average Strike Options
@@ -86,7 +89,7 @@ class CommodityEuropeanAsianOptionADGASEngineBuilder : public EuropeanAsianOptio
 public:
     CommodityEuropeanAsianOptionADGASEngineBuilder()
         : EuropeanAsianOptionADGASEngineBuilder("BlackScholesMerton", {"CommodityAsianOptionGeometricStrike"},
-                                                AssetClass::EQ) {}
+                                                AssetClass::COM) {}
 };
 
 //! Continuous Analytic Engine Builder for European Asian Commodity Geometric Average Price Options
@@ -98,7 +101,7 @@ class CommodityEuropeanAsianOptionACGAPEngineBuilder : public EuropeanAsianOptio
 public:
     CommodityEuropeanAsianOptionACGAPEngineBuilder()
         : EuropeanAsianOptionACGAPEngineBuilder("BlackScholesMerton", {"CommodityAsianOptionGeometricPrice"},
-                                                AssetClass::EQ) {}
+                                                AssetClass::COM) {}
 };
 
 } // namespace data
