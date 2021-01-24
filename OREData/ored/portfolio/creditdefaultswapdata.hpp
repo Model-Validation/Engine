@@ -114,10 +114,11 @@ public:
                           const Date& protectionStart = Date(), const Date& upfrontDate = Date(),
                           const Real upfrontFee = Null<Real>(),
                           QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>(),
-                          const std::string& referenceObligation = "")
+                          const std::string& referenceObligation = "", const Date& protectionEnd = Date())
         : issuerId_(issuerId), creditCurveId_(creditCurveId), leg_(leg), settlesAccrual_(settlesAccrual),
           protectionPaymentTime_(protectionPaymentTime), protectionStart_(protectionStart), upfrontDate_(upfrontDate),
-          upfrontFee_(upfrontFee), recoveryRate_(recoveryRate), referenceObligation_(referenceObligation) {}
+          upfrontFee_(upfrontFee), recoveryRate_(recoveryRate), referenceObligation_(referenceObligation),
+          protectionEnd_(protectionEnd) {}
 
     //! Constructor that takes a \p referenceInformation object
     CreditDefaultSwapData(const std::string& issuerId, const CdsReferenceInformation& referenceInformation,
@@ -128,7 +129,8 @@ public:
                           const QuantLib::Date& upfrontDate = QuantLib::Date(),
                           QuantLib::Real upfrontFee = QuantLib::Null<QuantLib::Real>(),
                           QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>(),
-                          const std::string& referenceObligation = "");
+                          const std::string& referenceObligation = "",
+                          const QuantLib::Date& protectionEnd = QuantLib::Date());
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
@@ -139,6 +141,7 @@ public:
     bool settlesAccrual() const { return settlesAccrual_; }
     QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime() const { return protectionPaymentTime_; }
     const Date& protectionStart() const { return protectionStart_; }
+    const Date& protectionEnd() const { return protectionEnd_; }
     const Date& upfrontDate() const { return upfrontDate_; }
     Real upfrontFee() const { return upfrontFee_; }
 
@@ -160,7 +163,7 @@ private:
     LegData leg_;
     bool settlesAccrual_;
     QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime_;
-    Date protectionStart_, upfrontDate_;
+    Date protectionStart_, protectionEnd_, upfrontDate_;
     Real upfrontFee_;
 
     //! Populated if the CDS is a fixed recovery rate CDS, otherwise \c Null<Real>()

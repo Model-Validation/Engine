@@ -140,8 +140,28 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
         }
 
         // on the other side, we add the payment in case of default.
-        results.defaultLegNPV += expectedLoss(defaultDate, effectiveStartDate, endDate, arguments.notional) *
-                                 discountCurve_->discount(protectionPaymentDate);
+        // results.defaultLegNPV += expectedLoss(defaultDate, effectiveStartDate, endDate, arguments.notional) *
+        //                          discountCurve_->discount(protectionPaymentDate);
+        const Date& protectionEndDate = arguments.protectionEnd;
+        if (endDate <= protectionEndDate) {
+            results.defaultLegNPV += expectedLoss(defaultDate, effectiveStartDate, endDate, arguments.notional) *
+                                     discountCurve_->discount(protectionPaymentDate);
+        } else if (effectiveStartDate <= protectionEndDate && endDate >= protectionEndDate) {
+            // First, update default date to use new midpoint
+            defaultDate = effectiveStartDate + (protectionEndDate - effectiveStartDate) / 2;
+            // If so, we should also (probably) update the protection payment date to use the
+            // new default date, for the case of it being configured to "atDefault"
+            if (arguments.protectionPaymentTime == CreditDefaultSwap::ProtectionPaymentTime::atDefault) {
+                protectionPaymentDate = defaultDate;
+            }
+            // Then, calculate expected loss for protection end date instead of end date
+            results.defaultLegNPV +=
+                expectedLoss(defaultDate, effectiveStartDate, protectionEndDate, arguments.notional) *
+                discountCurve_->discount(protectionPaymentDate);
+        } else {
+            // If effectiveStartDate > protectionEndDate, i.e. coupon period starts past protection end.
+            // results.defaultLegNPV += 0; 
+        }
     }
 
     Real upfrontSign = 1.0;

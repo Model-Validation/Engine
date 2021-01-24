@@ -177,11 +177,11 @@ CreditDefaultSwapData::CreditDefaultSwapData(
     const string& issuerId, const CdsReferenceInformation& referenceInformation, const LegData& leg,
     bool settlesAccrual, const QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime,
     const Date& protectionStart, const Date& upfrontDate, Real upfrontFee, Real recoveryRate,
-    const std::string& referenceObligation)
+    const std::string& referenceObligation, const Date& protectionEnd)
     : issuerId_(issuerId), leg_(leg), settlesAccrual_(settlesAccrual), protectionPaymentTime_(protectionPaymentTime),
       protectionStart_(protectionStart), upfrontDate_(upfrontDate), upfrontFee_(upfrontFee),
       recoveryRate_(recoveryRate), referenceObligation_(referenceObligation),
-      referenceInformation_(referenceInformation) {}
+      referenceInformation_(referenceInformation), protectionEnd_(protectionEnd) {}
 
 void CreditDefaultSwapData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CreditDefaultSwapData");
@@ -224,6 +224,13 @@ void CreditDefaultSwapData::fromXML(XMLNode* node) {
         protectionStart_ = parseDate(XMLUtils::getNodeValue(tmp)); // null date if empty or missing
     else
         protectionStart_ = Date();
+
+    tmp = XMLUtils::getChildNode(node, "ProtectionEnd");
+    if (tmp)
+        protectionEnd_ = parseDate(XMLUtils::getNodeValue(tmp)); // null date if empty or missing
+    else
+        protectionEnd_ = Date();
+
     tmp = XMLUtils::getChildNode(node, "UpfrontDate");
     if (tmp)
         upfrontDate_ = parseDate(XMLUtils::getNodeValue(tmp)); // null date if empty or mssing
@@ -279,6 +286,11 @@ XMLNode* CreditDefaultSwapData::toXML(XMLDocument& doc) {
         std::ostringstream tmp;
         tmp << QuantLib::io::iso_date(protectionStart_);
         XMLUtils::addChild(doc, node, "ProtectionStart", tmp.str());
+    }
+    if (protectionEnd_ != Date()) {
+        std::ostringstream tmp;
+        tmp << QuantLib::io::iso_date(protectionEnd_);
+        XMLUtils::addChild(doc, node, "ProtectionEnd", tmp.str());
     }
     if (upfrontDate_ != Date()) {
         std::ostringstream tmp;

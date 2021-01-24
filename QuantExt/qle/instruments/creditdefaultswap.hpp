@@ -96,12 +96,14 @@ public:
         @param lastPeriodDayCounter  Day-count convention for accrual in last period. Mainly to
                                      allow for possibility of including maturity date in the last
                                      period's coupon accrual which is standard.
+        @param protectionEnd  The last date where a default event will trigger the contract.
+                              Defaults to maturity if not given.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, Rate spread, const Schedule& schedule,
                       BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
                       ProtectionPaymentTime protectionPaymentTime = atDefault, const Date& protectionStart = Date(),
                       const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
-                      const DayCounter& lastPeriodDayCounter = DayCounter());
+                      const DayCounter& lastPeriodDayCounter = DayCounter(), const Date& protectionEnd = Date());
     //! CDS quoted as upfront and running spread
     /*! @param side  Whether the protection is bought or sold.
         @param notional  Notional value
@@ -120,12 +122,14 @@ public:
         @param lastPeriodDayCounter  Day-count convention for accrual in last period. Mainly to
                                      allow for possibility of including maturity date in the last
                                      period's coupon accrual which is standard.
+        @param protectionEnd  The last date where a default event will trigger the contract.
+                              Defaults to maturity if not given.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, Rate upfront, Rate spread, const Schedule& schedule,
                       BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
                       ProtectionPaymentTime protectionPaymentTime = atDefault, const Date& protectionStart = Date(),
                       const Date& upfrontDate = Date(), const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
-                      const DayCounter& lastPeriodDayCounter = DayCounter());
+                      const DayCounter& lastPeriodDayCounter = DayCounter(), const Date& protectionEnd = Date());
     //@}
     //! \name Instrument interface
     //@{
@@ -244,7 +248,7 @@ protected:
     boost::shared_ptr<Claim> claim_;
     Leg leg_;
     boost::shared_ptr<CashFlow> upfrontPayment_, accrualRebate_;
-    Date protectionStart_, maturity_;
+    Date protectionStart_, protectionEnd_, maturity_;
     // results
     mutable Rate fairUpfront_;
     mutable Rate fairSpread_;
@@ -272,7 +276,7 @@ public:
     bool settlesAccrual;
     ProtectionPaymentTime protectionPaymentTime;
     boost::shared_ptr<Claim> claim;
-    Date protectionStart, maturity;
+    Date protectionStart, protectionEnd, maturity;
     void validate() const;
 };
 

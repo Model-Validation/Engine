@@ -53,10 +53,11 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
                                      BusinessDayConvention convention, const DayCounter& dayCounter,
                                      bool settlesAccrual, ProtectionPaymentTime protectionPaymentTime,
                                      const Date& protectionStart, const boost::shared_ptr<Claim>& claim,
-                                     const DayCounter& lastPeriodDayCounter)
+                                     const DayCounter& lastPeriodDayCounter, const Date& protectionEnd)
     : side_(side), notional_(notional), upfront_(boost::none), runningSpread_(spread), settlesAccrual_(settlesAccrual),
       protectionPaymentTime_(protectionPaymentTime), claim_(claim),
-      protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
+      protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart),
+      protectionEnd_(protectionEnd == Null<Date>() ? schedule.endDate() : protectionEnd) {
 
     QL_REQUIRE((schedule.hasRule() &&
                 (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) ||
@@ -89,7 +90,8 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
     // the upfront payment left intentionally unitialized to indicate
     // this CDS has none.
 
-    maturity_ = schedule.dates().back();
+    maturity_ = schedule.endDate();
+    QL_REQUIRE(protectionEnd_ <= maturity_, "protection end date must not be greater than maturity");
 }
 
 CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate upfront, Rate runningSpread,
@@ -97,10 +99,11 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
                                      const DayCounter& dayCounter, bool settlesAccrual,
                                      ProtectionPaymentTime protectionPaymentTime, const Date& protectionStart,
                                      const Date& upfrontDate, const boost::shared_ptr<Claim>& claim,
-                                     const DayCounter& lastPeriodDayCounter)
+                                     const DayCounter& lastPeriodDayCounter, const Date& protectionEnd)
     : side_(side), notional_(notional), upfront_(upfront), runningSpread_(runningSpread),
       settlesAccrual_(settlesAccrual), protectionPaymentTime_(protectionPaymentTime), claim_(claim),
-      protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
+      protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart),
+      protectionEnd_(protectionEnd == Null<Date>() ? schedule.endDate() : protectionEnd) {
 
     QL_REQUIRE((schedule.hasRule() &&
                 (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015)) ||
@@ -134,7 +137,8 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
         claim_ = boost::shared_ptr<Claim>(new FaceValueClaim);
     registerWith(claim_);
 
-    maturity_ = schedule.dates().back();
+    maturity_ = schedule.endDate();
+    QL_REQUIRE(protectionEnd_ <= maturity_, "protection end date must not be greater than maturity");
 }
 
 Protection::Side CreditDefaultSwap::side() const { return side_; }
@@ -183,6 +187,7 @@ void CreditDefaultSwap::setupArguments(PricingEngine::arguments* args) const {
     arguments->upfront = upfront_;
     arguments->spread = runningSpread_;
     arguments->protectionStart = protectionStart_;
+    arguments->protectionEnd = protectionEnd_;
     arguments->maturity = maturity_;
 }
 
@@ -216,19 +221,19 @@ Rate CreditDefaultSwap::fairSpread() const {
 
 Real CreditDefaultSwap::couponLegBPS() const {
     calculate();
-    QL_REQUIRE(couponLegBPS_ != Null<Rate>(), "coupon-leg BPS not available");
+    QL_REQUIRE(couponLegBPS_ != Null<Real>(), "coupon-leg BPS not available");
     return couponLegBPS_;
 }
 
 Real CreditDefaultSwap::couponLegNPV() const {
     calculate();
-    QL_REQUIRE(couponLegNPV_ != Null<Rate>(), "coupon-leg NPV not available");
+    QL_REQUIRE(couponLegNPV_ != Null<Real>(), "coupon-leg NPV not available"); // Should be Null<Real>? Same elsewhere...
     return couponLegNPV_;
 }
 
 Real CreditDefaultSwap::defaultLegNPV() const {
     calculate();
-    QL_REQUIRE(defaultLegNPV_ != Null<Rate>(), "default-leg NPV not available");
+    QL_REQUIRE(defaultLegNPV_ != Null<Real>(), "default-leg NPV not available");
     return defaultLegNPV_;
 }
 
@@ -313,7 +318,8 @@ Rate CreditDefaultSwap::conventionalSpread(Real conventionalRecovery, const Hand
 const Date& CreditDefaultSwap::protectionStartDate() const { return protectionStart_; }
 
 const Date& CreditDefaultSwap::protectionEndDate() const {
-    return boost::dynamic_pointer_cast<Coupon>(leg_.back())->accrualEndDate();
+    return protectionEnd_;
+    //return boost::dynamic_pointer_cast<Coupon>(leg_.back())->accrualEndDate();
 }
 
 CreditDefaultSwap::arguments::arguments() : side(Protection::Side(-1)), notional(Null<Real>()), spread(Null<Rate>()) {}
@@ -327,6 +333,7 @@ void CreditDefaultSwap::arguments::validate() const {
     // upfront and accrual rebate can be empty to indicate there is no flow
     QL_REQUIRE(claim, "claim not set");
     QL_REQUIRE(protectionStart != Null<Date>(), "protection start date not set");
+    QL_REQUIRE(protectionEnd != Null<Date>(), "protection end date not set");
     QL_REQUIRE(maturity != Null<Date>(), "maturity date not set");
 }
 
