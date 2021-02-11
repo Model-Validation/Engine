@@ -72,47 +72,57 @@ protected:
 
     boost::shared_ptr<GeneralizedBlackScholesProcess>
     getConstBlackScholesProcess(const string& assetName, const Currency& ccy, const AssetClass& assetClassUnderlying,
-                                const Date& expiryDate, const double strike) { 
-        // Probably should change so that expiryDate_ and strike_ are populated and used instead as parameters for 
+                                const Date& expiryDate, const double strike) {
+        // Probably should change so that expiryDate_ and strike_ are populated and used instead as parameters for
         // function call and in blackVol()-call.
 
-        string config = this->configuration(ore::data::MarketContext::pricing);
+        string config = configuration(ore::data::MarketContext::pricing);
 
         if (assetClassUnderlying == AssetClass::EQ) {
-            Handle<BlackVolTermStructure> vol = this->market_->equityVol(assetName, config);
+            Handle<BlackVolTermStructure> vol = market_->equityVol(assetName, config);
             Volatility constVol = vol->blackVol(expiryDate, strike, true);
             vol = Handle<BlackVolTermStructure>(boost::make_shared<BlackConstantVol>(
                 vol->referenceDate(), vol->calendar(), constVol, vol->dayCounter()));
 
             return boost::make_shared<GeneralizedBlackScholesProcess>(
-                this->market_->equitySpot(assetName, config), this->market_->equityDividendCurve(assetName, config),
-                this->market_->equityForecastCurve(assetName, config), vol);
+                market_->equitySpot(assetName, config), market_->equityDividendCurve(assetName, config),
+                market_->equityForecastCurve(assetName, config), vol);
         } else if (assetClassUnderlying == AssetClass::FX) {
             const string& ccyPairCode = assetName + ccy.code();
-            Handle<BlackVolTermStructure> vol = this->market_->fxVol(ccyPairCode, config);
+            Handle<BlackVolTermStructure> vol = market_->fxVol(ccyPairCode, config);
             Volatility constVol = vol->blackVol(expiryDate, strike, true);
             vol = Handle<BlackVolTermStructure>(boost::make_shared<BlackConstantVol>(
                 vol->referenceDate(), vol->calendar(), constVol, vol->dayCounter()));
 
-            return boost::make_shared<GeneralizedBlackScholesProcess>(
-                this->market_->fxSpot(ccyPairCode, config), this->market_->discountCurve(assetName, config),
-                this->market_->discountCurve(ccy.code(), config), vol);
+            return boost::make_shared<GeneralizedBlackScholesProcess>(market_->fxSpot(ccyPairCode, config),
+                                                                      market_->discountCurve(assetName, config),
+                                                                      market_->discountCurve(ccy.code(), config), vol);
         } else if (assetClassUnderlying == AssetClass::COM) {
-            Handle<BlackVolTermStructure> vol = this->market_->commodityVolatility(assetName, config);
-            Volatility constVol = vol->blackVol(expiryDate, strike, true);
-            vol = Handle<BlackVolTermStructure>(boost::make_shared<BlackConstantVol>(
-                vol->referenceDate(), vol->calendar(), constVol, vol->dayCounter()));
+            Handle<BlackVolTermStructure> vol = market_->commodityVolatility(assetName, config);
+
+            Date asof = vol->referenceDate();
+            DayCounter volDc = vol->dayCounter();
+            std::vector<Date> dates(expiryDate - asof);
+            std::vector<Volatility> volatilities(expiryDate - asof);
+
+            size_t index = 0;
+            for (Date d = asof + 1; d <= expiryDate; ++d) {
+                dates[index] = d;
+                volatilities[index] = vol->blackVol(dates[index], strike, true);
+                ++index;
+            }
+            vol = Handle<BlackVolTermStructure>(
+                boost::make_shared<BlackVarianceCurve>(asof, dates, volatilities, volDc, false));
 
             // Create the commodity convenience yield curve for the process
-            Handle<QuantExt::PriceTermStructure> priceCurve = this->market_->commodityPriceCurve(assetName, config);
+            Handle<QuantExt::PriceTermStructure> priceCurve = market_->commodityPriceCurve(assetName, config);
             Handle<Quote> commoditySpot(boost::make_shared<QuantExt::DerivedPriceQuote>(priceCurve));
-            Handle<YieldTermStructure> discount = this->market_->discountCurve(ccy.code(), config);
+            Handle<YieldTermStructure> discount = market_->discountCurve(ccy.code(), config);
             Handle<YieldTermStructure> yield(
                 boost::make_shared<QuantExt::PriceTermStructureAdapter>(*priceCurve, *discount));
             yield->enableExtrapolation();
 
             return boost::make_shared<GeneralizedBlackScholesProcess>(commoditySpot, yield, discount, vol);
-
         } else {
             QL_FAIL("Asset class of " << (int)assetClassUnderlying << " not recognized.");
         }
@@ -136,8 +146,8 @@ public:
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                        const AssetClass& assetClassUnderlying,
-                                                        const Date& expiryDate, const double strike) override {
+                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                                        const double strike) override {
         bool brownianBridge = ore::data::parseBool(engineParameter("BrownianBridge", "", false, "true"));
         bool antitheticVariate = ore::data::parseBool(engineParameter("AntitheticVariate", "", false, "true"));
         bool controlVariate = ore::data::parseBool(engineParameter("ControlVariate", "", false, "true"));
@@ -248,8 +258,8 @@ public:
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                        const AssetClass& assetClassUnderlying,
-                                                        const Date& expiryDate, const double strike) override {
+                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                                        const double strike) override {
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
         return boost::make_shared<AnalyticDiscreteGeometricAverageStrikeAsianEngine>(gbsp);
@@ -269,8 +279,8 @@ public:
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                        const AssetClass& assetClassUnderlying,
-                                                        const Date& expiryDate, const double strike) override {
+                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                                        const double strike) override {
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
         return boost::make_shared<AnalyticContinuousGeometricAveragePriceAsianEngine>(gbsp);

@@ -117,10 +117,18 @@ void AsianOptionTrade::build(const boost::shared_ptr<EngineFactory>& engineFacto
             }
             Size pastFixings = 0;
             std::vector<QuantLib::Date> fixingDates = option_.asianData()->fixingDates();
+
+            // If index name has not been populated, use logic here to populate it from the index object.
+            string indexName = indexName_;
+            if (indexName.empty()) {
+                indexName = index_->name();
+                if (assetClassUnderlying_ == AssetClass::EQ)
+                    indexName = "EQ-" + indexName;
+            }
             for (QuantLib::Date fixingDate : fixingDates) {
                 if (fixingDate < today) {
-                    // TODO: Validate if correct loading of fixings!
-                    Real fixingValue = engineFactory->market()->equityCurve(assetName_)->fixing(fixingDate);
+                    requiredFixings_.addFixingDate(fixingDate, indexName);
+                    Real fixingValue = index_->fixing(fixingDate);
                     if (averageType == "Geometric") {
                         runningAccumulator *= fixingValue;
                     } else if (averageType == "Arithmetic") {
@@ -150,7 +158,8 @@ void AsianOptionTrade::build(const boost::shared_ptr<EngineFactory>& engineFacto
         boost::shared_ptr<AsianOptionEngineBuilder> asianOptionBuilder =
             boost::dynamic_pointer_cast<AsianOptionEngineBuilder>(builder);
 
-        asian->setPricingEngine(asianOptionBuilder->engine(assetName_, ccy, expiryDate_, strike_));
+        asian->setPricingEngine(
+            asianOptionBuilder->engine(assetName_, ccy, expiryDate_, strike_));
 
         configuration = asianOptionBuilder->configuration(MarketContext::pricing);
     } else {

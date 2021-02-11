@@ -61,7 +61,7 @@ protected:
     AsianOptionTrade(const Envelope& env, AssetClass assetClassUnderlying, OptionData option, string assetName,
                      string currency, double strike, double quantity,
                      const boost::shared_ptr<QuantLib::Index>& index = nullptr, const std::string& indexName = "")
-        : Trade("VanillaOption", env), assetClassUnderlying_(assetClassUnderlying), option_(option),
+        : Trade("AsianOption", env), assetClassUnderlying_(assetClassUnderlying), option_(option),
           assetName_(assetName), currency_(currency), strike_(strike), quantity_(quantity), index_(index),
           indexName_(indexName) {}
 

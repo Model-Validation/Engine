@@ -34,7 +34,7 @@ namespace data {
 void CommodityAsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // Checks
     QL_REQUIRE(quantity_ > 0, "Commodity Asian option requires a positive quatity");
-    QL_REQUIRE(strike_ > 0, "Commodity Asian option requires a positive strike");
+    QL_REQUIRE(strike_ >= 0, "Commodity Asian option requires a strike >= 0");
 
     // Get the price curve for the commodity.
     const boost::shared_ptr<Market>& market = engineFactory->market();
@@ -44,8 +44,7 @@ void CommodityAsianOption::build(const boost::shared_ptr<EngineFactory>& engineF
     // Populate the index_ in case the option is automatic exercise.
     // Intentionally use null calendar because we will ask for index value on the expiry date without adjustment.
     if (!isFuturePrice_ || *isFuturePrice_) {
-
-        // Assume future price if isFuturePrice_ is not explicitly set of if it is and true.
+        // Assume future price if isFuturePrice_ is not explicitly set or if it is and true.
 
         // If we are given an explicit future contract expiry date, use it, otherwise use option's expiry.
         Date expiryDate;
@@ -60,7 +59,6 @@ void CommodityAsianOption::build(const boost::shared_ptr<EngineFactory>& engineF
         }
 
         index_ = boost::make_shared<QuantExt::CommodityFuturesIndex>(assetName_, expiryDate, NullCalendar(), priceCurve);
-
     } else {
         // If the underlying is a commodity spot, create a spot index.
         index_ = boost::make_shared<QuantExt::CommoditySpotIndex>(assetName_, NullCalendar(), priceCurve);
