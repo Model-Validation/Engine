@@ -495,6 +495,21 @@ void OREApp::writeInitialReports() {
         out_ << "SKIP" << endl;
     }
 
+    /**********************
+     * Greeks report
+     */
+    out_ << setw(tab_) << left << "Greeks Report... " << flush;
+    if (params_->hasGroup("greeks") && params_->get("greeks", "active") == "Y") {
+        string fileName = outputPath_ + "/" + params_->get("greeks", "outputFileName");
+        CSVFileReport greeksReport(fileName);
+        getReportWriter()->writeGreeksReport(greeksReport, params_->get("greeks", "baseCurrency"), market_,
+                                             params_->get("markets", "pricing"), portfolio_);
+        out_ << "OK" << endl;
+    } else {
+        LOG("skip Greeks report");
+        out_ << "SKIP" << endl;
+    }
+
     LOG("Initial reports written");
     MEM_LOG;
 }

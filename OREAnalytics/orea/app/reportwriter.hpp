@@ -84,6 +84,10 @@ public:
 
     virtual void writeSensitivityReport(ore::data::Report& report, const boost::shared_ptr<SensitivityStream>& ss,
                                         QuantLib::Real outputThreshold = 0.0);
+    
+    virtual void writeGreeksReport(ore::data::Report& report, const std::string& baseCurrency,
+                                   boost::shared_ptr<ore::data::Market> market, const std::string& configuration,
+                                   boost::shared_ptr<Portfolio> portfolio);
 
     const std::string& nullString() const { return nullString_; }
 

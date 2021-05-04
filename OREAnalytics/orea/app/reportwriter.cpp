@@ -29,6 +29,7 @@
 #include <ql/cashflows/indexedcashflow.hpp>
 #include <ql/cashflows/inflationcoupon.hpp>
 #include <ql/errors.hpp>
+#include <ql/instruments/oneassetoption.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <stdio.h>
 
@@ -836,6 +837,213 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
 
     report.end();
     LOG("Sensitivity report finished");
+}
+
+void ReportWriter::writeGreeksReport(ore::data::Report& report, const std::string& baseCurrency,
+                                     boost::shared_ptr<ore::data::Market> market, const std::string& configuration,
+                                     boost::shared_ptr<Portfolio> portfolio) {
+    LOG("Greeks calculation/writing");
+    DayCounter dc = ActualActual();
+    Date today = Settings::instance().evaluationDate();
+    report.addColumn("TradeId", string())
+        .addColumn("TradeType", string())
+        .addColumn("Maturity", Date())
+        .addColumn("MaturityTime", double(), 6)
+        .addColumn("NPV", double(), 6)
+        .addColumn("NpvCurrency", string())
+        .addColumn("ErrorEstimate", double(), 6)
+        .addColumn("NPV(Base)", double(), 6)
+        .addColumn("BaseCurrency", string())
+        .addColumn("Notional", double(), 2)
+        .addColumn("NotionalCurrency", string())
+        .addColumn("Notional(Base)", double(), 2)
+        .addColumn("CallPut", string())
+        //.addColumn("Exercise", string())
+        .addColumn("Strike", double(), 2)
+        .addColumn("IsExpired", double())
+        //.addColumn("Discount(dom)", double(), 6)
+        //.addColumn("Discount(for)", double(), 6)
+        //.addColumn("Volatility", double(), 6)
+        //.addColumn("Forward", double(), 6)
+        .addColumn("Elasticity", double(), 6)
+        .addColumn("Delta", double(), 6)
+        .addColumn("DeltaForward", double(), 6)
+        .addColumn("Gamma", double(), 6)
+        .addColumn("Theta", double(), 6)
+        .addColumn("ThetaPerDay", double(), 6)
+        .addColumn("Vega", double(), 6)
+        .addColumn("Rho", double(), 6)
+        .addColumn("DividendRho", double(), 6)
+        .addColumn("StrikeSensitivity", double(), 6)
+        .addColumn("ITMCashProbability", double(), 6);
+
+    for (auto trade : portfolio->trades()) {
+        try {
+            boost::shared_ptr<ore::data::VanillaOptionTrade> vanillaOption =
+                boost::dynamic_pointer_cast<ore::data::VanillaOptionTrade>(trade);
+            if (vanillaOption) {
+                string tradeId = trade->id();
+                DLOG("Writing option data of trade id: " << tradeId);
+
+                boost::shared_ptr<QuantLib::Option> option =
+                    boost::dynamic_pointer_cast<QuantLib::Option>(trade->instrument()->qlInstrument());
+
+                string tradeType = trade->tradeType();
+                Date maturity = trade->maturity();
+                Time maturityTime =
+                    maturity == QuantLib::Null<Date>() ? Null<Real>() : dc.yearFraction(today, maturity);
+                Real npv = trade->instrument()->NPV();
+                string npvCcy = trade->npvCurrency();
+                Real errorEstimate = Null<Real>();
+                try {
+                    errorEstimate = option->errorEstimate();
+                } catch (...) {
+                }
+
+                Real fx = 1.0, fxNotional = 1.0;
+                if (npvCcy != baseCurrency)
+                    fx = market->fxSpot(npvCcy + baseCurrency, configuration)->value();
+                if (trade->notionalCurrency() != "" && trade->notionalCurrency() != baseCurrency)
+                    fxNotional = market->fxSpot(trade->notionalCurrency() + baseCurrency, configuration)->value();
+                QL_REQUIRE(std::isfinite(npv), "npv is not finite (" << npv << ")");
+                Real npvBase = npv * fx;
+                Real notional = trade->notional();
+                string notionalCcy = trade->notionalCurrency() == "" ? nullString_ : trade->notionalCurrency();
+                Real notionalBase = trade->notional() == Null<Real>() || trade->notionalCurrency() == ""
+                                        ? Null<Real>()
+                                        : trade->notional() * fxNotional;
+
+                boost::shared_ptr<QuantLib::OneAssetOption> qlOneAssetOption =
+                    boost::dynamic_pointer_cast<QuantLib::OneAssetOption>(trade->instrument()->qlInstrument());
+
+                string callPut = vanillaOption->option().callPut();
+                Real strike = vanillaOption->strike();
+                bool isExpired = option->isExpired();
+                //Real discountDom;
+                //Real discountFor;
+                //Volatility vol;
+                //Real fwd;
+
+                // OneAssetOption specific calls
+                Real elasticity = Null<Real>();
+                try {
+                    elasticity = qlOneAssetOption->elasticity();
+                } catch (...) {
+                }
+                Real delta = Null<Real>();
+                try {
+                    delta = qlOneAssetOption->delta();
+                } catch (...) {
+                }
+                Real deltaFwd = Null<Real>();
+                try {
+                    deltaFwd = qlOneAssetOption->deltaForward();
+                } catch (...) {
+                }
+                Real gamma = Null<Real>();
+                try {
+                    gamma = qlOneAssetOption->gamma();
+                } catch (...) {
+                }
+                Real theta = Null<Real>();
+                try {
+                    theta = qlOneAssetOption->theta();
+                } catch (...) {
+                }
+                Real thetaPerDay = Null<Real>();
+                try {
+                    thetaPerDay = qlOneAssetOption->thetaPerDay();
+                } catch (...) {
+                }
+                Real vega = Null<Real>();
+                try {
+                    vega = qlOneAssetOption->vega();
+                } catch (...) {
+                }
+                Real rho = Null<Real>();
+                try {
+                    rho = qlOneAssetOption->rho();
+                } catch (...) {
+                }
+                Real dividendRho = Null<Real>();
+                try {
+                    dividendRho = qlOneAssetOption->dividendRho();
+                } catch (...) {
+                }
+                Real strikeSensitivity = Null<Real>();
+                try {
+                    strikeSensitivity = qlOneAssetOption->strikeSensitivity();
+                } catch (...) {
+                }
+                Real itmCashProbability = Null<Real>();
+                try {
+                    itmCashProbability = qlOneAssetOption->itmCashProbability();
+                } catch (...) {
+                }
+
+                report.next()
+                    .add(tradeId)
+                    .add(tradeType)
+                    .add(maturity)
+                    .add(maturityTime)
+                    .add(npv)
+                    .add(npvCcy)
+                    .add(errorEstimate)
+                    .add(npvBase)
+                    .add(baseCurrency)
+                    .add(notional)
+                    .add(notionalCcy)
+                    .add(notionalBase)
+                    .add(callPut)
+                    .add(strike)
+                    .add(Real(isExpired))
+                    .add(elasticity)
+                    .add(delta)
+                    .add(deltaFwd)
+                    .add(gamma)
+                    .add(theta)
+                    .add(thetaPerDay)
+                    .add(vega)
+                    .add(rho)
+                    .add(dividendRho)
+                    .add(strikeSensitivity)
+                    .add(itmCashProbability);
+            }
+
+        } catch (std::exception& e) {
+            ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during trade pricing", e.what()));
+            Date maturity = trade->maturity();
+            report.next()
+                .add(trade->id())
+                .add(trade->tradeType())
+                .add(maturity)
+                .add(maturity == QuantLib::Null<Date>() ? Null<Real>() : dc.yearFraction(today, maturity))
+                .add(Null<Real>())
+                .add(nullString_)
+                .add(Null<Real>())
+                .add(Null<Real>())
+                .add(nullString_)
+                .add(Null<Real>())
+                .add(nullString_)
+                .add(Null<Real>())
+                .add(nullString_)
+                .add(Null<Real>())
+                .add(Null<Real>())
+                .add(Null<Real>())
+                .add(Null<Real>())
+                .add(Null<Real>())
+                .add(Null<Real>())
+                .add(Null<Real>())
+                .add(Null<Real>())
+                .add(Null<Real>())
+                .add(Null<Real>())
+                .add(Null<Real>())
+                .add(Null<Real>())
+                .add(Null<Real>());
+        }
+    }
+    report.end();
+    LOG("Greeks file written");
 }
 
 } // namespace analytics
