@@ -35,6 +35,7 @@
 #include <ql/pricingengines/asian/analytic_discr_geom_av_strike.hpp>
 #include <ql/pricingengines/asian/mc_discr_arith_av_price.hpp>
 #include <ql/pricingengines/asian/mc_discr_arith_av_strike.hpp>
+#include <ql/utilities/null.hpp>
 
 namespace ore {
 namespace data {
@@ -84,6 +85,8 @@ protected:
             vol = Handle<BlackVolTermStructure>(boost::make_shared<BlackConstantVol>(
                 vol->referenceDate(), vol->calendar(), constVol, vol->dayCounter()));
 
+            DLOG("Configured Black const vol = " << constVol << " for asset name = " << assetName
+                                                << " with expiry date = " << expiryDate << " and strike = " << strike);
             return boost::make_shared<GeneralizedBlackScholesProcess>(
                 market_->equitySpot(assetName, config), market_->equityDividendCurve(assetName, config),
                 market_->equityForecastCurve(assetName, config), vol);
@@ -105,14 +108,26 @@ protected:
             std::vector<Date> dates(expiryDate - asof);
             std::vector<Volatility> volatilities(expiryDate - asof);
 
-            size_t index = 0;
+            /*size_t index = 0;
             for (Date d = asof + 1; d <= expiryDate; ++d) {
                 dates[index] = d;
                 volatilities[index] = vol->blackVol(dates[index], strike, true);
+                DLOG("Configured Black vol = " << volatilities[index] << " at date = " << d
+                                               << " for asset name = " << assetName
+                                               << " with expiry date = " << expiryDate << " and strike = " << strike);
                 ++index;
             }
             vol = Handle<BlackVolTermStructure>(
                 boost::make_shared<BlackVarianceCurve>(asof, dates, volatilities, volDc, false));
+            */
+            
+            Volatility constVol = vol->blackVol(expiryDate, strike, true);
+            vol = Handle<BlackVolTermStructure>(boost::make_shared<BlackConstantVol>(
+                vol->referenceDate(), vol->calendar(), constVol, vol->dayCounter()));
+
+            DLOG("Configured Black const vol = " << constVol << " for asset name = " << assetName
+                                                 << " with expiry date = " << expiryDate << " and strike = " << strike);
+            
 
             // Create the commodity convenience yield curve for the process
             Handle<QuantExt::PriceTermStructure> priceCurve = market_->commodityPriceCurve(assetName, config);
@@ -151,14 +166,24 @@ protected:
         bool brownianBridge = ore::data::parseBool(engineParameter("BrownianBridge", "", false, "true"));
         bool antitheticVariate = ore::data::parseBool(engineParameter("AntitheticVariate", "", false, "true"));
         bool controlVariate = ore::data::parseBool(engineParameter("ControlVariate", "", false, "true"));
-        Size requiredSamples = ore::data::parseInteger(engineParameter("RequiredSamples"));
-        Real requiredTolerance = ore::data::parseReal(engineParameter("RequiredTolerance"));
-        Size maxSamples = ore::data::parseInteger(engineParameter("MaxSamples"));
+        Size requiredSamples = ore::data::parseInteger(engineParameter("RequiredSamples", "", false, "0"));
+        Real requiredTolerance = ore::data::parseReal(engineParameter("RequiredTolerance", "", false, "0"));
+        Size maxSamples = ore::data::parseInteger(engineParameter("MaxSamples", "", false, "0"));
         BigNatural seed = ore::data::parseInteger(engineParameter("Seed", "", false, "123456"));
+
+        // Check if values defaulted to 0, if so replace by Null<T>().
+        if (requiredSamples == 0)
+            requiredSamples = Null<Size>();
+        if (requiredTolerance == 0)
+            requiredTolerance = Null<Real>();
+        if (maxSamples == 0)
+            maxSamples = Null<Size>();
+        QL_REQUIRE(requiredSamples != QuantLib::Null<Size>() || requiredTolerance != QuantLib::Null<Real>(),
+                   "RequiredSamples or RequiredTolerance must be set for engine MCDiscreteArithmeticAPEngine.");
 
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
             getConstBlackScholesProcess(assetName, ccy, assetClassUnderlying, expiryDate, strike);
-        return boost::make_shared<MCDiscreteArithmeticAPEngine<>>(gbsp, brownianBridge, antitheticVariate,
+        return boost::make_shared<MCDiscreteArithmeticAPEngine<LowDiscrepancy>>(gbsp, brownianBridge, antitheticVariate,
                                                                   controlVariate, requiredSamples, requiredTolerance,
                                                                   maxSamples, seed);
     }
@@ -212,10 +237,20 @@ protected:
                                                         const double strike) override {
         bool brownianBridge = ore::data::parseBool(engineParameter("BrownianBridge", "", false, "true"));
         bool antitheticVariate = ore::data::parseBool(engineParameter("AntitheticVariate", "", false, "true"));
-        Size requiredSamples = ore::data::parseInteger(engineParameter("RequiredSamples"));
-        Real requiredTolerance = ore::data::parseReal(engineParameter("RequiredTolerance"));
-        Size maxSamples = ore::data::parseInteger(engineParameter("MaxSamples"));
+        Size requiredSamples = ore::data::parseInteger(engineParameter("RequiredSamples", "", false, "0"));
+        Real requiredTolerance = ore::data::parseReal(engineParameter("RequiredTolerance", "", false, "0"));
+        Size maxSamples = ore::data::parseInteger(engineParameter("MaxSamples", "", false, "0"));
         BigNatural seed = ore::data::parseInteger(engineParameter("Seed", "", false, "123456"));
+
+        // Check if values defaulted to 0, if so replace by Null<T>().
+        if (requiredSamples == 0)
+            requiredSamples = Null<Size>();
+        if (requiredTolerance == 0)
+            requiredTolerance = Null<Real>();
+        if (maxSamples == 0)
+            maxSamples = Null<Size>();
+        QL_REQUIRE(requiredSamples != QuantLib::Null<Size>() || requiredTolerance != QuantLib::Null<Real>(),
+                   "RequiredSamples or RequiredTolerance must be set for engine MCDiscreteArithmeticAPEngine.");
 
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
             getConstBlackScholesProcess(assetName, ccy, assetClassUnderlying, expiryDate, strike);
