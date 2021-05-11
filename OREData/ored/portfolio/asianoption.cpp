@@ -92,27 +92,21 @@ void AsianOptionTrade::build(const boost::shared_ptr<EngineFactory>& engineFacto
     }
 
     // Create builder in advance to determine if continuous or discrete asian option.
-    std::string averageType = option_.asianData()->averageType();
-    std::string asianType = option_.asianData()->asianType();
-    tradeTypeBuilder += averageType; // Add Arithmetic/Geometric
-    tradeTypeBuilder += asianType;   // Add Price/Strike
+    Average::Type averageType = option_.asianData()->averageType();
+    OptionAsianData::AsianType asianType = option_.asianData()->asianType();
+    tradeTypeBuilder += to_string(averageType); // Add Arithmetic/Geometric
+    tradeTypeBuilder += to_string(asianType);   // Add Price/Strike
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
     QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
     // TODO: Add check for processType tag in advance?
     std::string processType = engineFactory->engineData()->engineParameters(tradeTypeBuilder).at("ProcessType");
     QL_REQUIRE(processType != "", "ProcessType must be configured.");
 
-    QuantLib::Average::Type qlAverageType; // TODO: Improve aesthetics
-    if (averageType == "Geometric") {
-        qlAverageType = QuantLib::Average::Type::Geometric;
-    } else if (averageType == "Arithmetic") {
-        qlAverageType = QuantLib::Average::Type::Arithmetic;
-    }
     if (!isEuropDeferredCS) {
         // If the option is not a European deferred CS contract, i.e. the standard European/American physical/cash-settled ones. 
         if (processType == "Discrete") {
             Real runningAccumulator = 0;
-            if (averageType == "Geometric") {
+            if (averageType == Average::Type::Geometric) {
                 runningAccumulator = 1;
             }
             Size pastFixings = 0;
@@ -125,13 +119,14 @@ void AsianOptionTrade::build(const boost::shared_ptr<EngineFactory>& engineFacto
                 if (assetClassUnderlying_ == AssetClass::EQ)
                     indexName = "EQ-" + indexName;
             }
-            for (QuantLib::Date fixingDate : fixingDates) {
-                if (fixingDate < today) {
+            for (QuantLib::Date fixingDate : fixingDates) { // TODO: Check if sorted somewhere, else sort? Allows early break here if today > fixingDate
+                if (fixingDate <= today) { 
+                    Settings::instance().enforcesTodaysHistoricFixings();
                     requiredFixings_.addFixingDate(fixingDate, indexName);
                     Real fixingValue = index_->fixing(fixingDate);
-                    if (averageType == "Geometric") {
+                    if (averageType == Average::Type::Geometric) {
                         runningAccumulator *= fixingValue;
-                    } else if (averageType == "Arithmetic") {
+                    } else if (averageType == Average::Type::Arithmetic) {
                         runningAccumulator += fixingValue;
                     }
                     ++pastFixings;
@@ -139,9 +134,9 @@ void AsianOptionTrade::build(const boost::shared_ptr<EngineFactory>& engineFacto
             }
 
             asian = boost::make_shared<QuantLib::DiscreteAveragingAsianOption>(
-                qlAverageType, runningAccumulator, pastFixings, fixingDates, payoff, exercise);
+                averageType, runningAccumulator, pastFixings, fixingDates, payoff, exercise);
         } else if (processType == "Continuous") {
-            asian = boost::make_shared<QuantLib::ContinuousAveragingAsianOption>(qlAverageType, payoff, exercise);
+            asian = boost::make_shared<QuantLib::ContinuousAveragingAsianOption>(averageType, payoff, exercise);
         }
     } else {
         ELOG("Asian options do not support deferred cash settlement payments, "

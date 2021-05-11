@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
+#include <ql/instruments/averagetype.hpp>
 #include <ql/time/date.hpp>
 
 namespace ore {
@@ -34,22 +35,24 @@ namespace data {
 */
 class OptionAsianData : public XMLSerializable {
 public:
+    enum class AsianType { Price, Strike };
 
     //! Default constructor
     OptionAsianData();
 
-    //! Constructor taking an average type, average mode, and vector of fixing string dates.
-    OptionAsianData(const std::string& asianType, const std::string& averageType,
+    //! Constructor taking an Asian type, average type, and vector of fixing string dates.
+    OptionAsianData(const AsianType& asianType, const QuantLib::Average::Type& averageType,
                     const std::vector<std::string>& strFixingDates);
-    //! Constructor taking an average type, average mode, and vector of fixing dates.
-    OptionAsianData(const std::string& asianType, const std::string& averageType,
+
+    //! Constructor taking an Asian type, average type, and vector of fixing dates.
+    OptionAsianData(const AsianType& asianType, const QuantLib::Average::Type& averageType,
                     const std::vector<QuantLib::Date>& fixingDates);
 
     //! \name Inspectors
     //@{
-    const std::string& asianType() const { return asianType_;  }
-    const std::string& averageType() const { return averageType_;  }
-    const std::vector<QuantLib::Date> fixingDates() const { return fixingDates_; }
+    const AsianType& asianType() const { return asianType_; }
+    const QuantLib::Average::Type& averageType() const { return averageType_; }
+    const std::vector<QuantLib::Date>& fixingDates() const { return fixingDates_; }
     //@}
 
     //! \name Serialisation
@@ -61,13 +64,19 @@ public:
 private:
     std::vector<std::string> strFixingDates_;
 
-    std::string asianType_;
-    std::string averageType_;
+    AsianType asianType_;
+    QuantLib::Average::Type averageType_;
     std::vector<QuantLib::Date> fixingDates_;
 
     //! Initialisation
     void init();
+
+    //! Populate the value of asianType_ from string
+    void populateAsianType(const std::string& s);
 };
+
+//! Print AsianType enum values.
+std::ostream& operator<<(std::ostream& out, const OptionAsianData::AsianType& asianType);
 
 } // namespace data
 } // namespace ore

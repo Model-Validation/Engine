@@ -33,8 +33,8 @@ namespace data {
 
 void CommodityAsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // Checks
-    QL_REQUIRE(quantity_ > 0, "Commodity Asian option requires a positive quatity");
-    QL_REQUIRE(strike_ >= 0, "Commodity Asian option requires a strike >= 0");
+    QL_REQUIRE(quantity_ > 0, "Commodity Asian Option requires a positive quatity");
+    QL_REQUIRE(strike_ >= 0, "Commodity Asian Option requires a strike >= 0");
 
     // Get the price curve for the commodity.
     const boost::shared_ptr<Market>& market = engineFactory->market();
@@ -78,7 +78,7 @@ void CommodityAsianOption::fromXML(XMLNode* node) {
     QL_REQUIRE(commodityNode, "A commodity Asian option needs a 'CommodityOptionData' node");
 
     option_.fromXML(XMLUtils::getChildNode(commodityNode, "OptionData"));
-    QL_REQUIRE(option_.payoffType() == "Asian", "Expected PayoffType Asian for EquityAsianOption.");
+    QL_REQUIRE(option_.payoffType() == "Asian", "Expected PayoffType Asian for CommodityAsianOption.");
 
     assetName_ = XMLUtils::getChildValue(commodityNode, "Name", true);
     currency_ = XMLUtils::getChildValue(commodityNode, "Currency", true);

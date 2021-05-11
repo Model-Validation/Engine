@@ -18,46 +18,78 @@
 
 #include <ored/portfolio/optionasiandata.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <algorithm>
+
+using QuantLib::Average;
 
 namespace ore {
 namespace data {
 
-OptionAsianData::OptionAsianData() : asianType_("") {}
+OptionAsianData::OptionAsianData() : asianType_(AsianType::Price), averageType_(Average::Type::Arithmetic) {}
 
-OptionAsianData::OptionAsianData(const string& asianType, const string& averageType,
+OptionAsianData::OptionAsianData(const AsianType& asianType, const Average::Type& averageType,
                                  const vector<string>& strFixingDates)
     : asianType_(asianType), averageType_(averageType), strFixingDates_(strFixingDates) {
     init();
 }
 
-OptionAsianData::OptionAsianData(const string& asianType, const string& averageType,
+OptionAsianData::OptionAsianData(const AsianType& asianType, const Average::Type& averageType,
                                  const vector<QuantLib::Date>& fixingDates)
-    : asianType_(asianType), averageType_(averageType), fixingDates_(fixingDates) {}
+    : asianType_(asianType), averageType_(averageType), fixingDates_(fixingDates) {
+    QL_REQUIRE(fixingDates_.size() > 0, "Expected 1 or more FixingDate for AsianData.");
+}
 
-void ore::data::OptionAsianData::fromXML(XMLNode* node) {
+void OptionAsianData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "AsianData");
-    asianType_ = XMLUtils::getChildValue(node, "AsianType", true);
-    averageType_ = XMLUtils::getChildValue(node, "AverageType", true);
+    std::string strAsianType = XMLUtils::getChildValue(node, "AsianType", true);
+    populateAsianType(strAsianType);
+    averageType_ = parseAverageType(XMLUtils::getChildValue(node, "AverageType", true));
     strFixingDates_ = XMLUtils::getChildrenValues(node, "FixingDates", "FixingDate", true);
-    QL_REQUIRE(strFixingDates_.size() > 0, "Expected 1 or more FixingDate for AsianData.");
     init();
 }
 
-XMLNode* OptionAsianData::toXML(XMLDocument& doc) { 
+XMLNode* OptionAsianData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("AsianData");
-    XMLUtils::addChild(doc, node, "AsianType", asianType_);
-    XMLUtils::addChild(doc, node, "AverageType", averageType_);
+    XMLUtils::addChild(doc, node, "AsianType", to_string(asianType_));
+    XMLUtils::addChild(doc, node, "AverageType", to_string(averageType_));
+    if (strFixingDates_.size() == 0) {
+        // Need to populate if constructed from vector of proper dates
+        strFixingDates_.resize(fixingDates_.size());
+        std::transform(fixingDates_.begin(), fixingDates_.end(), strFixingDates_.begin(),
+                       [](QuantLib::Date date) -> std::string { return to_string(date); });
+    }
     XMLUtils::addChildren(doc, node, "FixingDates", "FixingDate", strFixingDates_);
     return node;
 }
 
 void OptionAsianData::init() {
-    // TODO: FIX!
-    //fixingDates_ = vector<QuantLib::Date>(strFixingDates_.size());
+    QL_REQUIRE(strFixingDates_.size() > 0, "Expected 1 or more FixingDate for AsianData.");
+
     fixingDates_.resize(strFixingDates_.size());
     std::transform(strFixingDates_.begin(), strFixingDates_.end(), fixingDates_.begin(),
                    [](string strDate) -> QuantLib::Date { return parseDate(strDate); });
+}
+
+void OptionAsianData::populateAsianType(const std::string& s) {
+    if (s == "Price") {
+        asianType_ = AsianType::Price;
+    } else if (s == "Strike") {
+        asianType_ = AsianType::Strike;
+    } else {
+        QL_FAIL("expected AsianType Price or Strike.");
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, const OptionAsianData::AsianType& asianType) {
+    switch (asianType) {
+    case OptionAsianData::AsianType::Price:
+        return out << "Price";
+    case OptionAsianData::AsianType::Strike:
+        return out << "Strike";
+    default:
+        QL_FAIL("Could not convert the asianType enum value to string.");
+    }
 }
 
 } // namespace data

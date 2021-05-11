@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -976,6 +977,17 @@ std::ostream& operator<<(std::ostream& os, Extrapolation extrap) {
         QL_FAIL("Unknown Extrapolation");
     }
 }
+
+Average::Type parseAverageType(const std::string& s) {
+    if (s == "Arithmetic") {
+        return Average::Type::Arithmetic;
+    } else if (s == "Geometric") {
+        return Average::Type::Geometric;
+    } else {
+        QL_FAIL("Average::Type '" << s << "' not recognized. Should be Arithmetic or Geometric");
+    }
+}
+
 
 } // namespace data
 } // namespace ore
