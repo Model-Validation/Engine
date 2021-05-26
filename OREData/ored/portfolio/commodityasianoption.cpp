@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2020 Fredrik Gerdin Börjesson
+ Copyright (C) 2020 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -33,8 +33,8 @@ namespace data {
 
 void CommodityAsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // Checks
-    QL_REQUIRE(quantity_ > 0, "Commodity Asian Option requires a positive quatity");
-    QL_REQUIRE(strike_ >= 0, "Commodity Asian Option requires a strike >= 0");
+    QL_REQUIRE(quantity_ > 0, "Commodity Asian option requires a positive quatity");
+    QL_REQUIRE(strike_ >= 0, "Commodity Asian option requires a strike >= 0");
 
     // Get the price curve for the commodity.
     const boost::shared_ptr<Market>& market = engineFactory->market();
@@ -74,8 +74,8 @@ std::map<AssetClass, std::set<std::string>> CommodityAsianOption::underlyingIndi
 void CommodityAsianOption::fromXML(XMLNode* node) {
     Trade::fromXML(node);
 
-    XMLNode* commodityNode = XMLUtils::getChildNode(node, "CommodityOptionData");
-    QL_REQUIRE(commodityNode, "A commodity Asian option needs a 'CommodityOptionData' node");
+    XMLNode* commodityNode = XMLUtils::getChildNode(node, "CommodityAsianOptionData");
+    QL_REQUIRE(commodityNode, "A commodity Asian option needs a 'CommodityAsianOptionData' node");
 
     option_.fromXML(XMLUtils::getChildNode(commodityNode, "OptionData"));
     QL_REQUIRE(option_.payoffType() == "Asian", "Expected PayoffType Asian for CommodityAsianOption.");
@@ -98,7 +98,7 @@ void CommodityAsianOption::fromXML(XMLNode* node) {
 XMLNode* CommodityAsianOption::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
 
-    XMLNode* eqNode = doc.allocNode("CommodityOptionData");
+    XMLNode* eqNode = doc.allocNode("CommodityAsianOptionData");
     XMLUtils::appendNode(node, eqNode);
 
     XMLUtils::appendNode(eqNode, option_.toXML(doc));

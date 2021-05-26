@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2020 Fredrik Gerdin Börjesson
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -30,22 +30,20 @@ void FxAsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
 
     const boost::shared_ptr<Market>& market = engineFactory->market();
 
-    // If automatic exercise, check that we have a non-empty FX index string, parse it and attach curves from market.
-    if (option_.automaticExercise()) {
-        QL_REQUIRE(!fxIndex_.empty(), "FX Asian option trade "
-                                          << id()
-                                          << " has automatic exercise so the FXIndex node needs to be populated.");
+    // Check that we can populate index_. Reused logic from AutomaticExercise FX vanilla options
+    QL_REQUIRE(!fxIndex_.empty(), "FX Asian option trade "
+                                        << id()
+                                        << " has automatic exercise so the FXIndex node needs to be populated.");
 
-        // The strike is the number of units of sold currency (currency_) per unit of bought currency (assetName_).
-        // So, the convention here is that the sold currency is domestic and the bought currency is foreign.
-        // Note: intentionally use null calendar and 0 day fixing lag here because we will ask the FX index for its
-        //       value on the expiry date without adjustment.
-        index_ = buildFxIndex(fxIndex_, currency_, assetName_, market,
-                              engineFactory->configuration(MarketContext::pricing), "NullCalendar", 0);
+    // The strike is the number of units of sold currency (currency_) per unit of bought currency (assetName_).
+    // So, the convention here is that the sold currency is domestic and the bought currency is foreign.
+    // Note: intentionally use null calendar and 0 day fixing lag here because we will ask the FX index for its
+    //       value on the expiry date without adjustment.
+    index_ = buildFxIndex(fxIndex_, currency_, assetName_, market,
+                            engineFactory->configuration(MarketContext::pricing), "NullCalendar", 0);
 
-        // Populate the external index name so that fixings work.
-        indexName_ = fxIndex_;
-    }
+    // Populate the external index name so that fixings work.
+    indexName_ = fxIndex_;
 
     // Build the trade using the shared functionality in the base class.
     AsianOptionTrade::build(engineFactory);
@@ -54,8 +52,8 @@ void FxAsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory)
 void FxAsianOption::fromXML(XMLNode* node) {
     AsianOptionTrade::fromXML(node);
 
-    XMLNode* fxNode = XMLUtils::getChildNode(node, "FxOptionData");
-    QL_REQUIRE(fxNode, "No FxOptionData Node");
+    XMLNode* fxNode = XMLUtils::getChildNode(node, "FxAsianOptionData");
+    QL_REQUIRE(fxNode, "No FxAsianOptionData Node");
 
     option_.fromXML(XMLUtils::getChildNode(fxNode, "OptionData"));
     QL_REQUIRE(option_.payoffType() == "Asian", "Expected PayoffType Asian for FxAsianOption.");
@@ -67,14 +65,14 @@ void FxAsianOption::fromXML(XMLNode* node) {
     strike_ = soldAmount / boughtAmount;
     quantity_ = boughtAmount;
     
-    fxIndex_ = XMLUtils::getChildValue(fxNode, "FXIndex", false);
+    fxIndex_ = XMLUtils::getChildValue(fxNode, "FXIndex", true);
 }
 
 XMLNode* FxAsianOption::toXML(XMLDocument& doc) {
     // TODO: Should call parent class to xml?
     XMLNode* node = Trade::toXML(doc);
 
-    XMLNode* fxNode = doc.allocNode("FxOptionData");
+    XMLNode* fxNode = doc.allocNode("FxAsianOptionData");
     XMLUtils::appendNode(node, fxNode);
 
     XMLUtils::appendNode(fxNode, option_.toXML(doc));

@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2020 Fredrik Gerdin Börjesson
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -38,7 +38,7 @@ public:
     FxAsianOption() : AsianOptionTrade(AssetClass::FX) { tradeType_ = "FxAsianOption"; }
     //! Constructor
     FxAsianOption(Envelope& env, OptionData option, string boughtCurrency, double boughtAmount, string soldCurrency,
-                  double soldAmount, const std::string& fxIndex = "")
+                  double soldAmount, const std::string& fxIndex)
         : AsianOptionTrade(env, AssetClass::FX, option, boughtCurrency, soldCurrency, soldAmount / boughtAmount,
                            boughtAmount),
           fxIndex_(fxIndex) {
@@ -64,7 +64,7 @@ public:
     //@}
 
 private:
-    //! If the option has automatic exercise, need an FX index for settlement.
+    //! Needed for past fixings
     std::string fxIndex_;
 };
 

@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2020 Fredrik Gerdin Börjesson
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -26,7 +26,8 @@ using QuantLib::Average;
 namespace ore {
 namespace data {
 
-OptionAsianData::OptionAsianData() : asianType_(AsianType::Price), averageType_(Average::Type::Arithmetic) {}
+OptionAsianData::OptionAsianData() 
+    : asianType_(AsianType::Price), averageType_(Average::Type::Arithmetic), fixingDates_(std::vector<QuantLib::Date>()), strFixingDates_(std::vector<string>()) {}
 
 OptionAsianData::OptionAsianData(const AsianType& asianType, const Average::Type& averageType,
                                  const vector<string>& strFixingDates)

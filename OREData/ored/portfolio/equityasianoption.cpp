@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2020 Fredrik Gerdin Börjesson
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -50,8 +50,8 @@ std::map<AssetClass, std::set<std::string>> EquityAsianOption::underlyingIndices
 
 void EquityAsianOption::fromXML(XMLNode* node) {
     AsianOptionTrade::fromXML(node);
-    XMLNode* eqNode = XMLUtils::getChildNode(node, "EquityOptionData");
-    QL_REQUIRE(eqNode, "No EquityOptionData node");
+    XMLNode* eqNode = XMLUtils::getChildNode(node, "EquityAsianOptionData");
+    QL_REQUIRE(eqNode, "No EquityAsianOptionData node");
     option_.fromXML(XMLUtils::getChildNode(eqNode, "OptionData"));
     QL_REQUIRE(option_.payoffType() == "Asian", "Expected PayoffType Asian for EquityAsianOption.");
     XMLNode* tmp = XMLUtils::getChildNode(eqNode, "Underlying");
@@ -66,7 +66,7 @@ void EquityAsianOption::fromXML(XMLNode* node) {
 
 XMLNode* EquityAsianOption::toXML(XMLDocument& doc) {
     XMLNode* node = AsianOptionTrade::toXML(doc);
-    XMLNode* eqNode = doc.allocNode("EquityOptionData");
+    XMLNode* eqNode = doc.allocNode("EquityAsianOptionData");
     XMLUtils::appendNode(node, eqNode);
 
     XMLUtils::appendNode(eqNode, option_.toXML(doc));

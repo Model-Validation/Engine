@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2020 Fredrik Gerdin Börjesson
+ Copyright (C) 2020 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 */
 
@@ -111,7 +111,11 @@ void AsianOptionTrade::build(const boost::shared_ptr<EngineFactory>& engineFacto
             }
             Size pastFixings = 0;
             std::vector<QuantLib::Date> fixingDates = option_.asianData()->fixingDates();
+            // Sort for the engine's sake
+            std::sort(fixingDates.begin(), fixingDates.end());
+            std::vector<QuantLib::Date> futureFixingDates;
 
+            QL_REQUIRE(index_, "Asian option trade " << id() << " needs a valid index for historical fixings.");
             // If index name has not been populated, use logic here to populate it from the index object.
             string indexName = indexName_;
             if (indexName.empty()) {
@@ -119,9 +123,9 @@ void AsianOptionTrade::build(const boost::shared_ptr<EngineFactory>& engineFacto
                 if (assetClassUnderlying_ == AssetClass::EQ)
                     indexName = "EQ-" + indexName;
             }
-            for (QuantLib::Date fixingDate : fixingDates) { // TODO: Check if sorted somewhere, else sort? Allows early break here if today > fixingDate
-                if (fixingDate <= today) { 
-                    Settings::instance().enforcesTodaysHistoricFixings();
+            for (QuantLib::Date fixingDate : fixingDates) {
+                if (fixingDate < today ||
+                    (fixingDate == today && Settings::instance().enforcesTodaysHistoricFixings())) {
                     requiredFixings_.addFixingDate(fixingDate, indexName);
                     Real fixingValue = index_->fixing(fixingDate);
                     if (averageType == Average::Type::Geometric) {
@@ -130,6 +134,8 @@ void AsianOptionTrade::build(const boost::shared_ptr<EngineFactory>& engineFacto
                         runningAccumulator += fixingValue;
                     }
                     ++pastFixings;
+                } else { // Only pass future dates to engine
+                    futureFixingDates.push_back(fixingDate);
                 }
             }
 

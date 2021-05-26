@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2020 Fredrik Gerdin Börjesson
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -17,14 +17,13 @@
 */
 
 /*! \file portfolio/builders/equityasianoption.hpp
-    \brief Engine builder for equity asian options
+    \brief Engine builder for equity Asian options
     \ingroup builders
 */
 
 #pragma once
 
 #include <ored/portfolio/builders/asianoption.hpp>
-#include <ored/utilities/parsers.hpp>
 
 namespace ore {
 namespace data {
