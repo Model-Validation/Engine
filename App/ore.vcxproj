@@ -342,6 +342,7 @@
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
+      <LanguageStandard>Default</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
