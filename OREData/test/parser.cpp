@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -762,6 +763,23 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
     hol = joint8.holidayList(Date(1, January, 2018), Date(31, December, 2018));
     BOOST_CHECK(hol.size() == expectedHolidays.size());
     checkCalendars(expectedHolidays, hol);
+}
+
+BOOST_AUTO_TEST_CASE(testIsdaCdsEngineParsers) {
+    using QuantLib::IsdaCdsEngine;
+    using namespace ore::data;
+
+    BOOST_TEST_MESSAGE("Testing NumericalFix parsing...");
+    BOOST_CHECK_EQUAL(IsdaCdsEngine::NumericalFix::None, parseNumericalFix("None"));
+    BOOST_CHECK_EQUAL(IsdaCdsEngine::NumericalFix::Taylor, parseNumericalFix("Taylor"));
+
+    BOOST_TEST_MESSAGE("Testing AccrualBias parsing...");
+    BOOST_CHECK_EQUAL(IsdaCdsEngine::AccrualBias::HalfDayBias, parseAccrualBias("HalfDayBias"));
+    BOOST_CHECK_EQUAL(IsdaCdsEngine::AccrualBias::NoBias, parseAccrualBias("NoBias"));
+
+    BOOST_TEST_MESSAGE("Testing ForwardsInCouponPeriod parsing...");
+    BOOST_CHECK_EQUAL(IsdaCdsEngine::ForwardsInCouponPeriod::Flat, parseForwardsInCouponPeriod("Flat"));
+    BOOST_CHECK_EQUAL(IsdaCdsEngine::ForwardsInCouponPeriod::Piecewise, parseForwardsInCouponPeriod("Piecewise"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
