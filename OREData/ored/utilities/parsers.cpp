@@ -1502,5 +1502,35 @@ Average::Type parseAverageType(const std::string& s) {
     }
 }
 
+QuantLib::IsdaCdsEngine::NumericalFix parseNumericalFix(const std::string& s) {
+    if (s == "None") {
+        return QuantLib::IsdaCdsEngine::NumericalFix::None;
+    } else if (s == "Taylor") {
+        return QuantLib::IsdaCdsEngine::NumericalFix::Taylor;
+    } else {
+        QL_FAIL("IsdaCdsEngine::NumericalFix '" << s << "' not recognized. Should be None or Taylor.");
+    }
+}
+
+QuantLib::IsdaCdsEngine::AccrualBias parseAccrualBias(const std::string& s) {
+    if (s == "HalfDayBias") {
+        return QuantLib::IsdaCdsEngine::AccrualBias::HalfDayBias;
+    } else if (s == "NoBias") {
+        return QuantLib::IsdaCdsEngine::AccrualBias::NoBias;
+    } else {
+        QL_FAIL("IsdaCdsEngine::AccrualBias '" << s << "' not recognized. Should be HalfDayBias or NoBias.");
+    }
+}
+
+QuantLib::IsdaCdsEngine::ForwardsInCouponPeriod parseForwardsInCouponPeriod(const std::string& s) {
+    if (s == "Flat") {
+        return QuantLib::IsdaCdsEngine::ForwardsInCouponPeriod::Flat;
+    } else if (s == "Piecewise") {
+        return QuantLib::IsdaCdsEngine::ForwardsInCouponPeriod::Piecewise;
+    } else {
+        QL_FAIL("IsdaCdsEngine::ForwardsInCouponPeriod '" << s << "' not recognized. Should be Flat or Piecewise.");
+    }
+}
+
 } // namespace data
 } // namespace ore

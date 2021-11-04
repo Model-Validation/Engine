@@ -40,6 +40,7 @@
 #include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/position.hpp>
+#include <ql/pricingengines/credit/isdacdsengine.hpp>
 #include <ql/time/businessdayconvention.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/date.hpp>
@@ -435,6 +436,21 @@ QuantExt::CdsOption::StrikeType parseCdsOptionStrikeType(const std::string& s);
     \ingroup utilities
 */
 QuantLib::Average::Type parseAverageType(const std::string& s);
+
+/*! Convert text to QuantLib::IsdaCdsEngine::NumericalFix
+    \ingroup utilities
+*/
+QuantLib::IsdaCdsEngine::NumericalFix parseNumericalFix(const std::string& s);
+
+/*! Convert text to QuantLib::IsdaCdsEngine::AccrualBias
+    \ingroup utilities
+*/
+QuantLib::IsdaCdsEngine::AccrualBias parseAccrualBias(const std::string& s);
+
+/*! Convert text to QuantLib::IsdaCdsEngine::ForwardsInCouponPeriod
+    \ingroup utilities
+*/
+QuantLib::IsdaCdsEngine::ForwardsInCouponPeriod parseForwardsInCouponPeriod(const std::string& s);
 
 } // namespace data
 } // namespace ore
