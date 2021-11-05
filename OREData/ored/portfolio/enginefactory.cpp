@@ -208,6 +208,7 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<data::LinearTsrDurationAdjustedCmsCouponPricerBuilder>());
 
     registerBuilder(boost::make_shared<MidPointCdsEngineBuilder>());
+    registerBuilder(boost::make_shared<IsdaCdsEngineBuilder>());
     registerBuilder(boost::make_shared<BlackCdsOptionEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityForwardEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityEuropeanOptionEngineBuilder>());
