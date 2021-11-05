@@ -156,6 +156,19 @@
     <Engine>MidPointCdsEngine</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="CreditDefaultSwap_DEACTIVATED">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>IsdaCdsEngine</Engine>
+    <EngineParameters>
+      <!-- [Optional] Taylor (default) or None -->
+      <Parameter name="NumericalFix">Taylor</Parameter>
+      <!-- [Optional] HalfDayBias (default) or NoBias -->
+      <Parameter name="AccrualBias">HalfDayBias</Parameter>
+      <!-- [Optional] Piecewise (default) or Flat -->
+      <Parameter name="ForwardsInCouponPeriod">Piecewise</Parameter>
+    </EngineParameters>
+  </Product>
   <Product type="CreditDefaultSwapOption">
     <Model>Black</Model>
     <ModelParameters/>
