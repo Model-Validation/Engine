@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -26,8 +27,10 @@
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
 
 #include <qle/pricingengines/midpointcdsengine.hpp>
+#include <ql/pricingengines/credit/isdacdsengine.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -156,6 +159,42 @@ protected:
         }
 
         return boost::make_shared<QuantExt::MidPointCdsEngine>(dpts, recoveryRate, yts);
+    }
+};
+
+//! ISDA engine builder class for credit default swaps
+/*! This class creates a QuantLib::IsdaCdsEngine
+    \ingroup builders
+*/
+class IsdaCdsEngineBuilder : public CreditDefaultSwapEngineBuilder {
+public:
+    IsdaCdsEngineBuilder() : CreditDefaultSwapEngineBuilder("DiscountedCashflows", "IsdaCdsEngine") {}
+
+protected:
+    boost::shared_ptr<PricingEngine>
+    engineImpl(QuantLib::Currency ccy, std::string creditCurveId,
+               QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>()) override {
+
+        auto cfg = configuration(MarketContext::pricing);
+        auto yts = market_->discountCurve(ccy.code(), cfg);
+        auto dpts = market_->defaultCurve(creditCurveId, cfg);
+
+        if (recoveryRate == QuantLib::Null<QuantLib::Real>()) {
+            // If recovery rate is null, get it from the market for the given reference entity
+            recoveryRate = market_->recoveryRate(creditCurveId, cfg)->value();
+        }
+
+        using QuantLib::IsdaCdsEngine;
+
+        IsdaCdsEngine::NumericalFix numericalFix =
+            parseNumericalFix(engineParameter("NumericalFix", "", false, "Taylor"));
+        IsdaCdsEngine::AccrualBias accrualBias =
+            parseAccrualBias(engineParameter("AccrualBias", "", false, "HalfDayBias"));
+        IsdaCdsEngine::ForwardsInCouponPeriod forwardsInCouponPeriod =
+            parseForwardsInCouponPeriod(engineParameter("ForwardsInCouponPeriod", "", false, "Piecewise"));
+
+        return boost::make_shared<IsdaCdsEngine>(dpts, recoveryRate, yts, boost::none, numericalFix, accrualBias,
+                                                 forwardsInCouponPeriod);
     }
 };
 
