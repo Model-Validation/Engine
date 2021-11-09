@@ -40,7 +40,6 @@
 #include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/position.hpp>
-#include <ql/pricingengines/credit/isdacdsengine.hpp>
 #include <ql/time/businessdayconvention.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/date.hpp>
@@ -54,6 +53,7 @@
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/currencies/configurablecurrency.hpp>
+#include <qle/pricingengines/isdacdsengine.hpp>
 
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/tokenizer.hpp>
@@ -435,22 +435,22 @@ QuantExt::CdsOption::StrikeType parseCdsOptionStrikeType(const std::string& s);
 /*! Convert text to QuantLib::Average::Type
     \ingroup utilities
 */
-QuantLib::Average::Type parseAverageType(const std::string& s);
+QuantExt::Average::Type parseAverageType(const std::string& s);
 
-/*! Convert text to QuantLib::IsdaCdsEngine::NumericalFix
+/*! Convert text to QuantExt::IsdaCdsEngine::NumericalFix
     \ingroup utilities
 */
-QuantLib::IsdaCdsEngine::NumericalFix parseNumericalFix(const std::string& s);
+QuantExt::IsdaCdsEngine::NumericalFix parseNumericalFix(const std::string& s);
 
-/*! Convert text to QuantLib::IsdaCdsEngine::AccrualBias
+/*! Convert text to QuantExt::IsdaCdsEngine::AccrualBias
     \ingroup utilities
 */
-QuantLib::IsdaCdsEngine::AccrualBias parseAccrualBias(const std::string& s);
+QuantExt::IsdaCdsEngine::AccrualBias parseAccrualBias(const std::string& s);
 
-/*! Convert text to QuantLib::IsdaCdsEngine::ForwardsInCouponPeriod
+/*! Convert text to QuantExt::IsdaCdsEngine::ForwardsInCouponPeriod
     \ingroup utilities
 */
-QuantLib::IsdaCdsEngine::ForwardsInCouponPeriod parseForwardsInCouponPeriod(const std::string& s);
+QuantExt::IsdaCdsEngine::ForwardsInCouponPeriod parseForwardsInCouponPeriod(const std::string& s);
 
 } // namespace data
 } // namespace ore

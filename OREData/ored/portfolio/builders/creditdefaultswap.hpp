@@ -30,7 +30,7 @@
 #include <ored/utilities/parsers.hpp>
 
 #include <qle/pricingengines/midpointcdsengine.hpp>
-#include <ql/pricingengines/credit/isdacdsengine.hpp>
+#include <qle/pricingengines/isdacdsengine.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -163,7 +163,7 @@ protected:
 };
 
 //! ISDA engine builder class for credit default swaps
-/*! This class creates a QuantLib::IsdaCdsEngine
+/*! This class creates a QuantExt::IsdaCdsEngine
     \ingroup builders
 */
 class IsdaCdsEngineBuilder : public CreditDefaultSwapEngineBuilder {
@@ -184,7 +184,7 @@ protected:
             recoveryRate = market_->recoveryRate(creditCurveId, cfg)->value();
         }
 
-        using QuantLib::IsdaCdsEngine;
+        using QuantExt::IsdaCdsEngine;
 
         IsdaCdsEngine::NumericalFix numericalFix =
             parseNumericalFix(engineParameter("NumericalFix", "", false, "Taylor"));

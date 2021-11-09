@@ -17,7 +17,7 @@
 */
 
 /*! \file portfolio/creditdefaultswap.hpp
- \brief Ibor cap, floor or collar trade data model and serialization
+ \brief Credit default swap trade data model and serialization
  \ingroup tradedata
  */
 

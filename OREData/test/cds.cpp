@@ -41,6 +41,7 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/daycounters/simpledaycounter.hpp>
 
 using namespace QuantLib;
@@ -81,6 +82,34 @@ private:
     }
 };
 
+class IsdaTestMarket : public MarketImpl {
+public:
+    IsdaTestMarket(Real hazardRate, Real recoveryRate, Real liborRate) {
+        asof_ = Date(3, Feb, 2016);
+        // build discount
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] =
+            flatRateYts(liborRate);
+        defaultCurves_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] = flatRateDcs(hazardRate);
+        recoveryRates_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(recoveryRate));
+        // build ibor index
+        Handle<IborIndex> hEUR(ore::data::parseIborIndex(
+            "EUR-EURIBOR-6M", yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")]));
+        iborIndices_[make_pair(Market::defaultConfiguration, "EUR-EURIBOR-6M")] = hEUR;
+    }
+
+private:
+    Handle<YieldTermStructure> flatRateYts(Real forward) {
+        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, Actual365Fixed()));
+        yts->enableExtrapolation();
+        return Handle<YieldTermStructure>(yts);
+    }
+    Handle<DefaultProbabilityTermStructure> flatRateDcs(Real forward) {
+        boost::shared_ptr<DefaultProbabilityTermStructure> dcs(new FlatHazardRate(asof_, forward, Actual365Fixed()));
+        return Handle<DefaultProbabilityTermStructure>(dcs);
+    }
+};
+
 struct CommonVars {
     // global data
     string ccy;
@@ -103,14 +132,14 @@ struct CommonVars {
     vector<Real> spread;
 
     // utilities
-    boost::shared_ptr<ore::data::CreditDefaultSwap> makeCDS(string end, Real rate) {
+    boost::shared_ptr<ore::data::CreditDefaultSwap> makeCDS(string end, Real rate, bool settlesAccrual = false) {
         ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
 
         // build CDS
         boost::shared_ptr<FixedLegData> fixedLegRateData = boost::make_shared<FixedLegData>(vector<double>(1, rate));
         LegData fixedLegData(fixedLegRateData, isPayer, ccy, fixedSchedule, fixDC, notionals);
 
-        CreditDefaultSwapData cd(issuerId, creditCurveId, fixedLegData, false,
+        CreditDefaultSwapData cd(issuerId, creditCurveId, fixedLegData, settlesAccrual,
                                  QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault);
         Envelope env("CP1");
 
@@ -347,6 +376,44 @@ BOOST_AUTO_TEST_CASE(testSimultaneousUsageCdsQuoteTypes) {
             BOOST_CHECK_NO_THROW(dpts->survivalProbability(1.0));
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(testCreditDefaultSwapBuildingIsda) {
+
+    BOOST_TEST_MESSAGE("Test the building of a CDS trade with the ISDA engine");
+
+    Settings::instance().evaluationDate() = Date(3, Feb, 2016);
+
+    // Create portfolio
+
+    Portfolio portfolio;
+    CommonVars vars;
+    string endDate = "2017-02-05";
+    Rate fixedRate = 0.03;
+    bool settlesAccrual = true;
+    portfolio.add(vars.makeCDS(endDate, fixedRate, settlesAccrual));
+
+    // build market with arbitrary market data
+
+    boost::shared_ptr<Market> market = boost::make_shared<IsdaTestMarket>(0.02, 0.2, 0.05);
+
+    // Engine data
+
+    boost::shared_ptr<EngineData> ed = boost::make_shared<EngineData>();
+    string productName = "CreditDefaultSwap";
+    ed->model(productName) = "DiscountedCashflows";
+    ed->engine(productName) = "IsdaCdsEngine";
+    ed->engineParameters(productName) = {
+        {"NumericalFix", "Taylor"}, {"AccrualBias", "HalfDayBias"}, {"ForwardsInCouponPeriod", "Piecewise"}};
+
+    // Test that the trade builds and prices without error
+
+    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(ed, market);
+    BOOST_REQUIRE_NO_THROW(portfolio.build(engineFactory));
+
+    Real npv;
+    BOOST_REQUIRE_NO_THROW(npv = portfolio.trades().at(0)->instrument()->NPV());
+    BOOST_TEST_MESSAGE("CDS NPV is: " << npv);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

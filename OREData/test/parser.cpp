@@ -766,7 +766,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
 }
 
 BOOST_AUTO_TEST_CASE(testIsdaCdsEngineParsers) {
-    using QuantLib::IsdaCdsEngine;
+    using QuantExt::IsdaCdsEngine;
     using namespace ore::data;
 
     BOOST_TEST_MESSAGE("Testing NumericalFix parsing...");
