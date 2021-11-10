@@ -7,6 +7,7 @@ blackvariancecurve.cpp
 blackvariancesurfacesparse.cpp
 blackvariancesurfacestddevs.cpp
 blackvolsurfacedelta.cpp
+blackvolsurfacemoneyness.cpp
 bonds.cpp
 capfloortermvolcurve.cpp
 cashflow.cpp

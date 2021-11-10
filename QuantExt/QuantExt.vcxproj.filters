@@ -1159,6 +1159,9 @@
     <ClInclude Include="qle\pricingengines\isdacdsengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\blackvolsurfacemoneyness.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1975,6 +1978,9 @@
     </ClCompile>
     <ClCompile Include="qle\pricingengines\isdacdsengine.cpp">
       <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\blackvolsurfacemoneyness.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

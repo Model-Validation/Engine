@@ -173,6 +173,9 @@
     <ClCompile Include="dategeneration.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="blackvolsurfacemoneyness.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
