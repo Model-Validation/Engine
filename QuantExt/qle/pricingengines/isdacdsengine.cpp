@@ -37,6 +37,8 @@
 */
 
 #include <qle/pricingengines/isdacdsengine.hpp>
+#include <qle/termstructures/interpolatedhazardratecurve.hpp>
+#include <qle/termstructures/interpolatedsurvivalprobabilitycurve.hpp>
 
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/instruments/claim.hpp>
@@ -123,11 +125,11 @@ void IsdaCdsEngine::calculate() const {
         QL_FAIL("Yield curve must be flat forward interpolated");
     }
 
-    if (ext::shared_ptr<InterpolatedSurvivalProbabilityCurve<LogLinear> > castC1 =
-            ext::dynamic_pointer_cast<InterpolatedSurvivalProbabilityCurve<LogLinear> >(*probability_)) {
+    if (ext::shared_ptr<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear> > castC1 =
+            ext::dynamic_pointer_cast<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear> >(*probability_)) {
         cDates = castC1->dates();
-    } else if (ext::shared_ptr<InterpolatedHazardRateCurve<BackwardFlat> > castC2 =
-                   ext::dynamic_pointer_cast<InterpolatedHazardRateCurve<BackwardFlat> >(*probability_)) {
+    } else if (ext::shared_ptr<QuantExt::InterpolatedHazardRateCurve<BackwardFlat> > castC2 =
+                   ext::dynamic_pointer_cast<QuantExt::InterpolatedHazardRateCurve<BackwardFlat> >(*probability_)) {
         cDates = castC2->dates();
     } else if (ext::shared_ptr<FlatHazardRate> castC3 = ext::dynamic_pointer_cast<FlatHazardRate>(*probability_)) {
         // no dates to extract
