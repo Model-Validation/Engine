@@ -94,5 +94,16 @@
      }
  };
 
+ //! Discrete Analytic Engine Builder for European Asian Fx Arithmetic Average Price Options
+ /*! Pricing engines are cached by asset/currency
+     \ingroup builders
+  */
+ class FxEuropeanAsianOptionADAAPEngineBuilder : public EuropeanAsianOptionADAAPEngineBuilder {
+ public:
+     FxEuropeanAsianOptionADAAPEngineBuilder()
+         : EuropeanAsianOptionADAAPEngineBuilder("GarmanKohlhagen", {"FxAsianOptionArithmeticPrice"},
+                                                 AssetClass::FX) {}
+ };
+
  } // namespace data
  } // namespace ore
