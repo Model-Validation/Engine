@@ -41,22 +41,22 @@ public:
     //! Detailed constructor with explicit future expiry date.
     CommodityForward(const Envelope& envelope, const std::string& position, const std::string& commodityName,
         const std::string& currency, QuantLib::Real quantity, const std::string& maturityDate,
-        QuantLib::Real strike);
+                     QuantLib::Real strike, const ScheduleData& observationDates = ScheduleData());
 
     //! Detailed constructor with explicit future expiry date.
     CommodityForward(const Envelope& envelope, const std::string& position, const std::string& commodityName,
                      const std::string& currency, QuantLib::Real quantity, const std::string& maturityDate,
                      QuantLib::Real strike, const QuantLib::Date& futureExpiryDate,
-                     const boost::optional<bool>& physicallySettled = true,
-                     const Date& paymentDate = Date());
-
+                     const boost::optional<bool>& physicallySettled = true, const Date& paymentDate = Date(),
+                     const ScheduleData& observationDates = ScheduleData());
     //! Detailed constructor with explicit future expiry offset and calendar.
     CommodityForward(const Envelope& envelope, const std::string& position, const std::string& commodityName,
         const std::string& currency, QuantLib::Real quantity, const std::string& maturityDate,
         QuantLib::Real strike, const QuantLib::Period& futureExpiryOffset,
         const QuantLib::Calendar& offsetCalendar,
         const boost::optional<bool>& physicallySettled = true,
-        const Date& paymentDate = Date());
+                     const Date& paymentDate = Date(),
+                     const ScheduleData& observationDates = ScheduleData());
     //@}
 
     //! \name Inspectors
@@ -73,6 +73,7 @@ public:
     const QuantLib::Calendar& offsetCalendar() const { return offsetCalendar_; }
     const boost::optional<bool>& physicallySettled() const { return physicallySettled_; }
     const QuantLib::Date& paymentDate() const { return paymentDate_; }
+    const ScheduleData& observationDates() const { return observationDates_; }
     //@}
 
     //! \name Trade interface
@@ -98,6 +99,7 @@ private:
     QuantLib::Real quantity_;
     std::string maturityDate_;
     QuantLib::Real strike_;
+    ScheduleData observationDates_;
 
     /*! Indicates if the forward underlying is a commodity future settlement price, \c true, or a spot price \c false.
         If not explicitly set, it is assumed to be \c false.

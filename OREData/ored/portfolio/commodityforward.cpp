@@ -37,27 +37,29 @@ namespace data {
 CommodityForward::CommodityForward() : Trade("CommodityForward"), quantity_(0.0), strike_(0.0) {}
 
 CommodityForward::CommodityForward(const Envelope& envelope, const string& position, const string& commodityName,
-                                   const string& currency, Real quantity, const string& maturityDate, Real strike)
+                                   const string& currency, Real quantity, const string& maturityDate, Real strike,
+                                   const ScheduleData& observationDates)
     : Trade("CommodityForward", envelope), position_(position), commodityName_(commodityName), currency_(currency),
-      quantity_(quantity), maturityDate_(maturityDate), strike_(strike) {}
+      quantity_(quantity), maturityDate_(maturityDate), strike_(strike), observationDates_(observationDates) {}
 
 CommodityForward::CommodityForward(const Envelope& envelope, const string& position, const string& commodityName,
                                    const string& currency, Real quantity, const string& maturityDate, Real strike,
                                    const Date& futureExpiryDate, const boost::optional<bool>& physicallySettled,
-                                   const Date& paymentDate)
+                                   const Date& paymentDate, const ScheduleData& observationDates)
     : Trade("CommodityForward", envelope), position_(position), commodityName_(commodityName), currency_(currency),
       quantity_(quantity), maturityDate_(maturityDate), strike_(strike), isFuturePrice_(true),
-      futureExpiryDate_(futureExpiryDate), physicallySettled_(physicallySettled), paymentDate_(paymentDate) {}
+      futureExpiryDate_(futureExpiryDate), physicallySettled_(physicallySettled), paymentDate_(paymentDate),
+      observationDates_(observationDates) {}
 
 CommodityForward::CommodityForward(const Envelope& envelope, const string& position, const string& commodityName,
                                    const string& currency, Real quantity, const string& maturityDate, Real strike,
                                    const Period& futureExpiryOffset, const Calendar& offsetCalendar,
-                                   const boost::optional<bool>& physicallySettled,
-                                   const Date& paymentDate)
+                                   const boost::optional<bool>& physicallySettled, const Date& paymentDate,
+                                   const ScheduleData& observationDates)
     : Trade("CommodityForward", envelope), position_(position), commodityName_(commodityName), currency_(currency),
       quantity_(quantity), maturityDate_(maturityDate), strike_(strike), isFuturePrice_(true),
       futureExpiryOffset_(futureExpiryOffset), offsetCalendar_(offsetCalendar), physicallySettled_(physicallySettled),
-      paymentDate_(paymentDate) {}
+      paymentDate_(paymentDate), observationDates_(observationDates) {}
 
 void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
@@ -105,11 +107,16 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
         }
     }
 
+    Schedule observationSchedule;
+    if (observationDates_.hasData())
+        observationSchedule = makeSchedule(observationDates_);
+    std::vector<QuantLib::Date> observationDates = observationSchedule.dates();
+
     // Create the commodity forward instrument
     Currency currency = parseCurrency(currency_);
     Position::Type position = parsePositionType(position_);
     boost::shared_ptr<Instrument> commodityForward = boost::make_shared<QuantExt::CommodityForward>(
-        index, currency, position, quantity_, maturity_, strike_, physicallySettled, paymentDate);
+        index, currency, position, quantity_, maturity_, strike_, physicallySettled, paymentDate, observationDates);
 
     // Pricing engine
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
@@ -186,6 +193,10 @@ void CommodityForward::fromXML(XMLNode* node) {
     paymentDate_ = Date();
     if (XMLNode* n = XMLUtils::getChildNode(commodityDataNode, "PaymentDate"))
         paymentDate_ = parseDate(XMLUtils::getNodeValue(n));
+
+    observationDates_ = ScheduleData();
+    if (XMLNode* n = XMLUtils::getChildNode(commodityDataNode, "ObservationDates"))
+        observationDates_.fromXML(n);
 }
 
 XMLNode* CommodityForward::toXML(XMLDocument& doc) {
@@ -218,6 +229,9 @@ XMLNode* CommodityForward::toXML(XMLDocument& doc) {
 
     if (paymentDate_ != Date())
         XMLUtils::addChild(doc, commodityDataNode, "PaymentDate", to_string(paymentDate_));
+
+    if (observationDates_.hasData())
+        XMLUtils::addChild(doc, commodityDataNode, "ObservationDates", observationDates_.toXML(doc));
 
     return node;
 }

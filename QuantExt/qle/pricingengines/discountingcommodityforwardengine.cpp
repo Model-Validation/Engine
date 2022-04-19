@@ -55,11 +55,24 @@ void DiscountingCommodityForwardEngine::calculate() const {
 
         Real buySell = arguments_.position == Position::Long ? 1.0 : -1.0;
         Real forwardPrice = index->fixing(maturity);
-
+        
+        if (!arguments_.observationDates.empty()) {
+            std::vector<Real> fixings;
+            forwardPrice = 0; // Reset and accumulate all observed fixings instead
+            for (Date obsDate : arguments_.observationDates) {
+                fixings.push_back(index->fixing(obsDate));
+                forwardPrice += index->fixing(obsDate);
+            }
+            
+            forwardPrice /= arguments_.observationDates.size();
+            results_.additionalResults["fixings"] = fixings;
+        }
         results_.value = arguments_.quantity * buySell * (forwardPrice - arguments_.strike) *
-            discountCurve_->discount(paymentDate) / discountCurve_->discount(npvDate);
-
-        results_.additionalResults["currentNotional"] = forwardPrice * arguments_.quantity;
+                         discountCurve_->discount(paymentDate) / discountCurve_->discount(npvDate);
+        results_.additionalResults["forwardPrice"] = forwardPrice;
+        results_.additionalResults["discountPaymentDate"] = discountCurve_->discount(paymentDate);
+        results_.additionalResults["discountNpvDate"] = discountCurve_->discount(npvDate);
+        results_.additionalResults["currentNotional"] = arguments_.strike * arguments_.quantity;
     }
 }
 
