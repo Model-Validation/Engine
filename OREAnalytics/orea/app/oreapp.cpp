@@ -684,6 +684,23 @@ void OREApp::writeInitialReports() {
         out_ << "SKIP" << endl;
     }
 
+    /**********************
+    * Output volatility surfaces
+    */
+    out_ << setw(tab_) << left << "Output volatilities... " << flush;
+    if (params_->hasGroup("volatilities") && params_->get("volatilities", "active") == "Y") {
+        string fileName = outputPath_ + "/" + params_->get("volatilities", "outputFileName");
+        CSVFileReport volsReport(fileName);
+        DateGrid grid(params_->get("volatilities", "expiries"));
+        vector<Real> strikes = parseListOfValues<Real>(params_->get("volatilities", "strikes"), &parseReal);
+        getReportWriter()->writeVolatilityReport(volsReport, grid, *marketParameters_, market_,
+                                                 params_->get("volatilities", "configuration"), strikes);
+        out_ << "OK" << endl;
+    } else {
+        LOG("skip volatility results");
+        out_ << "SKIP" << endl;
+    }
+
     LOG("Initial reports written");
     MEM_LOG;
 }
