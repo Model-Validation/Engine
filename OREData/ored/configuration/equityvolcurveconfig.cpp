@@ -156,6 +156,8 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
             volatilityConfig_ = boost::make_shared<VolatilityMoneynessSurfaceConfig>();
         } else if ((n = XMLUtils::getChildNode(node, "ApoFutureSurface"))) {
             QL_FAIL("ApoFutureSurface not supported for equity volatilities.");
+        } else if ((n = XMLUtils::getChildNode(node, "SviSurface"))) {
+            volatilityConfig_ = boost::make_shared<VolatilitySviSurfaceConfig>();
         } else if ((n = XMLUtils::getChildNode(node, "ProxySurface"))) {
             proxySurface_ = XMLUtils::getChildValue(node, "ProxySurface", true);
         } else {
