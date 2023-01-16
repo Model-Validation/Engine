@@ -892,34 +892,34 @@ void YieldCurve::buildDiscountCurve() {
     boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<Convention> convention;
 
-    for (Size i = 0; i < discountQuoteIDs.size(); ++i) {
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(discountQuoteIDs[i], asofDate_);
-        if (marketQuote) {
-            QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::DISCOUNT,
-                       "Market quote not of type Discount.");
-            boost::shared_ptr<DiscountQuote> discountQuote = boost::dynamic_pointer_cast<DiscountQuote>(marketQuote);
+    set<string> discountQuoteStrings;
+    transform(discountQuoteIDs.begin(), discountQuoteIDs.end(), inserter(discountQuoteStrings, discountQuoteStrings.begin()),
+              [](const auto& p) { return p.first; });
+    auto discountQuotes = loader_.get(discountQuoteStrings, asofDate_);
+    for (auto marketQuote : discountQuotes) {
+        QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::DISCOUNT,
+                    "Market quote not of type Discount.");
+        boost::shared_ptr<DiscountQuote> discountQuote = boost::dynamic_pointer_cast<DiscountQuote>(marketQuote);
 
-            if(discountQuote->date() != Date()){
+        if(discountQuote->date() != Date()){
 
-                data[discountQuote->date()] = discountQuote->quote()->value();
+            data[discountQuote->date()] = discountQuote->quote()->value();
 
-            } else if (discountQuote->tenor() != Period()){
+        } else if (discountQuote->tenor() != Period()){
 
-                if(!convention)
-                    convention = conventions->get(discountCurveSegment->conventionsID());
-                boost::shared_ptr<ZeroRateConvention> zeroConvention = boost::dynamic_pointer_cast<ZeroRateConvention>(convention);
-                QL_REQUIRE(zeroConvention, "could not cast to ZeroRateConvention");
+            if(!convention)
+                convention = conventions->get(discountCurveSegment->conventionsID());
+            boost::shared_ptr<ZeroRateConvention> zeroConvention = boost::dynamic_pointer_cast<ZeroRateConvention>(convention);
+            QL_REQUIRE(zeroConvention, "could not cast to ZeroRateConvention");
 
-                Calendar cal = zeroConvention->tenorCalendar();
-                BusinessDayConvention rollConvention = zeroConvention->rollConvention();
-                Date date = cal.adjust(cal.adjust(asofDate_, rollConvention) + discountQuote->tenor(), rollConvention);
-                DLOG("YieldCurve::buildDiscountCurve - tenor " << discountQuote->tenor() << " to date " << io::iso_date(date));
-                data[date] = discountQuote->quote()->value();
+            Calendar cal = zeroConvention->tenorCalendar();
+            BusinessDayConvention rollConvention = zeroConvention->rollConvention();
+            Date date = cal.adjust(cal.adjust(asofDate_, rollConvention) + discountQuote->tenor(), rollConvention);
+            DLOG("YieldCurve::buildDiscountCurve - tenor " << discountQuote->tenor() << " to date " << io::iso_date(date));
+            data[date] = discountQuote->quote()->value();
 
-            } else {
-                QL_FAIL("YieldCurve::buildDiscountCurve - neither date nor tenor recognised");
-            }
-
+        } else {
+            QL_FAIL("YieldCurve::buildDiscountCurve - neither date nor tenor recognised");
         }
     }
 
