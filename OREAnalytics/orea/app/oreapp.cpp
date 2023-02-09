@@ -28,6 +28,7 @@
 #endif
 
 #include <boost/filesystem.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
@@ -92,6 +93,7 @@ OREApp::~OREApp() {
 int OREApp::run() {
 
     cpu_timer timer;
+    boost::posix_time::ptime before, now;
 
     try {
         out_ << "ORE starting" << std::endl;
@@ -101,9 +103,11 @@ int OREApp::run() {
         /*********
          * Load Reference Data
          */
+        before = boost::posix_time::microsec_clock::local_time();
         out_ << setw(tab_) << left << "Reference... " << flush;
         getReferenceData();
-        out_ << "OK" << endl;
+        now = boost::posix_time::microsec_clock::local_time();
+        out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
 
         /*********
          * Build Markets
@@ -113,16 +117,20 @@ int OREApp::run() {
         /************************
          *Build Pricing Engine Factory
          */
+        before = boost::posix_time::microsec_clock::local_time();
         out_ << setw(tab_) << left << "Engine factory... " << flush;
         engineFactory_ = buildEngineFactory(market_, "setup", true);
-        out_ << "OK" << endl;
+        now = boost::posix_time::microsec_clock::local_time();
+        out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
 
         /******************************
          * Load and Build the Portfolio
          */
+        before = boost::posix_time::microsec_clock::local_time();
         out_ << setw(tab_) << left << "Portfolio... " << flush;
         portfolio_ = buildPortfolio(engineFactory_, buildFailedTrades_);
-        out_ << "OK" << endl;
+        now = boost::posix_time::microsec_clock::local_time();
+        out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
 
         /******************************
          * Write initial reports
@@ -138,10 +146,12 @@ int OREApp::run() {
         /**************************
          * Write base scenario file
          */
+        before = boost::posix_time::microsec_clock::local_time();
         out_ << setw(tab_) << left << "Write Base Scenario... " << flush;
         if (writeBaseScenario_) {
             writeBaseScenario();
-            out_ << "OK" << endl;
+            now = boost::posix_time::microsec_clock::local_time();
+            out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
         } else {
             LOG("skip base scenario");
             out_ << "SKIP" << endl;
@@ -151,13 +161,15 @@ int OREApp::run() {
          * Sensitivity analysis
          */
         if (sensitivity_) {
+            before = boost::posix_time::microsec_clock::local_time();
             out_ << setw(tab_) << left << "Sensitivity Report... " << flush;
 
             // We reset this here because the date grid building in sensitivity analysis depends on it.
             Settings::instance().evaluationDate() = asof_;
             sensitivityRunner_ = getSensitivityRunner();
             sensitivityRunner_->runSensitivityAnalysis(market_, curveConfigs_, marketParameters_);
-            out_ << "OK" << endl;
+            now = boost::posix_time::microsec_clock::local_time();
+            out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
         } else {
             LOG("skip sensitivity analysis");
             out_ << setw(tab_) << left << "Sensitivity... ";
@@ -195,7 +207,7 @@ int OREApp::run() {
 
         if (simulate_ && xva_ && useXvaRunner) {
 
-	    LOG("Use XvaRunner");
+    	    LOG("Use XvaRunner");
 
 	    // if (cptyCube_) {
 	    //     LOG("with cptyCube");
@@ -216,17 +228,21 @@ int OREApp::run() {
             // QL_REQUIRE(scenarioData_->dimSamples() == cube_->samples(),
             //            "scenario sample size does not match cube sample size");
 
-	    out_ << setw(tab_) << left << "XVA simulation... " << flush;
-	    boost::shared_ptr<XvaRunner> xva = getXvaRunner();
+            before = boost::posix_time::microsec_clock::local_time();
+            out_ << setw(tab_) << left << "XVA simulation... " << flush;
+	        boost::shared_ptr<XvaRunner> xva = getXvaRunner();
             xva->runXva(market_, true);
             postProcess_ = xva->postProcess();
-            out_ << "OK" << endl;
+            now = boost::posix_time::microsec_clock::local_time();
+            out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
 
+            before = boost::posix_time::microsec_clock::local_time();
             out_ << setw(tab_) << left << "Write XVA Reports... " << flush;
             writeXVAReports();
             if (writeDIMReport_)
                 writeDIMReport();
-            out_ << "OK" << endl;
+            now = boost::posix_time::microsec_clock::local_time();
+            out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
 
         } else {
 
@@ -244,6 +260,7 @@ int OREApp::run() {
             /*****************************
              * Aggregation and XVA Reports
              */
+            before = boost::posix_time::microsec_clock::local_time();
             out_ << setw(tab_) << left << "Aggregation and XVA Reports... " << flush;
             if (xva_) {
                 // We reset this here because the date grid building below depends on it.
@@ -267,12 +284,16 @@ int OREApp::run() {
                            "scenario sample size does not match cube sample size");
 
                 runPostProcessor();
-                out_ << "OK" << endl;
+                now = boost::posix_time::microsec_clock::local_time();
+                out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
+
+                before = boost::posix_time::microsec_clock::local_time();
                 out_ << setw(tab_) << left << "Write Reports... " << flush;
                 writeXVAReports();
                 if (writeDIMReport_)
                     writeDIMReport();
-                out_ << "OK" << endl;
+                now = boost::posix_time::microsec_clock::local_time();
+                out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
             } else {
                 LOG("skip XVA reports");
                 out_ << "SKIP" << endl;
@@ -625,10 +646,12 @@ void OREApp::writeInitialReports() {
 
     MEM_LOG;
     LOG("Writing initial reports");
+    boost::posix_time::ptime before, now;
 
     /************
      * Curve dump
      */
+    before = boost::posix_time::microsec_clock::local_time();
     out_ << setw(tab_) << left << "Curve Report... " << flush;
     if (params_->hasGroup("curves") && params_->get("curves", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("curves", "outputFileName");
@@ -636,7 +659,8 @@ void OREApp::writeInitialReports() {
         DateGrid grid(params_->get("curves", "grid"));
         getReportWriter()->writeCurves(curvesReport, params_->get("curves", "configuration"), grid, *marketParameters_,
                                        market_, continueOnError_);
-        out_ << "OK" << endl;
+        now = boost::posix_time::microsec_clock::local_time();
+        out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
     } else {
         LOG("skip curve report");
         out_ << "SKIP" << endl;
@@ -645,13 +669,15 @@ void OREApp::writeInitialReports() {
     /*********************
      * Portfolio valuation
      */
+    before = boost::posix_time::microsec_clock::local_time();
     out_ << setw(tab_) << left << "NPV Report... " << flush;
     if (params_->hasGroup("npv") && params_->get("npv", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("npv", "outputFileName");
         CSVFileReport npvReport(fileName);
         getReportWriter()->writeNpv(npvReport, params_->get("npv", "baseCurrency"), market_,
                                     params_->get("markets", "pricing"), portfolio_);
-        out_ << "OK" << endl;
+        now = boost::posix_time::microsec_clock::local_time();
+        out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
     } else {
         LOG("skip portfolio valuation");
         out_ << "SKIP" << endl;
@@ -660,12 +686,14 @@ void OREApp::writeInitialReports() {
     /*********************
      * Additional Results
      */
+    before = boost::posix_time::microsec_clock::local_time();
     out_ << setw(tab_) << left << "Additional Results... " << flush;
     if (params_->hasGroup("additionalResults") && params_->get("additionalResults", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("additionalResults", "outputFileName");
         CSVFileReport addResultReport(fileName);
         getReportWriter()->writeAdditionalResultsReport(addResultReport, portfolio_, market_, params_->get("npv", "baseCurrency"));
-        out_ << "OK" << endl;
+        now = boost::posix_time::microsec_clock::local_time();
+        out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
     } else {
         LOG("skip additional results");
         out_ << "SKIP" << endl;
@@ -674,6 +702,7 @@ void OREApp::writeInitialReports() {
     /*********************
      * TodaysMarket calibration
      */
+    before = boost::posix_time::microsec_clock::local_time();
     out_ << setw(tab_) << left << "TodaysMarket Calibration... " << flush;
     if (params_->hasGroup("todaysMarketCalibration") && params_->get("todaysMarketCalibration", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("todaysMarketCalibration", "outputFileName");
@@ -683,7 +712,8 @@ void OREApp::writeInitialReports() {
             getReportWriter()->writeTodaysMarketCalibrationReport(todaysMarketCalibrationReport,
                                                                   todaysMarket->calibrationInfo());
         }
-        out_ << "OK" << endl;
+        now = boost::posix_time::microsec_clock::local_time();
+        out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
     } else {
         LOG("skip additional results");
         out_ << "SKIP" << endl;
@@ -692,6 +722,7 @@ void OREApp::writeInitialReports() {
     /**********************
      * Cash flow generation
      */
+    before = boost::posix_time::microsec_clock::local_time();
     out_ << setw(tab_) << left << "Cashflow Report... " << flush;
     if (params_->hasGroup("cashflow") && params_->get("cashflow", "active") == "Y") {
         bool includePastCashflows = params_->has("cashflow", "includePastCashflows") &&
@@ -700,7 +731,8 @@ void OREApp::writeInitialReports() {
         CSVFileReport cashflowReport(fileName);
         getReportWriter()->writeCashflow(cashflowReport, portfolio_, market_, params_->get("markets", "pricing"),
                                          includePastCashflows);
-        out_ << "OK" << endl;
+        now = boost::posix_time::microsec_clock::local_time();
+        out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
     } else {
         LOG("skip cashflow generation");
         out_ << "SKIP" << endl;
@@ -710,6 +742,7 @@ void OREApp::writeInitialReports() {
      * Cash flow NPV Report
      * NPV of future cash flows with payment dates from tomorrow up to today+horizonCalendarDays
      */
+    before = boost::posix_time::microsec_clock::local_time();
     out_ << setw(tab_) << left << "Cashflow NPV report... " << flush;
     if (params_->hasGroup("cashflowNpv") && params_->get("cashflowNpv", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("cashflowNpv", "outputFileName");
@@ -725,7 +758,8 @@ void OREApp::writeInitialReports() {
 
         CSVFileReport cfNpvReport(fileName);
         getReportWriter()->writeCashflowNpv(cfNpvReport, cashflowReport, market_, config, baseCcy, horizon);
-        out_ << "OK" << endl;
+        now = boost::posix_time::microsec_clock::local_time();
+        out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
     } else {
         LOG("skip cashflow npv report");
         out_ << "SKIP" << endl;
@@ -749,7 +783,9 @@ void OREApp::runStressTest() {
 
     MEM_LOG;
     LOG("Running stress test");
+    boost::posix_time::ptime before, now;
 
+    before = boost::posix_time::microsec_clock::local_time();
     out_ << setw(tab_) << left << "Stress Test Report... " << flush;
     // We reset this here because the date grid building below depends on it.
     Settings::instance().evaluationDate() = asof_;
@@ -784,7 +820,8 @@ void OREApp::runStressTest() {
     boost::shared_ptr<Report> stressReport = boost::make_shared<CSVFileReport>(outputFile);
     stressTest->writeReport(stressReport, threshold);
 
-    out_ << "OK" << endl;
+    now = boost::posix_time::microsec_clock::local_time();
+    out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
 
     LOG("Stress test completed");
     MEM_LOG;
@@ -796,7 +833,9 @@ void OREApp::runParametricVar() {
 
     MEM_LOG;
     LOG("Running parametric VaR");
+    boost::posix_time::ptime before, now;
 
+    before = boost::posix_time::microsec_clock::local_time();
     out_ << setw(tab_) << left << "Parametric VaR Report... " << flush;
 
     LOG("Get sensitivity data");
@@ -832,7 +871,8 @@ void OREApp::runParametricVar() {
 
     CSVFileReport report(outputPath_ + "/" + params_->get("parametricVar", "outputFile"));
     calc->calculate(report);
-    out_ << "OK" << endl;
+    now = boost::posix_time::microsec_clock::local_time();
+    out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
 
     LOG("Parametric VaR completed");
     MEM_LOG;
@@ -1376,12 +1416,14 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
     if (curveConfigXML != "")
         curveConfigs_->fromXMLString(curveConfigXML);
     else if (params_->has("setup", "curveConfigFile") && params_->get("setup", "curveConfigFile") != "") {
+        boost::posix_time::ptime before = boost::posix_time::microsec_clock::local_time();
         out_ << setw(tab_) << left << "Curve configuration... " << flush;
         string inputPath = params_->get("setup", "inputPath");
         string curveConfigFile = inputPath + "/" + params_->get("setup", "curveConfigFile");
         LOG("Load curve configurations from file");
         curveConfigs_->fromFile(curveConfigFile);
-        out_ << "OK" << endl;
+        boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
+        out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
     } else {
         WLOG("No curve configurations loaded");
     }
@@ -1390,11 +1432,13 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
     bool implyTodaysFixings = parseBool(implyTodaysFixingsString);
 
     boost::shared_ptr<Loader> loader;
+    boost::posix_time::ptime before, now;
     if (marketData.size() == 0 || fixingData.size() == 0) {
         /*******************************
          * Market and fixing data loader
          */
         if (params_->has("setup", "marketDataFile") && params_->get("setup", "marketDataFile") != "") {
+            before = boost::posix_time::microsec_clock::local_time();
             out_ << setw(tab_) << left << "Market data loader... " << flush;
             string marketFileString = params_->get("setup", "marketDataFile");
             vector<string> marketFiles = getFilenames(marketFileString, inputPath_);
@@ -1406,7 +1450,8 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
                 dividendFiles = getFilenames(dividendFileString, inputPath_);
             }
             loader = boost::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings);
-            out_ << "OK" << endl;
+            now = boost::posix_time::microsec_clock::local_time();
+            out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
         } else {
             WLOG("No market data loaded from file");
         }
@@ -1427,11 +1472,13 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
     }
 
     // build market
+    before = boost::posix_time::microsec_clock::local_time();
     out_ << setw(tab_) << left << "Market... " << flush;
     market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, jointLoader, curveConfigs_,
                                                continueOnError_, true, lazyMarketBuilding_, referenceData_, false,
                                                iborFallbackConfig_);
-    out_ << "OK" << endl;
+    now = boost::posix_time::microsec_clock::local_time();
+    out_ << "OK" << "    " << setprecision(4) << (now - before).total_milliseconds() / 1.0e3 << " s" << endl;
 
     LOG("Today's market built");
     MEM_LOG;
@@ -1440,6 +1487,49 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
 boost::shared_ptr<MarketImpl> OREApp::getMarket() const {
     QL_REQUIRE(market_ != nullptr, "OREApp::getMarket(): original market is null");
     return boost::dynamic_pointer_cast<MarketImpl>(market_);
+}
+
+boost::shared_ptr<ore::data::TodaysMarket> OREApp::getTodaysMarket() const {
+    QL_REQUIRE(market_ != nullptr, "OREApp::getTodaysMarket(): original market is null");
+    return boost::dynamic_pointer_cast<TodaysMarket>(market_);
+}
+
+void OREApp::writeReport(const std::string& report) {
+    QL_REQUIRE(market_ != nullptr, "OREApp::getMarket(): original market is null");
+    writeInitialReports();
+}
+
+std::map< string, std::vector<std::pair<Date, double> > > OREApp::discountCurveNodes() const {
+    std::map< string, std::vector<std::pair<Date, double> > > nodes_map;
+    Date d;
+    double rate;
+
+    auto todaysMarket = boost::dynamic_pointer_cast<TodaysMarket>(market_);
+    if (todaysMarket) {
+        // yield curve results
+
+        for (auto const& r : todaysMarket->calibrationInfo()->yieldCurveCalibrationInfo) {
+            string curve_name = r.first;
+            boost::shared_ptr<YieldCurveCalibrationInfo> info = r.second;
+            std::vector<std::pair<Date, double> > nodes;
+
+            for (Size i = 0; i < info->pillarDates.size(); ++i) {
+                d = info->pillarDates[i];
+                rate = info->zeroRates[i];
+                std::pair<Date, double> entry(d, rate);
+                nodes.push_back(entry);
+            }
+            std::pair< string, std::vector<std::pair<Date, double> > > map_entry(curve_name, nodes);
+
+            nodes_map.insert(map_entry);
+        }
+    }
+    return nodes_map;
+}
+
+std::map< std::string, boost::shared_ptr<YieldCurveCalibrationInfo> > OREApp::yieldCurveCalibrationInfo() const {
+    auto todaysMarket = boost::dynamic_pointer_cast<TodaysMarket>(market_);
+    return todaysMarket->calibrationInfo()->yieldCurveCalibrationInfo;
 }
 
 boost::shared_ptr<EngineFactory> OREApp::buildEngineFactoryFromXMLString(const boost::shared_ptr<Market>& market,

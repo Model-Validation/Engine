@@ -394,6 +394,7 @@
     <ClCompile Include="ored\portfolio\optionwrapper.cpp" />
     <ClCompile Include="ored\portfolio\portfolio.cpp">
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp17</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp17</LanguageStandard>
     </ClCompile>
     <ClCompile Include="ored\portfolio\premiumdata.cpp" />
     <ClCompile Include="ored\portfolio\referencedata.cpp" />
