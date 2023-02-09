@@ -147,6 +147,12 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
         }
     }
     file.close();
+    // sort all the vectors for each date
+    for (auto& marketDatumVec : data_) {
+        std::sort(marketDatumVec.second.begin(), marketDatumVec.second.end(),
+            [](const boost::shared_ptr<MarketDatum>& l, const boost::shared_ptr<MarketDatum>& r) { return l->name() < r->name(); });
+    }
+
     LOG("CSVLoader completed processing " << filename);
 }
 
@@ -157,11 +163,16 @@ vector<boost::shared_ptr<MarketDatum>> CSVLoader::loadQuotes(const QuantLib::Dat
 }
 
 boost::shared_ptr<MarketDatum> CSVLoader::get(const string& name, const QuantLib::Date& d) const {
-    for (const auto& md : loadQuotes(d)) {
-        if (md->name() == name)
-            return md;
+    const auto& quotes = loadQuotes(d);
+    const auto& quote = std::lower_bound(quotes.begin(), quotes.end(),
+        name,
+        [](const boost::shared_ptr<MarketDatum>& l, const std::string r) { return l->name() < r; });
+
+    if (quote == quotes.end()) {
+        QL_FAIL("No MarketDatum for name " << name << " and date " << d);
     }
-    QL_FAIL("No MarketDatum for name " << name << " and date " << d);
+    return *quote;
 }
+
 } // namespace data
 } // namespace ore

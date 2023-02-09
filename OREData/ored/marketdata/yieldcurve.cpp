@@ -286,6 +286,8 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
                 calibrationInfo_ = boost::make_shared<YieldCurveCalibrationInfo>();
             calibrationInfo_->dayCounter = zeroDayCounter_.name();
             calibrationInfo_->currency = currency_.code();
+            calibrationInfo_->interpolationMethod = curveConfig_->interpolationMethod();
+            calibrationInfo_->interpolationVariable = curveConfig_->interpolationVariable();
             if (calibrationInfo_->pillarDates.empty()) {
                 for (auto const& p : YieldCurveCalibrationInfo::defaultPeriods)
                     calibrationInfo_->pillarDates.push_back(asofDate_ + p);
@@ -621,6 +623,7 @@ YieldCurve::piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments) {
     // set calibration info
     if (buildCalibrationInfo_) {
         calibrationInfo_ = boost::make_shared<PiecewiseYieldCurveCalibrationInfo>();
+        calibrationInfo_->instruments = instruments;
         for (Size i = 0; i < instruments.size(); ++i) {
             calibrationInfo_->pillarDates.push_back(instruments[i]->pillarDate());
         }
@@ -886,8 +889,15 @@ void YieldCurve::buildDiscountCurve() {
     boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<Convention> convention;
 
+    vector< boost::shared_ptr<MarketDatum> > quotes = loader_.loadQuotes(asofDate_);
+    unordered_map< string, boost::shared_ptr<MarketDatum> > quotes_map;
+    vector< boost::shared_ptr<MarketDatum> > quotes_vector;
+
+    for (auto& q : quotes) {
+        quotes_map.insert(pair<string, boost::shared_ptr<MarketDatum> >(q->name(), q));
+    }
     for (Size i = 0; i < discountQuoteIDs.size(); ++i) {
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(discountQuoteIDs[i], asofDate_);
+        boost::shared_ptr<MarketDatum> marketQuote = quotes_map.at(discountQuoteIDs[i].first);
         if (marketQuote) {
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::DISCOUNT,
                        "Market quote not of type Discount.");
