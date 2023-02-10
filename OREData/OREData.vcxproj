@@ -498,7 +498,10 @@
     <ClCompile Include="ored\portfolio\optionexercisedata.cpp" />
     <ClCompile Include="ored\portfolio\optionpaymentdata.cpp" />
     <ClCompile Include="ored\portfolio\optionwrapper.cpp" />
-    <ClCompile Include="ored\portfolio\portfolio.cpp" />
+    <ClCompile Include="ored\portfolio\portfolio.cpp">
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp17</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp17</LanguageStandard>
+    </ClCompile>
     <ClCompile Include="ored\portfolio\premiumdata.cpp" />
     <ClCompile Include="ored\portfolio\referencedata.cpp" />
     <ClCompile Include="ored\portfolio\referencedatafactory.cpp" />
@@ -719,6 +722,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>Default</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>

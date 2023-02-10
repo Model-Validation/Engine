@@ -27,6 +27,8 @@
 #include <ql/time/date.hpp>
 #include <ql/time/period.hpp>
 #include <ql/utilities/null.hpp>
+//#include <ored/marketdata/yieldcurve.hpp>
+#include <ql/termstructures/yield/ratehelpers.hpp>
 
 #include <map>
 #include <string>
@@ -45,11 +47,16 @@ struct YieldCurveCalibrationInfo {
 
     std::string dayCounter;
     std::string currency;
+//    ore::data::YieldCurve::InterpolationMethod interpolationMethod;
+//    ore::data::YieldCurve::InterpolationVariable interpolationVariable;
+    std::string interpolationMethod;
+    std::string interpolationVariable;
 
     std::vector<QuantLib::Date> pillarDates;
     std::vector<double> zeroRates;
     std::vector<double> discountFactors;
     std::vector<double> times;
+    std::vector< boost::shared_ptr<QuantLib::RateHelper> > instruments;
 };
 
 struct PiecewiseYieldCurveCalibrationInfo : public YieldCurveCalibrationInfo {
