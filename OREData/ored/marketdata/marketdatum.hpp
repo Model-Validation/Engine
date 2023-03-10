@@ -314,31 +314,54 @@ private:
 class SwapQuote : public MarketDatum {
 public:
     SwapQuote() {}
-    //! Constructor
+    //! Tenor based constructor
     SwapQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Period fwdStart,
               Period term, Period tenor, const std::string& indexName = "")
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::IR_SWAP), ccy_(ccy), fwdStart_(fwdStart),
-          term_(term), tenor_(tenor), indexName_(indexName) {}
+          term_(term), tenor_(tenor), indexName_(indexName), tenorBased_(true) {}
+
+    //! Date based constructor
+    SwapQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, QuantLib::Date startDate,
+              QuantLib::Date expiryDate, Period tenor, const std::string& indexName = "")
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::IR_SWAP), ccy_(ccy), startDate_(startDate),
+          expiryDate_(expiryDate), tenor_(tenor), indexName_(indexName), tenorBased_(false) {}
 
     //! Make a copy of the market datum
     boost::shared_ptr<MarketDatum> clone() override {
-        return boost::make_shared<SwapQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, fwdStart_, term_, tenor_);
+        if (tenorBased()) {
+            return boost::make_shared<SwapQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, fwdStart_, term_,
+                                                 tenor_, indexName_);
+        } else {
+            return boost::make_shared<SwapQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, startDate_,
+                                                 expiryDate_, tenor_, indexName_);
+        }
     }
 
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
+    //! The swap's forward start tenor if the quote is tenor based
     const Period& fwdStart() const { return fwdStart_; }
+    //! The swap's start date if the quote is date based
+    const QuantLib::Date& startDate() const { return startDate_; }
+    //! The swap's term if the quote is tenor based
     const Period& term() const { return term_; }
     const Period& tenor() const { return tenor_; }
     const std::string& indeName() const { return indexName_; }
+    //! The swap's expiry if the quote is date based
+    const QuantLib::Date& expiryDate() const { return expiryDate_; }
+    //! Returns \c true if the swap is tenor based and \c false if swap is date based
+    bool tenorBased() const { return tenorBased_; }
     //@}
 private:
     string ccy_;
     Period fwdStart_;
+    Date startDate_;
     Period term_;
+    QuantLib::Date expiryDate_;
     Period tenor_;
     std::string indexName_;
+    bool tenorBased_;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);

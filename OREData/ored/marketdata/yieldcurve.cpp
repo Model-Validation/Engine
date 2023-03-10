@@ -886,34 +886,34 @@ void YieldCurve::buildDiscountCurve() {
     boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<Convention> convention;
 
-    for (Size i = 0; i < discountQuoteIDs.size(); ++i) {
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(discountQuoteIDs[i], asofDate_);
-        if (marketQuote) {
-            QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::DISCOUNT,
-                       "Market quote not of type Discount.");
-            boost::shared_ptr<DiscountQuote> discountQuote = boost::dynamic_pointer_cast<DiscountQuote>(marketQuote);
+    set<string> discountQuoteStrings;
+    transform(discountQuoteIDs.begin(), discountQuoteIDs.end(), inserter(discountQuoteStrings, discountQuoteStrings.begin()),
+              [](const auto& p) { return p.first; });
+    auto discountQuotes = loader_.get(discountQuoteStrings, asofDate_);
+    for (auto marketQuote : discountQuotes) {
+        QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::DISCOUNT,
+                    "Market quote not of type Discount.");
+        boost::shared_ptr<DiscountQuote> discountQuote = boost::dynamic_pointer_cast<DiscountQuote>(marketQuote);
 
-            if(discountQuote->date() != Date()){
+        if(discountQuote->date() != Date()){
 
-                data[discountQuote->date()] = discountQuote->quote()->value();
+            data[discountQuote->date()] = discountQuote->quote()->value();
 
-            } else if (discountQuote->tenor() != Period()){
+        } else if (discountQuote->tenor() != Period()){
 
-                if(!convention)
-                    convention = conventions->get(discountCurveSegment->conventionsID());
-                boost::shared_ptr<ZeroRateConvention> zeroConvention = boost::dynamic_pointer_cast<ZeroRateConvention>(convention);
-                QL_REQUIRE(zeroConvention, "could not cast to ZeroRateConvention");
+            if(!convention)
+                convention = conventions->get(discountCurveSegment->conventionsID());
+            boost::shared_ptr<ZeroRateConvention> zeroConvention = boost::dynamic_pointer_cast<ZeroRateConvention>(convention);
+            QL_REQUIRE(zeroConvention, "could not cast to ZeroRateConvention");
 
-                Calendar cal = zeroConvention->tenorCalendar();
-                BusinessDayConvention rollConvention = zeroConvention->rollConvention();
-                Date date = cal.adjust(cal.adjust(asofDate_, rollConvention) + discountQuote->tenor(), rollConvention);
-                DLOG("YieldCurve::buildDiscountCurve - tenor " << discountQuote->tenor() << " to date " << io::iso_date(date));
-                data[date] = discountQuote->quote()->value();
+            Calendar cal = zeroConvention->tenorCalendar();
+            BusinessDayConvention rollConvention = zeroConvention->rollConvention();
+            Date date = cal.adjust(cal.adjust(asofDate_, rollConvention) + discountQuote->tenor(), rollConvention);
+            DLOG("YieldCurve::buildDiscountCurve - tenor " << discountQuote->tenor() << " to date " << io::iso_date(date));
+            data[date] = discountQuote->quote()->value();
 
-            } else {
-                QL_FAIL("YieldCurve::buildDiscountCurve - neither date nor tenor recognised");
-            }
-
+        } else {
+            QL_FAIL("YieldCurve::buildDiscountCurve - neither date nor tenor recognised");
         }
     }
 
@@ -1573,19 +1573,30 @@ void YieldCurve::addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
             oisQuote = boost::dynamic_pointer_cast<SwapQuote>(marketQuote);
 
             // Create a swap helper if we do.
-            Period oisTenor = oisQuote->term();
             boost::shared_ptr<RateHelper> oisHelper;
             if (brlCdiIndex) {
+                Period oisTenor = oisQuote->term();
                 oisHelper = boost::make_shared<BRLCdiRateHelper>(
                     oisTenor, oisQuote->quote(), brlCdiIndex,
                     discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true);
             } else {
-                oisHelper = boost::make_shared<QuantExt::OISRateHelper>(
-                    oisConvention->spotLag(), oisTenor, oisQuote->quote(), onIndex, oisConvention->fixedDayCounter(),
-                    oisConvention->fixedCalendar(), oisConvention->paymentLag(), oisConvention->eom(),
-                    oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
-                    oisConvention->fixedPaymentConvention(), oisConvention->rule(),
-                    discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true);
+                if (oisQuote->tenorBased()) {
+                    Period oisTenor = oisQuote->term();
+
+                    oisHelper = boost::make_shared<QuantExt::OISRateHelper>(
+                        oisConvention->spotLag(), oisTenor, oisQuote->quote(), onIndex, oisConvention->fixedDayCounter(),
+                        oisConvention->fixedCalendar(), oisConvention->paymentLag(), oisConvention->eom(),
+                        oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
+                        oisConvention->fixedPaymentConvention(), oisConvention->rule(),
+                        discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true);
+                } else {
+                    oisHelper = boost::make_shared<QuantExt::DatedOISRateHelper>(
+                        oisQuote->startDate(), oisQuote->expiryDate(), oisQuote->quote(), onIndex,
+                        oisConvention->fixedDayCounter(), oisConvention->paymentLag(), oisConvention->fixedFrequency(),
+                        oisConvention->fixedConvention(), oisConvention->fixedPaymentConvention(),
+                        oisConvention->rule(), discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(),
+                        true);
+                }
             }
 
             instruments.push_back(oisHelper);
@@ -1622,6 +1633,8 @@ void YieldCurve::addSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::IR_SWAP,
                        "Market quote not of type swap.");
             swapQuote = boost::dynamic_pointer_cast<SwapQuote>(marketQuote);
+
+            QL_REQUIRE(swapQuote->tenorBased(), "Only tenor based swap quotes are supported");
 
             // Create a swap helper if we do.
             Period swapTenor = swapQuote->term();
@@ -2019,9 +2032,13 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
 
     DLOG("YieldCurve::addFXForwards(), create FX forward quotes and helpers");
     auto fxForwardQuoteIDs = fxForwardSegment->quotes();
-    for (Size i = 0; i < fxForwardQuoteIDs.size(); i++) {
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(fxForwardQuoteIDs[i], asofDate_);
-
+    set<string> fxFwdQuoteStrings;
+    transform(fxForwardQuoteIDs.begin(), fxForwardQuoteIDs.end(), inserter(fxFwdQuoteStrings, fxFwdQuoteStrings.begin()),
+              [](const auto& p) { return p.first; });
+    auto fXFwdQuotes = loader_.get(fxFwdQuoteStrings, asofDate_);
+    for (auto marketQuote : fXFwdQuotes) {
+        //boost::shared_ptr<MarketDatum> marketQuote = loader_.get(fxForwardQuoteIDs[i], asofDate_);
+        
         // Check that we have a valid FX forward quote
         if (marketQuote) {
             boost::shared_ptr<FXForwardQuote> fxForwardQuote;
@@ -2034,7 +2051,7 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
             QL_REQUIRE(fxSpotQuote->unitCcy() == fxForwardQuote->unitCcy() &&
                            fxSpotQuote->ccy() == fxForwardQuote->ccy(),
                        "Currency mismatch between spot \"" << spotRateID << "\" and fwd \""
-                                                           << fxForwardQuoteIDs[i].first << "\"");
+                                                           << marketQuote->name() << "\"");
                         
             // QL expects the FX Fwd quote to be per spot, not points. If the quote is an outright, handle conversion to points convention here.
 
