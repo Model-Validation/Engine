@@ -1676,7 +1676,7 @@ void OREApp::writeInitialReports() {
         CONSOLE("OK");
     } else {
         LOG("skip today's market calibration results");
-        out_ << "SKIP" << endl;
+        CONSOLE("SKIP");
     }
 
     /**********************
