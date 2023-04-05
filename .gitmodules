@@ -1,5 +1,5 @@
 [submodule "QuantLib"]
 	path = QuantLib
 	url = https://github.com/Model-Validation/QuantLib.git
-	branch = master_patched
+	branch = 9-dev
 	ignore = dirty
