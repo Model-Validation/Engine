@@ -22,6 +22,7 @@ configuration/onedimsolverconfig.cpp
 configuration/reportconfig.cpp
 configuration/volatilityconfig.cpp
 configuration/yieldcurveconfig.cpp
+marketdata/adjustmentfactors.cpp
 marketdata/basecorrelationcurve.cpp
 marketdata/capfloorvolcurve.cpp
 marketdata/cdsvolcurve.cpp
@@ -259,6 +260,7 @@ utilities/currencyconfig.cpp
 utilities/currencyhedgedequityindexdecomposition.cpp
 utilities/currencyparser.cpp
 utilities/dategrid.cpp
+utilities/fileio.cpp
 utilities/filteredbufferedlogger.cpp
 utilities/flowanalysis.cpp
 utilities/indexnametranslator.cpp
@@ -304,6 +306,7 @@ configuration/swaptionvolcurveconfig.hpp
 configuration/volatilityconfig.hpp
 configuration/yieldcurveconfig.hpp
 configuration/yieldvolcurveconfig.hpp
+marketdata/adjustmentfactors.hpp
 marketdata/basecorrelationcurve.hpp
 marketdata/capfloorvolcurve.hpp
 marketdata/cdsvolcurve.hpp
@@ -562,6 +565,7 @@ utilities/currencyconfig.hpp
 utilities/currencyhedgedequityindexdecomposition.hpp
 utilities/currencyparser.hpp
 utilities/dategrid.hpp
+utilities/fileio.hpp
 utilities/filteredbufferedlogger.hpp
 utilities/flowanalysis.hpp
 utilities/indexnametranslator.hpp

@@ -31,6 +31,7 @@
 #include <ored/configuration/volatilityconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/configuration/yieldvolcurveconfig.hpp>
+#include <ored/marketdata/adjustmentfactors.hpp>
 #include <ored/marketdata/basecorrelationcurve.hpp>
 #include <ored/marketdata/capfloorvolcurve.hpp>
 #include <ored/marketdata/cdsvolcurve.hpp>
@@ -289,6 +290,7 @@
 #include <ored/utilities/currencyhedgedequityindexdecomposition.hpp>
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/dategrid.hpp>
+#include <ored/utilities/fileio.hpp>
 #include <ored/utilities/filteredbufferedlogger.hpp>
 #include <ored/utilities/flowanalysis.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
