@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -24,12 +25,14 @@
 #include <ored/utilities/to_string.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/models/carrmadanarbitragecheck.hpp>
 #include <qle/termstructures/blackdeltautilities.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 #include <qle/termstructures/blacktriangulationatmvol.hpp>
+#include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <qle/termstructures/blackvolsurfacebfrr.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
@@ -59,7 +62,7 @@ private:
     const map<string, boost::shared_ptr<ore::data::FXSpot>>& fxSpots_;
 };
 
-// look-u[ fx from triangulation object
+// look-up fx from triangulation object
 class FXLookupTriangulation : public ore::data::FXLookup {
 public:
     FXLookupTriangulation(const ore::data::FXTriangulation& fxSpots) : fxSpots_(fxSpots) {}
@@ -162,9 +165,9 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                     QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << md->name());
                     if ((*expiriesWildcard_).matches(tokens[4])) {
                         data.push_back(md);
-                        auto it = std::find(expiries_.begin(), expiries_.end(), q->expiry());
+                        auto it = std::find(expiries_.begin(), expiries_.end(), q->expiryPeriod());
                         if (it == expiries_.end()) {
-                            expiries_.push_back(q->expiry());
+                            expiries_.push_back(q->expiryPeriod());
                             expiriesStr.push_back(tokens[4]);
                         }
                     }
@@ -271,7 +274,7 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
                 boost::split(tokens, md->name(), boost::is_any_of("/"));
                 QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << md->name());
                 if (expiriesWildcard_ && (*expiriesWildcard_).matches(tokens[4]))
-                    expiriesTmp.insert(q->expiry());
+                    expiriesTmp.insert(q->expiryPeriod());
                 data.push_back(q);
             }
         }
@@ -292,7 +295,7 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
     std::vector<Real> atmQuotesTmp(expiriesTmp.size(), Null<Real>());
 
     for (auto const& q : data) {
-        Size expiryIdx = std::distance(expiriesTmp.begin(), expiriesTmp.find(q->expiry()));
+        Size expiryIdx = std::distance(expiriesTmp.begin(), expiriesTmp.find(q->expiryPeriod()));
         if (expiryIdx >= expiriesTmp.size())
             continue;
         Strike s = parseStrike(q->strike());
@@ -449,7 +452,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
                             quotes[idx].push_back(q);
                         }
                     } else {
-                        auto it = std::find(expiries[idx].begin(), expiries[idx].end(), q->expiry());
+                        auto it = std::find(expiries[idx].begin(), expiries[idx].end(), q->expiryPeriod());
                         if (it != expiries[idx].end()) {
                             // we have a hit
                             quotes[idx].push_back(q);
@@ -489,7 +492,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     for (Size i = 0; i < n; i++) {
         std::sort(quotes[i].begin(), quotes[i].end(),
                   [](const boost::shared_ptr<FXOptionQuote>& a, const boost::shared_ptr<FXOptionQuote>& b) -> bool {
-                      return a->expiry() < b->expiry();
+                      return a->expiryPeriod() < b->expiryPeriod();
                   });
     }
 
@@ -502,7 +505,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     if (isATM && quotes[0].size() == 1) {
         vol_ = boost::shared_ptr<BlackVolTermStructure>(
             new BlackConstantVol(asof, config->calendar(), quotes[0].front()->quote()->value(), dc));
-        expiries_ = {quotes[0].front()->expiry()};
+        expiries_ = {quotes[0].front()->expiryPeriod()};
     } else {
 
         Size numExpiries = quotes[0].size();
@@ -510,13 +513,13 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
         vector<vector<Volatility>> vols(n, vector<Volatility>(numExpiries)); // same as above: [0] = ATM, etc.
 
         for (Size i = 0; i < numExpiries; i++) {
-            dates[i] = cal.advance(asof, quotes[0][i]->expiry());
-            expiries_.push_back(quotes[0][i]->expiry());
+            dates[i] = cal.advance(asof, quotes[0][i]->expiryPeriod());
+            expiries_.push_back(quotes[0][i]->expiryPeriod());
             DLOG("Spec Tenor Vol Variance");
             for (Size idx = 0; idx < n; idx++) {
                 vols[idx][i] = quotes[idx][i]->quote()->value();
                 Real variance = vols[idx][i] * vols[idx][i] * (dates[i] - asof) / 365.0; // approximate variance
-                DLOG(spec << " " << quotes[0][i]->expiry() << " " << vols[idx][i] << " " << variance);
+                DLOG(spec << " " << quotes[0][i]->expiryPeriod() << " " << vols[idx][i] << " " << variance);
             }
         }
 
@@ -537,6 +540,130 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
         }
     }
     vol_->enableExtrapolation();
+}
+
+void FXVolCurve::buildAbsoluteStrikeCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
+                                          boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots) {
+
+    LOG("FXVolCurve: start building 2-D volatility absolute strike surface");
+
+    // We are building an FX volatility surface here of the form expiry vs strike where the strikes are absolute
+    // numbers. The list of expiries may be explicit or contain a single wildcard character '*'. Similarly, the list
+    // of strikes may be explicit or contain a single wildcard character '*'. So, we have a few options here which
+    // ultimately lead to two different types of surface being built:
+    // 1. explicit strikes, explicit expiries, missing quotes false => BlackVarianceSurface
+    // 2a. wildcard strikes and/or wildcard expiries => BlackVarianceSurfaceSparse
+    // 2b. explicit strikes, explicit expiries, optional quotes true, missing quotes true => BlackVarianceSurfaceSparse
+
+    // Collect market data
+
+    // expiriesWildcard_ = getUniqueWildcard(config->expiries());
+    boost::optional<Wildcard> strikesWildcard = getUniqueWildcard(config->strikes());
+
+    vector<Date> expiries;
+    vector<Real> strikes;
+    vector<Volatility> vols;
+    Size foundQuotes = 0;
+    bool missingQuotes = false;
+    Size expectedQuotes = 0;
+
+    // Rather than filtering quotes against expiries() and
+    // strikes(), perhaps config->quotes() should be used
+    // instead. It is provided by the FxVolatilityCurveConfig
+    // though it is seemingly never used to help filter
+    // quotes in the FXVolCurve class. However, it is used very
+    // frequently in e.g. the EquityVolCurve builders, which
+    // is perhaps an improvement over this file.
+
+    // std::vector<boost::shared_ptr<FXOptionQuote>> optionQuotes; // TODO Remove?
+
+    vector<Real> configuredStrikes;
+    if (!strikesWildcard) {
+        configuredStrikes = parseVectorOfValues<Real>(config->strikes(), &parseReal);
+        sort(configuredStrikes.begin(), configuredStrikes.end(), [](Real x, Real y) { return !close(x, y) && x < y; });
+        QL_REQUIRE(adjacent_find(configuredStrikes.begin(), configuredStrikes.end(),
+                                 [](Real x, Real y) { return close(x, y); }) == configuredStrikes.end(),
+                   "The configured strikes contain duplicates");
+        DLOG("Parsed " << configuredStrikes.size() << " unique configured absolute strikes");
+    }
+    expectedQuotes = expiriesNoDuplicates_.size() * configuredStrikes.size();
+
+    if (!expiriesWildcard_ && !strikesWildcard && !config->optionalQuotes()) {
+        // No wildcards nor optional quotes
+
+        expiries = parseVectorOfValues<Date>(expiriesNoDuplicates_, &parseDate);
+        strikes = configuredStrikes;
+        for (auto const& md : loader.loadQuotes(asof)) {
+            ++foundQuotes;
+        }
+        missingQuotes = foundQuotes != expectedQuotes;
+        QL_REQUIRE(!missingQuotes, "Missing quotes for FXVolatility curve id " << config->curveID());
+    } else {
+        // Either wildcard(s) present or optional quotes are allowed
+        for (auto const& md : loader.loadQuotes(asof)) {
+            if (md->asofDate() != asof)
+                continue;
+            if (md->instrumentType() != MarketDatum::InstrumentType::FX_OPTION)
+                continue;
+
+            boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
+            QL_REQUIRE(q, "internal error: could not cast to FXOptionQuote");
+            Strike strike = parseStrike(q->strike());
+
+            if (!(q->unitCcy() == spec.unitCcy() && q->ccy() == spec.ccy()))
+                continue;
+            if (strike.type != Strike::Type::Absolute && strike.type != Strike::Type::ATM) // TODO Remove ATM check?
+                continue;
+
+            vector<string> tokens;
+            boost::split(tokens, md->name(), boost::is_any_of("/"));
+
+            // Is the expiry relevant?
+            if (!expiriesWildcard_ && !(*expiriesWildcard_).matches(tokens[4]))
+                continue;
+
+            // Is the strike relevant?
+            if (!strikesWildcard && !(*strikesWildcard).matches(tokens[5]))
+                continue;
+
+            // The quote is relevant on all checked points
+            
+            Date expiryDate = getExpiry(asof, q->expiry(), config->calendar());
+
+            expiries.push_back(expiryDate);
+            strikes.push_back(strike.value);
+            vols.push_back(q->quote()->value());
+            ++foundQuotes;
+        }
+    }
+
+    QL_REQUIRE(foundQuotes > 0, "No quotes found for FXVolatility curve id " << config->curveID());
+    DLOG("Found " << foundQuotes << " quotes for FXVolatility curve id " << config->curveID());
+
+    Matrix vol_grid;
+
+    if (!expiriesWildcard_ && !strikesWildcard && !missingQuotes) {
+        // No missing quotes, build ordinary variance surface
+        // We already check for and fail on missing quotes above but let's keep the
+        // check here too, for now.
+
+        // Explicitly hardcode extrapolation settings to the defaults for now.
+        // TODO: Make flexible if solution is made permanent
+        BlackVarianceSurface::Extrapolation lowerExtrapolation = BlackVarianceSurface::InterpolatorDefaultExtrapolation;
+        BlackVarianceSurface::Extrapolation upperExtrapolation = BlackVarianceSurface::InterpolatorDefaultExtrapolation;
+        vol_ = boost::make_shared<BlackVarianceSurface>(asof, config->calendar(), expiries, strikes, vol_grid,
+                                                        config->dayCounter(), lowerExtrapolation, upperExtrapolation);
+    } else {
+        // If optional quotes are allowed and we actually have missing quotes
+
+        // Explicitly hardcode extrapolation settings to the defaults for now.
+        // TODO: Make flexible if solution is made permanent
+        bool flatStrikeExtrap = true;
+        bool flatTimeExtrap = false;
+        vol_ = boost::make_shared<QuantExt::BlackVarianceSurfaceSparse>(asof, config->calendar(), expiries, strikes,
+                                                                        vols, config->dayCounter(), flatStrikeExtrap,
+                                                                        flatStrikeExtrap, flatTimeExtrap);
+    }
 }
 
 Handle<QuantExt::CorrelationTermStructure>
@@ -690,7 +817,8 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                        config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated ||
                        config->dimension() == FXVolatilityCurveConfig::Dimension::SmileVannaVolga ||
                        config->dimension() == FXVolatilityCurveConfig::Dimension::SmileDelta ||
-                       config->dimension() == FXVolatilityCurveConfig::Dimension::SmileBFRR,
+                       config->dimension() == FXVolatilityCurveConfig::Dimension::SmileBFRR ||
+                       config->dimension() == FXVolatilityCurveConfig::Dimension::SmileAbsoluteStrike,
                    "Unknown FX curve building dimension");
 
         expiriesWildcard_ = getUniqueWildcard(config->expiries());
@@ -785,7 +913,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 spotCalendar_ = fxConv->advanceCalendar();
             }
         } else {
-            WLOG("no fx option conventions given in fxvol curve condig for " << spec.curveConfigID()
+            WLOG("no fx option conventions given in fxvol curve config for " << spec.curveConfigID()
                                                                              << ", assuming defaults");
         }
 
@@ -802,6 +930,8 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         } else if (config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated) {
             buildATMTriangulated(asof, spec, loader, config, fxSpots, yieldCurves, fxVols, correlationCurves,
                                  conventions);
+        } else if (config->dimension() == FXVolatilityCurveConfig::Dimension::SmileAbsoluteStrike) {
+            buildAbsoluteStrikeCurve(asof, spec, loader, config, fxSpots);
         } else {
             buildVannaVolgaOrATMCurve(asof, spec, loader, config, fxSpots, yieldCurves, conventions);
         }

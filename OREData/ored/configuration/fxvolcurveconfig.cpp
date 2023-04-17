@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -67,6 +68,10 @@ const vector<string>& FXVolatilityCurveConfig::quotes() {
             } else if (dimension_ == Dimension::SmileDelta) {
                 for (auto d : deltas_) {
                     quotes_.push_back(base + e + "/" + d);
+                }
+            } else if (dimension_ == Dimension::SmileAbsoluteStrike) {
+                for (auto s : strikes_) {
+                    quotes_.push_back(base + e + "/" + s);
                 }
             }
         }
@@ -167,8 +172,14 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
                     smileDelta_ = {10, 25};
                 else
                     smileDelta_ = parseListOfValues<Size>(sDelta, &parseInteger);
+            } else if (smileType == "AbsoluteStrike") {
+                dimension_ = Dimension::SmileAbsoluteStrike;
+                strikes_ = XMLUtils::getChildrenValuesAsStrings(node, "Strikes", true);
+
+                // Optional flag, if set to true some tenor/strike quotes can be omitted
+                optionalQuotes_ = XMLUtils::getChildValueAsBool(node, "OptionalQuotes", false, false);
             } else {
-                QL_FAIL("SmileType '" << smileType << "' not supported, expected VannaVolga, Delta, BFRR");
+                QL_FAIL("SmileType '" << smileType << "' not supported, expected VannaVolga, Delta, BFRR, AbsoluteStrike");
             }
         } else {
             QL_FAIL("Dimension " << dim << " not supported yet");
@@ -241,6 +252,10 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
         }
         XMLUtils::addGenericChildAsList(doc, node, "SmileDelta", smileDelta_);
         XMLUtils::addChild(doc, node, "Conventions", to_string(conventionsID_));
+    } else if (dimension_ == Dimension::SmileAbsoluteStrike) {
+        XMLUtils::addChild(doc, node, "Dimension", "AbsoluteStrike");
+        XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
+        XMLUtils::addChild(doc, node, "OptionalQuotes", optionalQuotes_);
     } else {
         QL_FAIL("Unkown Dimension in FXVolatilityCurveConfig::toXML()");
     }

@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -426,7 +427,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
         const string& unitCcy = tokens[2];
         const string& ccy = tokens[3];
-        Period expiry = parsePeriod(tokens[4]);
+        const boost::shared_ptr<Expiry>& expiry = parseExpiry(tokens[4]);
         const string& strike = tokens[5];
         return boost::make_shared<FXOptionQuote>(value, asof, datumName, quoteType, unitCcy, ccy, expiry, strike);
     }
