@@ -25,7 +25,7 @@
 #define quantext_stripped_optionlet_adapter_h
 
 #include <algorithm>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <ql/math/interpolation.hpp>
 #include <ql/termstructures/interpolatedcurve.hpp>
