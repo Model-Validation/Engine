@@ -112,7 +112,7 @@ int OREApp::run() {
         /*********
          * Build Markets
          */
-        buildMarket();
+         buildMarket();
 
         /************************
          *Build Pricing Engine Factory
@@ -1492,49 +1492,6 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
 boost::shared_ptr<MarketImpl> OREApp::getMarket() const {
     QL_REQUIRE(market_ != nullptr, "OREApp::getMarket(): original market is null");
     return boost::dynamic_pointer_cast<MarketImpl>(market_);
-}
-
-boost::shared_ptr<ore::data::TodaysMarket> OREApp::getTodaysMarket() const {
-    QL_REQUIRE(market_ != nullptr, "OREApp::getTodaysMarket(): original market is null");
-    return boost::dynamic_pointer_cast<TodaysMarket>(market_);
-}
-
-void OREApp::writeReport(const std::string& report) {
-    QL_REQUIRE(market_ != nullptr, "OREApp::getMarket(): original market is null");
-    writeInitialReports();
-}
-
-std::map< string, std::vector<std::pair<Date, double> > > OREApp::discountCurveNodes() const {
-    std::map< string, std::vector<std::pair<Date, double> > > nodes_map;
-    Date d;
-    double rate;
-
-    auto todaysMarket = boost::dynamic_pointer_cast<TodaysMarket>(market_);
-    if (todaysMarket) {
-        // yield curve results
-
-        for (auto const& r : todaysMarket->calibrationInfo()->yieldCurveCalibrationInfo) {
-            string curve_name = r.first;
-            boost::shared_ptr<YieldCurveCalibrationInfo> info = r.second;
-            std::vector<std::pair<Date, double> > nodes;
-
-            for (Size i = 0; i < info->pillarDates.size(); ++i) {
-                d = info->pillarDates[i];
-                rate = info->zeroRates[i];
-                std::pair<Date, double> entry(d, rate);
-                nodes.push_back(entry);
-            }
-            std::pair< string, std::vector<std::pair<Date, double> > > map_entry(curve_name, nodes);
-
-            nodes_map.insert(map_entry);
-        }
-    }
-    return nodes_map;
-}
-
-std::map< std::string, boost::shared_ptr<YieldCurveCalibrationInfo> > OREApp::yieldCurveCalibrationInfo() const {
-    auto todaysMarket = boost::dynamic_pointer_cast<TodaysMarket>(market_);
-    return todaysMarket->calibrationInfo()->yieldCurveCalibrationInfo;
 }
 
 boost::shared_ptr<EngineFactory> OREApp::buildEngineFactoryFromXMLString(const boost::shared_ptr<Market>& market,

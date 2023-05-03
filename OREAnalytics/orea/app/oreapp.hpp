@@ -72,14 +72,6 @@ public:
     // TODO: This should return a market, not market impl
     boost::shared_ptr<ore::data::MarketImpl> getMarket() const;
 
-    boost::shared_ptr<ore::data::TodaysMarket> getTodaysMarket() const;
-
-    void writeReport(const std::string& reportName);
-
-    std::map< string, std::vector<std::pair<Date, double> > > OREApp::discountCurveNodes() const;
-
-    std::map<std::string, boost::shared_ptr<YieldCurveCalibrationInfo>> yieldCurveCalibrationInfo() const;
-
     //! build engine factory for a given market from an XML String
     boost::shared_ptr<ore::data::EngineFactory>
     buildEngineFactoryFromXMLString(const boost::shared_ptr<ore::data::Market>& market,
