@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2023 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -769,6 +770,17 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
     hol = joint8.holidayList(Date(1, January, 2018), Date(31, December, 2018));
     BOOST_CHECK(hol.size() == expectedHolidays.size());
     checkCalendars(expectedHolidays, hol);
+}
+
+BOOST_AUTO_TEST_CASE(testParseBoostAny) {
+
+    BOOST_TEST_MESSAGE("Testing parsing of Boost::Any...");
+
+    // For QuantLib::Array
+    Array arr(5, 3);
+    boost::any any_array = boost::any_cast<Array>(arr);
+    BOOST_REQUIRE_NO_THROW(ore::data::parseBoostAny(any_array));
+    BOOST_CHECK_EQUAL(ore::data::parseBoostAny(any_array), "[3, 3, 3, 3, 3]");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
