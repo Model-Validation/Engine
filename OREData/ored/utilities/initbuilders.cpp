@@ -379,6 +379,7 @@ void initBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(MidPointCdsEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxBarrierOptionAnalyticEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxBarrierOptionFDEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(FxBarrierOptionVVEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanCSOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityAmericanOptionFDEngineBuilder, false)
