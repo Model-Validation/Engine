@@ -66,9 +66,9 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
         .addColumn("TradeType", string())
         .addColumn("Maturity", Date())
         .addColumn("MaturityTime", double(), 6)
-        .addColumn("NPV", double(), 6)
+        .addColumn("NPV", double(), 8)
         .addColumn("NpvCurrency", string())
-        .addColumn("NPV(Base)", double(), 6)
+        .addColumn("NPV(Base)", double(), 8)
         .addColumn("BaseCurrency", string())
         .addColumn("Notional", double(), 2)
         .addColumn("NotionalCurrency", string())
@@ -1148,7 +1148,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
             // Get the additional data for the current instrument.
             auto additionalData = trade->additionalData();
             for (const auto& kv : additionalData) {
-                auto p = parseBoostAny(kv.second, 6);
+                auto p = parseBoostAny(kv.second, 8);
                 report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
             }
             // if the 'notional[2]' has been provided convert it to base currency
@@ -1211,7 +1211,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                     } else if (kv.second.type() == typeid(result_type_scalar)) {
                         addMapResults<result_type_scalar>(kv.second, tradeId, kv.first, report);
                     } else {
-                        auto p = parseBoostAny(kv.second, 6);
+                        auto p = parseBoostAny(kv.second, 8);
                         report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
                     }
                 }
