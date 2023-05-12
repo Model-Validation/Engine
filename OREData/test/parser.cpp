@@ -780,9 +780,9 @@ BOOST_AUTO_TEST_CASE(testParseBoostAny) {
     Array arr(5, 3);
     boost::any any_array = boost::any_cast<Array>(arr);
     std::pair<std::string, std::string> result;
-    BOOST_REQUIRE_NO_THROW(result = ore::data::parseBoostAny(any_array));
+    BOOST_REQUIRE_NO_THROW(result = ore::data::parseBoostAny(any_array, 0));
     BOOST_CHECK_EQUAL(result.first, "array");
-    BOOST_CHECK_EQUAL(result.second, "[3, 3, 3, 3, 3]");
+    BOOST_CHECK_EQUAL(result.second, "[ 3; 3; 3; 3; 3 ]");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
