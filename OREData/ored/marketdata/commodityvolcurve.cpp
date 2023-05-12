@@ -187,7 +187,7 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
         dayCounter_ = parseDayCounter(config.dayCounter());
 
         // loop over the volatility configs attempting to build in the order provided
-        DLOG("CommodityVolCurve: Attempting to build equity vol curve from volatilityConfig, "
+        DLOG("CommodityVolCurve: Attempting to build commodity vol curve from volatilityConfig, "
              << config.volatilityConfig().size() << " volatility configs provided.");
         for (auto vc : config.volatilityConfig()) {
             try {
@@ -262,9 +262,9 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
                 }
 
             } catch (std::exception& e) {
-                DLOG("CommodityVolCurve: equity vol curve building failed :" << e.what());
+                DLOG("CommodityVolCurve: commodity vol curve building failed :" << e.what());
             } catch (...) {
-                DLOG("CommodityVolCurve: equity vol curve building failed: unknown error");
+                DLOG("CommodityVolCurve: commodity vol curve building failed: unknown error");
             }
         }
         QL_REQUIRE(volatility_ , "CommodityVolCurve: Failed to build commodity volatility structure from "
@@ -335,7 +335,7 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
             if (!q)
                 continue;
             QL_REQUIRE(q->quoteType() == vcc.quoteType(),
-                "EquityOptionQuote type '" << q->quoteType() << "' <> VolatilityCurveConfig quote type '" << vcc.quoteType() << "'");
+                "CommodityOptionQuote type '" << q->quoteType() << "' <> VolatilityCurveConfig quote type '" << vcc.quoteType() << "'");
 
             TLOG("The quote " << q->name() << " matched the pattern");
 
