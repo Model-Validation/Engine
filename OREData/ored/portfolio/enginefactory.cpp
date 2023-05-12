@@ -200,6 +200,7 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<FxEuropeanAsianOptionTWEngineBuilder>());
     registerBuilder(boost::make_shared<FxBarrierOptionAnalyticEngineBuilder>());
     registerBuilder(boost::make_shared<FxBarrierOptionFDEngineBuilder>());
+    registerBuilder(boost::make_shared<FxBarrierOptionVVEngineBuilder>());
     registerBuilder(boost::make_shared<FxDoubleBarrierOptionAnalyticEngineBuilder>());
     registerBuilder(boost::make_shared<FxTouchOptionEngineBuilder>());
     registerBuilder(boost::make_shared<FxDoubleTouchOptionAnalyticEngineBuilder>());
