@@ -196,14 +196,14 @@ std::tuple<Natural, Calendar, BusinessDayConvention> getFxIndexConventions(const
         ccy2 = "USD";
 
     try {
-	Calendar cal = parseCalendar(ccy1 + "," + ccy2);
-        TLOG("getFxIndexConvention(" << index << "): 2 (default) / " << cal.name()
+	    Calendar cal = parseCalendar(ccy1 + "," + ccy2);
+        WLOG("getFxIndexConvention(" << index << "): 2 (default) / " << cal.name()
                                      << " (from ccys), no convention found.");
         return std::make_tuple(2, cal, Following);
     } catch (const std::exception& e) {
         ALOG("could not get fx index convention for '" << index << "': " << e.what() << ", continue with 'USD'");
     }
-    TLOG("getFxIndexConvention(" << index
+    WLOG("getFxIndexConvention(" << index
                                  << "): 2 (default) / USD (default), no convention found, could not parse calendar '"
                                  << (ccy1 + "," + ccy2) << "'");
     return std::make_tuple(2, parseCalendar("USD"), Following);
