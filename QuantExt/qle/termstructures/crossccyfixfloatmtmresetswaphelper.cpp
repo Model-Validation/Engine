@@ -71,7 +71,7 @@ void CrossCcyFixFloatMtMResetSwapHelper::initializeDates() {
     Real nominal = 1.0;
 
     // build an FX index for forward rate projection (TODO - review settlement and calendar)
-    Natural paymentLag = 0;
+    Integer paymentLag = 0;
     Spread floatSpread = spread_.empty() ? 0.0 : spread_->value();
     boost::shared_ptr<FxIndex> fxIdx;
     if (resetsOnFloatLeg_) {

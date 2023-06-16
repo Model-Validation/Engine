@@ -57,7 +57,7 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
 }
 
 CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
-    Real quantity, const Date& startDate, const Date& endDate, Natural paymentLag, Calendar paymentCalendar,
+    Real quantity, const Date& startDate, const Date& endDate, Integer paymentLag, Calendar paymentCalendar,
     BusinessDayConvention paymentConvention, const ext::shared_ptr<CommodityIndex>& index,
     const Calendar& pricingCalendar, QuantLib::Real spread, QuantLib::Real gearing, PaymentTiming paymentTiming,
     bool useFuturePrice, Natural deliveryDateRoll, Natural futureMonthOffset,
@@ -296,7 +296,7 @@ CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withQuantities(const vec
     return *this;
 }
 
-CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withPaymentLag(Natural paymentLag) {
+CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withPaymentLag(Integer paymentLag) {
     paymentLag_ = paymentLag;
     return *this;
 }

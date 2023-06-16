@@ -39,7 +39,7 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(Real quantity, const Date& pr
 
 CommodityIndexedCashFlow::CommodityIndexedCashFlow(
     Real quantity, const Date& startDate, const Date& endDate, const ext::shared_ptr<CommodityIndex>& index,
-    Natural paymentLag, const Calendar& paymentCalendar, BusinessDayConvention paymentConvention, Natural pricingLag,
+    Integer paymentLag, const Calendar& paymentCalendar, BusinessDayConvention paymentConvention, Natural pricingLag,
     const Calendar& pricingLagCalendar, Real spread, Real gearing, PaymentTiming paymentTiming, bool isInArrears,
     bool useFuturePrice, bool useFutureExpiryDate, Natural futureMonthOffset,
     const ext::shared_ptr<FutureExpiryCalculator>& calc, const QuantLib::Date& paymentDateOverride,
@@ -123,7 +123,7 @@ void CommodityIndexedCashFlow::setPeriodQuantity(Real periodQuantity) { periodQu
 
 void CommodityIndexedCashFlow::init(const ext::shared_ptr<FutureExpiryCalculator>& calc, const Date& contractDate,
                                     const PaymentTiming paymentTiming, const Date& startDate, const Date& endDate,
-                                    const Natural paymentLag, const BusinessDayConvention paymentConvention,
+                                    const Integer paymentLag, const BusinessDayConvention paymentConvention,
                                     const Calendar& paymentCalendar,
                                     const QuantLib::Calendar& pricingCalendar,
                                     bool includeEndDate, bool excludeStartDate) {
@@ -205,7 +205,7 @@ CommodityIndexedLeg& CommodityIndexedLeg::withQuantities(const vector<Real>& qua
     return *this;
 }
 
-CommodityIndexedLeg& CommodityIndexedLeg::withPaymentLag(Natural paymentLag) {
+CommodityIndexedLeg& CommodityIndexedLeg::withPaymentLag(Integer paymentLag) {
     paymentLag_ = paymentLag;
     return *this;
 }

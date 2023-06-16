@@ -33,6 +33,7 @@
 #include <ql/money.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/schedule.hpp>
+#include <ql/instruments/swap.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -117,6 +118,13 @@ public:
     }
     std::vector<Leg> legs() { return legs_; }
     std::vector<Currency> currencies() { return currency_; }
+    std::vector<bool> payers() {
+        std::vector<bool> bool_payers(payer_.size(), true);
+        for (Size j = 0; j < payer_.size(); ++j) {
+            if (payer_[j] == 1.0)
+                bool_payers[j] = false;
+        }
+        return bool_payers; }
     //@}
 protected:
     //! \name Constructors

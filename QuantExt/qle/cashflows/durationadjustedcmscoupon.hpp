@@ -60,7 +60,7 @@ public:
     DurationAdjustedCmsLeg& withNotionals(const std::vector<Real>& notionals);
     DurationAdjustedCmsLeg& withPaymentDayCounter(const DayCounter&);
     DurationAdjustedCmsLeg& withPaymentAdjustment(BusinessDayConvention);
-    DurationAdjustedCmsLeg& withPaymentLag(Natural lag);
+    DurationAdjustedCmsLeg& withPaymentLag(Integer lag);
     DurationAdjustedCmsLeg& withPaymentCalendar(const Calendar&);
     DurationAdjustedCmsLeg& withFixingDays(Natural fixingDays);
     DurationAdjustedCmsLeg& withFixingDays(const std::vector<Natural>& fixingDays);
@@ -85,7 +85,7 @@ private:
     boost::shared_ptr<SwapIndex> swapIndex_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
-    Natural paymentLag_;
+    Integer paymentLag_;
     Calendar paymentCalendar_;
     BusinessDayConvention paymentAdjustment_;
     std::vector<Natural> fixingDays_;
