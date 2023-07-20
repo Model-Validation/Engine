@@ -39,9 +39,11 @@ class EquityForward : public Trade {
 public:
     EquityForward() : Trade("EquityForward"), quantity_(0.0), strike_(0.0) {}
     EquityForward(Envelope& env, string longShort, EquityUnderlying equityUnderlying, string currency,
-                  QuantLib::Real quantity, string maturityDate, QuantLib::Real strike, string strikeCurrency = "")
+                  QuantLib::Real quantity, string maturityDate, string settlementDateStr, QuantLib::Real strike,
+                  string strikeCurrency = "")
         : Trade("EquityForward", env), longShort_(longShort), equityUnderlying_(equityUnderlying), currency_(currency),
-          quantity_(quantity), maturityDate_(maturityDate), strike_(strike), strikeCurrency_(strikeCurrency) {}
+          quantity_(quantity), maturityDate_(maturityDate), settlementDateStr_(settlementDateStr), strike_(strike),
+          strikeCurrency_(strikeCurrency) {}
 
     void build(const boost::shared_ptr<EngineFactory>&) override;
 
@@ -54,6 +56,7 @@ public:
     string currency() { return currency_; }
     double quantity() { return quantity_; }
     string maturityDate() { return maturityDate_; }
+    string settlementDate() { return settlementDateStr_; }
     double strike() { return strike_; }
     string strikeCurrency() { return strikeCurrency_; }
 
@@ -66,6 +69,8 @@ private:
     string currency_;
     QuantLib::Real quantity_;
     string maturityDate_;
+    string settlementDateStr_;
+    Date settlemendDate_;
     QuantLib::Real strike_;
     string strikeCurrency_;
 };

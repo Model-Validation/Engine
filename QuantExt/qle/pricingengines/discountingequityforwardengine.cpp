@@ -53,10 +53,11 @@ void DiscountingEquityForwardEngine::calculate() const {
         Real lsInd = ((arguments_.longShort == Position::Long) ? 1.0 : -1.0);
         Real qty = arguments_.quantity;
         Date maturity = arguments_.maturityDate;
+        Date spotDate = arguments_.settlementDate;
         Real strike = arguments_.strike;
         Real forwardPrice =
             equitySpot_->value() * divYieldCurve_->discount(maturity) / equityRefRateCurve_->discount(maturity);
-        DiscountFactor df = discountCurve_->discount(maturity);
+        DiscountFactor df = discountCurve_->discount(spotDate);
         results_.value = (lsInd * qty) * (forwardPrice - strike) * df;
 
         results_.additionalResults["forwardPrice"] = forwardPrice;
