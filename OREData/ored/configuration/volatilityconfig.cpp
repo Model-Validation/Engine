@@ -542,6 +542,12 @@ void VolatilityConfigBuilder::loadVolatiltyConfigs(XMLNode* node) {
         auto vc = boost::make_shared<ProxyVolatilityConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
+
+    for (XMLNode* n = XMLUtils::getChildNode(node, "SviSurface"); n;
+         n = XMLUtils::getNextSibling(n, "SviSurface")) {
+        auto vc = boost::make_shared<VolatilitySviSurfaceConfig>();
+        vc->fromXML(n);
+        volatilityConfig_.push_back(vc);
     }
 
     QL_REQUIRE(volatilityConfig_.size() > 0,
@@ -566,6 +572,42 @@ void VolatilityConfigBuilder::fromXML(XMLNode* node) {
 }
 
 XMLNode* VolatilityConfigBuilder::toXML(XMLDocument& doc) { return NULL; }
+
+VolatilitySviSurfaceConfig::VolatilitySviSurfaceConfig(MarketDatum::QuoteType quoteType,
+                                                       QuantLib::Exercise::Type exerciseType)
+    : VolatilitySurfaceConfig(quoteType, exerciseType) {}
+
+void VolatilitySviSurfaceConfig::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "SviSurface");
+    VolatilityConfig::fromBaseNode(node);
+
+    // Read in the skews
+    XMLNode* segmentsNode = XMLUtils::getChildNode(node, "SmileSections");
+    if (segmentsNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(segmentsNode); child; child = XMLUtils::getNextSibling(child)) {
+            XMLUtils::checkNode(child, "Smile");
+            const std::string expiry = XMLUtils::getChildValue(child, "Expiry", true);
+            std::vector<Real> sviParameters = XMLUtils::getChildrenValuesAsDoublesCompact(child, "SviParameters", true);
+            QL_REQUIRE(sviParameters.size() == 5, "The SviParameters node expects 5 values (a,b,sigma,rho,m)");
+            // TODO: Should probably check that expiry is strictly greater than the most recent expiry in the vector (if any)
+
+            expiries_.push_back(expiry);
+            sviParameters_.push_back(sviParameters);
+        }
+    }
+}
+
+ore::data::XMLNode* VolatilitySviSurfaceConfig::toXML(ore::data::XMLDocument& doc) {
+    XMLNode* node = doc.allocNode("SviSurface");
+    VolatilityConfig::addBaseNode(doc, node);
+    for (size_t i = 0; i < expiries_.size(); ++i) {
+        XMLUtils::addChild(doc, node, "Expiry", expiries_[i]);
+        XMLUtils::addGenericChildAsList(doc, node, "SviParameters", sviParameters_[i]);
+    }
+    return node;
+}
+
+vector<pair<string, string>> VolatilitySviSurfaceConfig::quotes() const { return vector<pair<string, string>>(); }
 
 } // namespace data
 } // namespace ore

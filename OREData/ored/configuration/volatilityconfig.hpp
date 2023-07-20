@@ -453,5 +453,40 @@ private:
 };
 
 
+/*! Volatility configuration for a 2-D SVI volatility surface
+    \ingroup configuration
+ */
+class VolatilitySviSurfaceConfig : public VolatilitySurfaceConfig {
+public:
+    //! Default constructor
+    VolatilitySviSurfaceConfig(MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+                               QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European);
+
+    //! Explicit constructor
+
+    
+    //! \name Inspectors
+    //@{
+    const std::vector<std::string>& expiries() const { return expiries_; };
+    const std::vector<std::vector<double>>& sviParameterSets() const { return sviParameters_; };
+    //@}
+
+    //! \name VolatilitySurfaceConfig
+    //@{
+    std::vector<std::pair<std::string, std::string>> quotes() const override;
+    //@}
+
+    
+    //! \name Serialisation
+    //@{
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    //@}
+
+private:
+    std::vector<std::string> expiries_;
+    std::vector<std::vector<double>> sviParameters_;
+};
+
 } // namespace data
 } // namespace ore

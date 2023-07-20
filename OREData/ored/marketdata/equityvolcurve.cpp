@@ -28,6 +28,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/wildcard.hpp>
+#include <ql/experimental/volatility/svivolsurface.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/pricingengines/blackformula.hpp>
@@ -102,6 +103,8 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                         buildVolatility(asof, config, *vmsc, loader, eqIndex);
                     } else if (auto vdsc = boost::dynamic_pointer_cast<VolatilityDeltaSurfaceConfig>(vc)) {
                         buildVolatility(asof, config, *vdsc, loader, eqIndex);
+                    } else if (auto vsvisc = boost::dynamic_pointer_cast<VolatilitySviSurfaceConfig>(vc)) {
+                        buildVolatility(asof, config, *vsvisc, loader, eqIndex);
                     } else if (auto vdsc = boost::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(vc)) {
                         QL_FAIL("EquityVolCurve: VolatilityApoFutureSurfaceConfig surface not supported for Equities");
                     } else {
@@ -996,6 +999,35 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
     vol_->enableExtrapolation(vdsc.extrapolation());
 
     DLOG("EquityVolCurve: finished building 2-D volatility delta strike surface");
+}
+
+void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilityCurveConfig& vc,
+                                     const VolatilitySviSurfaceConfig& vsvisc, const Loader& loader,
+                                     const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex) {
+
+    LOG("EquityVolCurve: start building 2-D volatility SVI surface");
+
+    QL_REQUIRE(vsvisc.expiries().size() > 0, "VolatilitySviSurfaceConfig expects one or more expiries");
+    QL_REQUIRE(vsvisc.sviParameterSets().size() > 0,
+               "VolatilitySviSurfaceConfig expects one or more SVI smile section parameter sets");
+    QL_REQUIRE(vsvisc.expiries().size() == vsvisc.sviParameterSets().size(),
+               "Expected an equal amount of expiries andSVI smile section parameter sets");
+
+    std::vector<Date> expiries;
+    for (auto const& expiry : vsvisc.expiries()) {
+        expiries.push_back(getDateFromDateOrPeriod(expiry, asof, calendar_));
+    }
+
+    for (auto const& sviParameters : vsvisc.sviParameterSets()) {
+        QL_REQUIRE(sviParameters.size() == 5,
+                   "Expected each SVI parameter set to have a length of 5 (a,b,sigma,rho,m)");
+    }
+
+    vol_ = boost::make_shared<SviVolSurface>(asof, eqIndex->equitySpot(), eqIndex->equityForecastCurve(),
+                                                       eqIndex->equityDividendCurve(), expiries,
+                                                       vsvisc.sviParameterSets(), calendar_, BusinessDayConvention::Following, dayCounter_);
+
+    LOG("EquityVolCurve: finished building 2-D volatility SVI surface");
 }
 
 void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVolatilityCurveSpec& spec,
