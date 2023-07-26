@@ -28,7 +28,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/wildcard.hpp>
-#include <ql/experimental/volatility/svivolsurface.hpp>
+#include <qle/termstructures/svivolsurface.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/pricingengines/blackformula.hpp>
@@ -1003,7 +1003,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
 
 void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilityCurveConfig& vc,
                                      const VolatilitySviSurfaceConfig& vsvisc, const Loader& loader,
-                                     const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex) {
+                                     const QuantLib::Handle<QuantExt::EquityIndex2>& eqIndex) {
 
     LOG("EquityVolCurve: start building 2-D volatility SVI surface");
 

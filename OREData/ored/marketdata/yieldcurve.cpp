@@ -1694,14 +1694,18 @@ void YieldCurve::addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
 
                     oisHelper = boost::make_shared<QuantExt::OISRateHelper>(
                         oisConvention->spotLag(), oisTenor, oisQuote->quote(), onIndex,
-                        oisConvention->fixedDayCounter(), oisConvention->paymentLag(), oisConvention->eom(),
+                        oisConvention->fixedDayCounter(), oisConvention->fixedCalendar(), 
+                        oisConvention->paymentLag(),
+                        oisConvention->eom(),
                         oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
                         oisConvention->fixedPaymentConvention(), oisConvention->rule(),
                         discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true);
                 } else {
                     oisHelper = boost::make_shared<QuantExt::DatedOISRateHelper>(
                         oisQuote->startDate(), oisQuote->expiryDate(), oisQuote->quote(), onIndex,
-                        oisConvention->fixedDayCounter(), oisConvention->paymentLag(), oisConvention->fixedFrequency(),
+                        oisConvention->fixedDayCounter(), oisConvention->fixedCalendar(), 
+                        oisConvention->paymentLag(),
+                        oisConvention->fixedFrequency(),
                         oisConvention->fixedConvention(), oisConvention->fixedPaymentConvention(),
                         oisConvention->rule(), discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(),
                         true);

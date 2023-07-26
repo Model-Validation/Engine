@@ -438,21 +438,6 @@ private:
     std::string maxTenor_;
 };
 
-class VolatilityConfigBuilder : public XMLSerializable {
-public:
-    explicit VolatilityConfigBuilder() {}
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
-
-    void loadVolatiltyConfigs(XMLNode* node);
-
-    const std::vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig() { return volatilityConfig_; };
-
-private:
-    std::vector<boost::shared_ptr<VolatilityConfig>> volatilityConfig_;
-};
-
-
 /*! Volatility configuration for a 2-D SVI volatility surface
     \ingroup configuration
  */
@@ -473,19 +458,34 @@ public:
 
     //! \name VolatilitySurfaceConfig
     //@{
-    std::vector<std::pair<std::string, std::string>> quotes() const override;
+    std::vector<std::pair<std::string, std::string>> quotes() const;
     //@}
 
     
     //! \name Serialisation
     //@{
     void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) override;
     //@}
 
 private:
     std::vector<std::string> expiries_;
     std::vector<std::vector<double>> sviParameters_;
+};
+
+
+class VolatilityConfigBuilder : public XMLSerializable {
+public:
+    explicit VolatilityConfigBuilder() {}
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
+
+    void loadVolatiltyConfigs(XMLNode* node);
+
+    const std::vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig() { return volatilityConfig_; };
+
+private:
+    std::vector<boost::shared_ptr<VolatilityConfig>> volatilityConfig_;
 };
 
 } // namespace data

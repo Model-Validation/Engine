@@ -56,11 +56,11 @@ BOOST_AUTO_TEST_CASE(testVolatilitySurfaceMoneynessForward) {
     blackVolMatrix[1][0] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.40));
     blackVolMatrix[1][1] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.35));
 
-    DayCounter dc = ActualActual();
-    Handle<YieldTermStructure> forTS(
-        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.02)), ActualActual()));
-    Handle<YieldTermStructure> domTS(
-        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.01)), ActualActual()));
+    DayCounter dc = ActualActual(ActualActual::ISDA);
+    Handle<YieldTermStructure> forTS(boost::make_shared<FlatForward>(
+        today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.02)), ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> domTS(boost::make_shared<FlatForward>(
+        today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.01)), ActualActual(ActualActual::ISDA)));
 
     // Create the volatility surface with a spot moneyness dimension
     QuantExt::BlackVolatilitySurfaceMoneynessForward surface(cal, spot, expiryTimes, moneynessLevels, blackVolMatrix,
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(testVolatilitySurfaceMoneynessSpot) {
     blackVolMatrix[1][0] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.40));
     blackVolMatrix[1][1] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.35));
 
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
 
     // Create the volatility surface with a spot moneyness dimension
     QuantExt::BlackVolatilitySurfaceMoneynessSpot surface(cal, spot, expiryTimes, moneynessLevels, blackVolMatrix, dc,
