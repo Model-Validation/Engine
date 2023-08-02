@@ -19,6 +19,7 @@
 
 #include <qle/termstructures/svivolsurface.hpp>
 #include <algorithm>
+// #include <iostream>
 
 using namespace std;
 using namespace QuantLib;
@@ -58,17 +59,21 @@ namespace QuantExt {
         Time t2;
         Real var_t1;
         Real var_t2;
+        Real var_t;
         Real moneyness = strike / (spot_->value() * div_->discount(t) / rf_->discount(t));
+        // cout << endl;
+        // cout << "SVIVol -- time: " << t << ", strike: " << strike << ", moneyness: " << moneyness << ", spot: " << spot_->value() << ", div_df: " << div_->discount(t) << ", rf_df: " << rf_->discount(t) << endl;
 
         if (t <= expiryTimes_.front()) {
             t1 = 0.0;
             t2 = expiryTimes_.front();
             var_t1 = 0.0;
             var_t2 = smileSections_[0]->variance(moneyness * smileSections_[0]->atmLevel());
+            // cout << "SVIVol -- t1: " << t1 << ", t2: " << t2 << ", var_t1: " << var_t1 << ", var_t2: " << var_t2 << endl;
         } else if (t <= expiryTimes_.back()) {
-            Size i1, i2;
-            for (Size i = 0; i < smileSections_.size(); ++i) {
-                if (t > smileSections_[i]->exerciseTime()) {
+            Size i1 = 0, i2 = 0;
+            for (Size i = 0; i < smileSections_.size() - 1; ++i) {
+                if (smileSections_[i]->exerciseTime() < t && t <= smileSections_[i+1]->exerciseTime()) {
                     i1 = i;
                     i2 = i + 1;
                     break;
@@ -78,11 +83,18 @@ namespace QuantExt {
             t2 = smileSections_[i2]->exerciseTime();
             var_t1 = smileSections_[i1]->variance(moneyness * smileSections_[i1]->atmLevel());
             var_t2 = smileSections_[i2]->variance(moneyness * smileSections_[i2]->atmLevel());
+            // cout << "SVIVol --  t1: " << t1 << ", t2: " << t2 << ", var_t1: " << var_t1 << ", var_t2: " << var_t2 << endl;
         } else {
-            return smileSections_.back()->variance(moneyness * smileSections_.back()->atmLevel()) *
+            // cout << "SVIVol --  t1: " << smileSections_.back()->exerciseTime() << endl;
+            var_t = smileSections_.back()->variance(moneyness * smileSections_.back()->atmLevel()) *
                    t / smileSections_.back()->exerciseTime();
+            // cout << "SVIVol -- var_t: " << var_t << endl;
+            // cout << flush;
+            return var_t;
         }
-        Real var_t = var_t1 + (var_t2 - var_t1) * (t - t1) / (t2 - t1);
+        var_t = var_t1 + (var_t2 - var_t1) * (t - t1) / (t2 - t1);
+        // cout << "SVIVol -- var_t: " << var_t << endl;
+        // cout << flush;
         return var_t;
     }
 
