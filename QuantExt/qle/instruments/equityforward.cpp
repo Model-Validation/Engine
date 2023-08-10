@@ -24,9 +24,9 @@ using namespace QuantLib;
 namespace QuantExt {
 
 EquityForward::EquityForward(const std::string& name, const Currency& currency, const Position::Type& longShort,
-                             const Real& quantity, const Date& maturityDate, const Real& strike)
+                             const Real& quantity, const Date& maturityDate, const Date& settlementDate, const Real& strike)
     : name_(name), currency_(currency), longShort_(longShort), quantity_(quantity), maturityDate_(maturityDate),
-      strike_(strike) {}
+      settlementDate_(settlementDate), strike_(strike) {}
 
 bool EquityForward::isExpired() const { return detail::simple_event(maturityDate_).hasOccurred(); }
 
@@ -39,6 +39,7 @@ void EquityForward::setupArguments(PricingEngine::arguments* args) const {
     arguments->quantity = quantity_;
     arguments->maturityDate = maturityDate_;
     arguments->strike = strike_;
+    arguments->settlementDate = settlementDate_;
 }
 
 void EquityForward::arguments::validate() const {

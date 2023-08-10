@@ -245,7 +245,7 @@ boost::shared_ptr<Trade> buildEquityForward(string id, string longShort, Size ex
     Envelope env("CP");
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::EquityForward(env, longShort, EquityUnderlying(equityName), currency,
-                                                                quantity, expiryDate, strike));
+                                                                quantity, expiryDate, expiryDate, strike));
     trade->id() = id;
 
     return trade;

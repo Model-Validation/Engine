@@ -348,7 +348,9 @@ public:
     const QuantLib::Date& startDate() const { return startDate_; }
     //! The swap's term if the quote is tenor based
     const Period& term() const { return term_; }
+
     const Period& tenor() const { return tenor_; }
+    
     const std::string& indeName() const { return indexName_; }
     //! The swap's expiry if the quote is date based
     const QuantLib::Date& expiryDate() const { return expiryDate_; }

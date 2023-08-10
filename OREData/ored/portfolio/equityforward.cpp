@@ -60,11 +60,12 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
 
     QuantLib::Position::Type longShort = parsePositionType(longShort_);
     Date maturity = parseDate(maturityDate_);
+    Date settlementDate = parseDate(settlementDateStr_);
 
     string name = eqName();
 
     boost::shared_ptr<Instrument> inst =
-        boost::make_shared<QuantExt::EquityForward>(name, ccy, longShort, quantity_, maturity, strike);
+        boost::make_shared<QuantExt::EquityForward>(name, ccy, longShort, quantity_, maturity, settlementDate, strike);
 
     // Pricing engine
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
@@ -101,6 +102,7 @@ void EquityForward::fromXML(XMLNode* node) {
 
     longShort_ = XMLUtils::getChildValue(eNode, "LongShort", true);
     maturityDate_ = XMLUtils::getChildValue(eNode, "Maturity", true);
+    settlementDateStr_ = XMLUtils::getChildValue(eNode, "SettlementDate", true);
     XMLNode* tmp = XMLUtils::getChildNode(eNode, "Underlying");
     if (!tmp)
         tmp = XMLUtils::getChildNode(eNode, "Name");
@@ -118,6 +120,7 @@ XMLNode* EquityForward::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, eNode, "LongShort", longShort_);
     XMLUtils::addChild(doc, eNode, "Maturity", maturityDate_);
+    XMLUtils::addChild(doc, eNode, "SettlementDate", settlementDateStr_);
     XMLUtils::appendNode(eNode, equityUnderlying_.toXML(doc));
     XMLUtils::addChild(doc, eNode, "Currency", currency_);
     XMLUtils::addChild(doc, eNode, "Strike", strike_);

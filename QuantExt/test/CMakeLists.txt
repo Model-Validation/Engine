@@ -11,6 +11,7 @@ blackvolsurfacedelta.cpp
 blackvolsurfaceproxy.cpp
 blockmatrixinverse.cpp
 bondoption.cpp
+blackvolsurfacemoneyness.cpp
 bonds.cpp
 bondtrs.cpp
 calendars.cpp

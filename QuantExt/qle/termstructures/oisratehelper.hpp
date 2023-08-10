@@ -37,7 +37,7 @@ class OISRateHelper : public RelativeDateRateHelper {
 public:
     OISRateHelper(Natural settlementDays, const Period& swapTenor, const Handle<Quote>& fixedRate,
                   const boost::shared_ptr<OvernightIndex>& overnightIndex, const DayCounter& fixedDayCounter,
-                  const Calendar& fixedCalendar, Natural paymentLag = 0, bool endOfMonth = false,
+                  const Calendar& fixedCalendar, Integer paymentLag = 0, bool endOfMonth = false,
                   Frequency paymentFrequency = Annual, BusinessDayConvention fixedConvention = Following,
                   BusinessDayConvention paymentAdjustment = Following,
                   DateGeneration::Rule rule = DateGeneration::Backward,
@@ -65,7 +65,7 @@ protected:
     boost::shared_ptr<OvernightIndex> overnightIndex_;
     DayCounter fixedDayCounter_;
     Calendar fixedCalendar_;
-    Natural paymentLag_;
+    Integer paymentLag_;
     bool endOfMonth_;
     Frequency paymentFrequency_;
     BusinessDayConvention fixedConvention_;
@@ -87,7 +87,7 @@ class DatedOISRateHelper : public RateHelper {
 public:
     DatedOISRateHelper(const Date& startDate, const Date& endDate, const Handle<Quote>& fixedRate,
                        const boost::shared_ptr<OvernightIndex>& overnightIndex, const DayCounter& fixedDayCounter,
-                       const Calendar& fixedCalendar, Natural paymentLag = 0, Frequency paymentFrequency = Annual,
+                       const Calendar& fixedCalendar, Integer paymentLag = 0, Frequency paymentFrequency = Annual,
                        BusinessDayConvention fixedConvention = Following,
                        BusinessDayConvention paymentAdjustment = Following,
                        DateGeneration::Rule rule = DateGeneration::Backward,
@@ -108,7 +108,7 @@ protected:
     boost::shared_ptr<OvernightIndex> overnightIndex_;
     DayCounter fixedDayCounter_;
     Calendar fixedCalendar_;
-    Natural paymentLag_;
+    Integer paymentLag_;
     Frequency paymentFrequency_;
     BusinessDayConvention fixedConvention_;
     BusinessDayConvention paymentAdjustment_;

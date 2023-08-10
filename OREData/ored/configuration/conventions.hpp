@@ -392,7 +392,7 @@ public:
     const DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
     // might be empty to retain bwd compatibility
     const Calendar& fixedCalendar() const { return fixedCalendar_; }
-    Natural paymentLag() const { return paymentLag_; }
+    Integer paymentLag() const { return paymentLag_; }
     bool eom() { return eom_; }
     Frequency fixedFrequency() const { return fixedFrequency_; }
     BusinessDayConvention fixedConvention() const { return fixedConvention_; }
@@ -412,7 +412,7 @@ private:
     Natural spotLag_;
     DayCounter fixedDayCounter_;
     Calendar fixedCalendar_;
-    Natural paymentLag_;
+    Integer paymentLag_;
     bool eom_;
     Frequency fixedFrequency_;
     BusinessDayConvention fixedConvention_;
@@ -870,8 +870,9 @@ public:
     const QuantLib::Period& flatTenor() const { return flatTenor_; }
     const QuantLib::Period& spreadTenor() const { return spreadTenor_; }
 
-    Size paymentLag() const { return paymentLag_; }
-    Size flatPaymentLag() const { return flatPaymentLag_; }
+    
+    Integer paymentLag() const { return paymentLag_; }
+    Integer flatPaymentLag() const { return flatPaymentLag_; }
 
     // only OIS
     boost::optional<bool> includeSpread() const { return includeSpread_; }
@@ -901,8 +902,8 @@ private:
     bool flatIndexIsResettable_;
     QuantLib::Period flatTenor_;
     QuantLib::Period spreadTenor_;
-    QuantLib::Size paymentLag_;
-    QuantLib::Size flatPaymentLag_;
+    QuantLib::Integer paymentLag_;
+    QuantLib::Integer flatPaymentLag_;
     // OIS only
     boost::optional<bool> includeSpread_;
     boost::optional<QuantLib::Period> lookback_;

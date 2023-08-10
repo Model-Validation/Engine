@@ -65,7 +65,7 @@ public:
     //! Constructor that deduces payment date from \p endDate using payment conventions
     CommodityIndexedAverageCashFlow(
         QuantLib::Real quantity, const QuantLib::Date& startDate, const QuantLib::Date& endDate,
-        QuantLib::Natural paymentLag, QuantLib::Calendar paymentCalendar,
+        QuantLib::Integer paymentLag, QuantLib::Calendar paymentCalendar,
         QuantLib::BusinessDayConvention paymentConvention, const ext::shared_ptr<CommodityIndex>& index,
         const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(), QuantLib::Real spread = 0.0,
         QuantLib::Real gearing = 1.0, PaymentTiming paymentTiming = PaymentTiming::InArrears,
@@ -177,7 +177,7 @@ public:
     CommodityIndexedAverageLeg(const QuantLib::Schedule& schedule, const ext::shared_ptr<CommodityIndex>& index);
     CommodityIndexedAverageLeg& withQuantities(QuantLib::Real quantity);
     CommodityIndexedAverageLeg& withQuantities(const std::vector<QuantLib::Real>& quantities);
-    CommodityIndexedAverageLeg& withPaymentLag(QuantLib::Natural paymentLag);
+    CommodityIndexedAverageLeg& withPaymentLag(QuantLib::Integer paymentLag);
     CommodityIndexedAverageLeg& withPaymentCalendar(const QuantLib::Calendar& paymentCalendar);
     CommodityIndexedAverageLeg& withPaymentConvention(QuantLib::BusinessDayConvention paymentConvention);
     CommodityIndexedAverageLeg& withPricingCalendar(const QuantLib::Calendar& pricingCalendar);
@@ -210,7 +210,7 @@ private:
     Schedule schedule_;
     ext::shared_ptr<CommodityIndex> index_;
     std::vector<QuantLib::Real> quantities_;
-    QuantLib::Natural paymentLag_;
+    QuantLib::Integer paymentLag_;
     QuantLib::Calendar paymentCalendar_;
     QuantLib::BusinessDayConvention paymentConvention_;
     QuantLib::Calendar pricingCalendar_;

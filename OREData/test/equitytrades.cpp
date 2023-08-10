@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(testEquityTradePrices) {
     EquityOption eqCallPremium(env, callDataPremium, EquityUnderlying("zzzCorp"), "EUR", 1.0, tradeStrike);
     EquityOption eqPut(env, putData, EquityUnderlying("zzzCorp"), "EUR", 1.0, tradeStrike);
     EquityOption eqPutPremium(env, putDataPremium, EquityUnderlying("zzzCorp"), "EUR", 1.0, tradeStrike);
-    ore::data::EquityForward eqFwd(env, "Long", EquityUnderlying("zzzCorp"), "EUR", 1.0, exp_str, 95.0);
+    ore::data::EquityForward eqFwd(env, "Long", EquityUnderlying("zzzCorp"), "EUR", 1.0, exp_str, exp_str, 95.0);
 
     Real expectedNPV_Put = -2.4648;           // negative for sold option
     Real expectedNPV_Put_Premium = -1.513558; // less negative due to received premium of 1 EUR at expiry
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(testEquityFutureParity) {
     EquityFutureOption eqCallPremium(env, callDataPremium, "EUR", 1.0, underlying, strike, futureExpiry);
     EquityFutureOption eqPut(env, putData, "EUR", 1.0, underlying, strike, futureExpiry);
     EquityFutureOption eqPutPremium(env, putDataPremium, "EUR", 1.0, underlying, strike, futureExpiry);
-    ore::data::EquityForward eqFwd(env, "Long", EquityUnderlying("zzzCorp"), "EUR", 1.0, f_exp_str, 0);
+    ore::data::EquityForward eqFwd(env, "Long", EquityUnderlying("zzzCorp"), "EUR", 1.0, f_exp_str, f_exp_str, 0);
 
     // Build and price
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();

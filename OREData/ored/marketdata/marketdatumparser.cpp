@@ -310,6 +310,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     case MarketDatum::InstrumentType::IR_SWAP: {
         QL_REQUIRE(tokens.size() == 6 || tokens.size() == 7, "6 or 7 tokens expected in " << datumName);
         const string& ccy = tokens[2];
+        
         Size offset = 0;
         string indexName;
         if (tokens.size() == 7) {

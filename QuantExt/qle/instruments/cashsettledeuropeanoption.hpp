@@ -46,7 +46,7 @@ public:
 
     //! Constructor for cash settled vanilla European option.
     CashSettledEuropeanOption(QuantLib::Option::Type type, QuantLib::Real strike, const QuantLib::Date& expiryDate,
-                              QuantLib::Natural paymentLag, const QuantLib::Calendar& paymentCalendar,
+                              QuantLib::Integer paymentLag, const QuantLib::Calendar& paymentCalendar,
                               QuantLib::BusinessDayConvention paymentConvention, bool automaticExercise,
                               const boost::shared_ptr<QuantLib::Index>& underlying = nullptr, bool exercised = false,
                               QuantLib::Real priceAtExercise = QuantLib::Null<QuantLib::Real>());
@@ -60,7 +60,7 @@ public:
 
     //! Constructor for cash settled vanilla European option with digital payoff.
     CashSettledEuropeanOption(QuantLib::Option::Type type, QuantLib::Real strike, QuantLib::Real cashPayoff,
-                              const QuantLib::Date& expiryDate, QuantLib::Natural paymentLag,
+                              const QuantLib::Date& expiryDate, QuantLib::Integer paymentLag,
                               const QuantLib::Calendar& paymentCalendar,
                               QuantLib::BusinessDayConvention paymentConvention, bool automaticExercise,
                               const boost::shared_ptr<QuantLib::Index>& underlying = nullptr, bool exercised = false,

@@ -52,7 +52,7 @@ public:
         are derived from the start date and end date using the conventions.
     */
     CommodityIndexedCashFlow(QuantLib::Real quantity, const QuantLib::Date& startDate, const QuantLib::Date& endDate,
-                             const ext::shared_ptr<CommodityIndex>& index, QuantLib::Natural paymentLag,
+                             const ext::shared_ptr<CommodityIndex>& index, QuantLib::Integer paymentLag,
                              const QuantLib::Calendar& paymentCalendar,
                              QuantLib::BusinessDayConvention paymentConvention, QuantLib::Natural pricingLag,
                              const QuantLib::Calendar& pricingLagCalendar, QuantLib::Real spread = 0.0,
@@ -135,7 +135,7 @@ private:
               const QuantLib::Date& contractDate = QuantLib::Date(),
               const PaymentTiming paymentTiming = PaymentTiming::InArrears,
               const QuantLib::Date& startDate = QuantLib::Date(), const QuantLib::Date& endDate = QuantLib::Date(),
-              const QuantLib::Natural paymentLag = 0,
+              const QuantLib::Integer paymentLag = 0,
               const QuantLib::BusinessDayConvention paymentConvention = QuantLib::Unadjusted,
               const QuantLib::Calendar& paymentCalendar = QuantLib::NullCalendar(),
               const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(), bool includeEndDate = true,
@@ -149,7 +149,7 @@ public:
     CommodityIndexedLeg(const QuantLib::Schedule& schedule, const ext::shared_ptr<CommodityIndex>& index);
     CommodityIndexedLeg& withQuantities(QuantLib::Real quantity);
     CommodityIndexedLeg& withQuantities(const std::vector<QuantLib::Real>& quantities);
-    CommodityIndexedLeg& withPaymentLag(QuantLib::Natural paymentLag);
+    CommodityIndexedLeg& withPaymentLag(QuantLib::Integer paymentLag);
     CommodityIndexedLeg& withPaymentCalendar(const QuantLib::Calendar& paymentCalendar);
     CommodityIndexedLeg& withPaymentConvention(QuantLib::BusinessDayConvention paymentConvention);
     CommodityIndexedLeg& withPricingLag(QuantLib::Natural pricingLag);
@@ -180,7 +180,7 @@ private:
     Schedule schedule_;
     ext::shared_ptr<CommodityIndex> index_;
     std::vector<QuantLib::Real> quantities_;
-    QuantLib::Natural paymentLag_;
+    QuantLib::Integer paymentLag_;
     QuantLib::Calendar paymentCalendar_;
     QuantLib::BusinessDayConvention paymentConvention_;
     QuantLib::Natural pricingLag_;

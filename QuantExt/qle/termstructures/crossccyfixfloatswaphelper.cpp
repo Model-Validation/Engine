@@ -109,7 +109,7 @@ void CrossCcyFixFloatSwapHelper::initializeDates() {
                            DateGeneration::Backward, endOfMonth_);
 
     // Create the swap
-    Natural paymentLag = 0;
+    Integer paymentLag = 0;
     Spread floatSpread = spread_.empty() ? 0.0 : spread_->value();
     swap_.reset(new CrossCcyFixFloatSwap(CrossCcyFixFloatSwap::Payer, fixedNominal, fixedCurrency_, fixedSchedule, 0.0,
                                          fixedDayCount_, paymentConvention_, paymentLag, paymentCalendar_, floatNominal,

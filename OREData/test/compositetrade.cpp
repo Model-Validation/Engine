@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(testSyntheticForward) {
     eqPut->id() = "Short Put";
     CompositeTrade syntheticForward("EUR", {eqCall, eqPut}, "Mean", 0.0, env);
     syntheticForward.id() = "Synthetic Forward Test";
-    ore::data::EquityForward eqFwd(env, "Long", EquityUnderlying("eurCorp"), "EUR", 1.0, exp_str, 95.0);
+    ore::data::EquityForward eqFwd(env, "Long", EquityUnderlying("eurCorp"), "EUR", 1.0, exp_str, exp_str, 95.0);
 
     // Build and price
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();

@@ -77,6 +77,7 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
         .addColumn("CounterParty", string());
     for (auto & [tradeId, trade] : portfolio->trades()) {
         try {
+            DLOG("Writing npv data of trade id: " << trade->id());
             string npvCcy = trade->npvCurrency();
             Real fx = 1.0, fxNotional = 1.0;
             if (npvCcy != baseCurrency)
@@ -647,15 +648,22 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
     map<string, string> discountCurves = marketConfig.mapping(MarketObject::DiscountCurve, configID);
     map<string, string> YieldCurves = marketConfig.mapping(MarketObject::YieldCurve, configID);
     map<string, string> indexCurves = marketConfig.mapping(MarketObject::IndexCurve, configID);
-    map<string, string> zeroInflationIndices, defaultCurves;
+    map<string, string> zeroInflationIndices, defaultCurves, EquityCurves, CommodityCurves;
     if (marketConfig.hasMarketObject(MarketObject::ZeroInflationCurve))
         zeroInflationIndices = marketConfig.mapping(MarketObject::ZeroInflationCurve, configID);
     if (marketConfig.hasMarketObject(MarketObject::DefaultCurve))
         defaultCurves = marketConfig.mapping(MarketObject::DefaultCurve, configID);
+    if (marketConfig.hasMarketObject(MarketObject::EquityCurve))
+        EquityCurves = marketConfig.mapping(MarketObject::EquityCurve, configID);
+    if (marketConfig.hasMarketObject(MarketObject::CommodityCurve))
+        CommodityCurves = marketConfig.mapping(MarketObject::CommodityCurve, configID);
+
 
     vector<Handle<YieldTermStructure>> yieldCurves;
     vector<Handle<ZeroInflationIndex>> zeroInflationFixings;
     vector<Handle<DefaultProbabilityTermStructure>> probabilityCurves;
+    vector<std::tuple<Handle<YieldTermStructure>, Handle<YieldTermStructure>>> equityCurves;
+    vector<Handle<PriceTermStructure>> commodityCurves;
 
     report.addColumn("Tenor", Period()).addColumn("Date", Date());
 
@@ -724,16 +732,47 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
             }
         }
     }
+    for (auto it : EquityCurves) {
+        DLOG("equity curve - " << it.first);
+        try {
+            equityCurves.push_back(std::make_tuple(market->equityCurve(it.first, configID)->equityForecastCurve(),
+                                   market->equityCurve(it.first, configID)->equityDividendCurve()));
+            report.addColumn(it.first + " Fwd", double(), 15);
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                WLOG("skip this curve: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
+    }
+    for (auto it : CommodityCurves) {
+        DLOG("commodity curve - " << it.first);
+        try {
+            commodityCurves.push_back(market->commodityPriceCurve(it.first, configID));
+            report.addColumn(it.first + " price curve", double(), 15);
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                WLOG("skip this curve: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
+    }
 
     for (Size j = 0; j < grid.size(); ++j) {
         Date date = grid[j];
         report.next().add(grid.tenors()[j]).add(date);
-        for (Size i = 0; i < yieldCurves.size(); ++i)
-            report.add(yieldCurves[i]->discount(date));
-        for (Size i = 0; i < zeroInflationFixings.size(); ++i)
-            report.add(zeroInflationFixings[i]->fixing(date));
-        for (Size i = 0; i < probabilityCurves.size(); ++i)
-            report.add(probabilityCurves[i]->survivalProbability(date));
+        for (auto yC : yieldCurves)
+            report.add(yC->discount(date));
+        for (auto zInfF : zeroInflationFixings)
+            report.add(zInfF->fixing(date));
+        for (auto prC : probabilityCurves)
+            report.add(prC->survivalProbability(date));
+        for (auto eqC : equityCurves)
+            report.add(std::get<0>(eqC)->discount(date) / std::get<1>(eqC)->discount(date));
+        for (auto comC : commodityCurves)
+            report.add(comC->price(date));
     }
     report.end();
 }

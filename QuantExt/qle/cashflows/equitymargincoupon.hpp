@@ -130,7 +130,7 @@ protected:
     Real quantity_;
     Date fixingStartDate_;
     Date fixingEndDate_;
-    Natural paymentLag_;
+    Integer paymentLag_;
     boost::shared_ptr<FxIndex> fxIndex_;
     Real marginFactor_;
     InterestRate fixedRate_;
@@ -172,7 +172,7 @@ public:
     EquityMarginLeg& withNotionals(const std::vector<Real>& notionals);
     EquityMarginLeg& withPaymentDayCounter(const DayCounter& dayCounter);
     EquityMarginLeg& withPaymentAdjustment(BusinessDayConvention convention);
-    EquityMarginLeg& withPaymentLag(Natural paymentLag);
+    EquityMarginLeg& withPaymentLag(Integer paymentLag);
     EquityMarginLeg& withPaymentCalendar(const Calendar& calendar);
     EquityMarginLeg& withTotalReturn(bool);
     EquityMarginLeg& withDividendFactor(Real);
@@ -195,7 +195,7 @@ private:
     boost::shared_ptr<FxIndex> fxIndex_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
-    Natural paymentLag_;
+    Integer paymentLag_;
     BusinessDayConvention paymentAdjustment_;
     Calendar paymentCalendar_;
     bool isTotalReturn_;

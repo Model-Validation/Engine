@@ -3477,10 +3477,10 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fPayouts) {
 
     Date tradeMaturity = d.referenceDate + 5 * 365;
 
-    boost::shared_ptr<EquityForward> lhFwdTrade =
-        boost::make_shared<EquityForward>("LH", EURCurrency(), Position::Long, 1, tradeMaturity, strikeLh);
+    boost::shared_ptr<EquityForward> lhFwdTrade = boost::make_shared<EquityForward>(
+        "LH", EURCurrency(), Position::Long, 1, tradeMaturity, tradeMaturity, strikeLh);
     boost::shared_ptr<EquityForward> spFwdTrade =
-        boost::make_shared<EquityForward>("SP", USDCurrency(), Position::Long, 1, tradeMaturity, strikeSp);
+        boost::make_shared<EquityForward>("SP", USDCurrency(), Position::Long, 1, tradeMaturity, tradeMaturity, strikeSp);
 
     boost::shared_ptr<VanillaOption> lhCall =
         boost::make_shared<VanillaOption>(boost::make_shared<PlainVanillaPayoff>(Option::Call, strikeLh),

@@ -30,7 +30,7 @@ void no_deletion(YieldTermStructure*) {}
 
 OISRateHelper::OISRateHelper(Natural settlementDays, const Period& swapTenor, const Handle<Quote>& fixedRate,
                              const boost::shared_ptr<OvernightIndex>& overnightIndex, const DayCounter& fixedDayCounter,
-                             const Calendar& fixedCalendar, Natural paymentLag, bool endOfMonth,
+                             const Calendar& fixedCalendar, Integer paymentLag, bool endOfMonth,
                              Frequency paymentFrequency, BusinessDayConvention fixedConvention,
                              BusinessDayConvention paymentAdjustment, DateGeneration::Rule rule,
                              const Handle<YieldTermStructure>& discountingCurve, bool telescopicValueDates,
@@ -144,7 +144,7 @@ void OISRateHelper::accept(AcyclicVisitor& v) {
 DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDate, const Handle<Quote>& fixedRate,
                                        const boost::shared_ptr<OvernightIndex>& overnightIndex,
                                        const DayCounter& fixedDayCounter, const Calendar& fixedCalendar,
-                                       Natural paymentLag, Frequency paymentFrequency,
+                                       Integer paymentLag, Frequency paymentFrequency,
                                        BusinessDayConvention fixedConvention, BusinessDayConvention paymentAdjustment,
                                        DateGeneration::Rule rule, const Handle<YieldTermStructure>& discountingCurve,
                                        bool telescopicValueDates, Pillar::Choice pillar, Date customPillarDate)

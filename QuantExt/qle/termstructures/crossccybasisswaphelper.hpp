@@ -106,8 +106,8 @@ protected:
     std::vector<Natural> spotFXSettleDaysVec_;
     std::vector<Calendar> spotFXSettleCalendarVec_;
 
-    Size paymentLag_;
-    Size flatPaymentLag_;
+    Integer paymentLag_;
+    Integer flatPaymentLag_;
     // OIS only
     boost::optional<bool> includeSpread_;
     boost::optional<QuantLib::Period> lookback_;

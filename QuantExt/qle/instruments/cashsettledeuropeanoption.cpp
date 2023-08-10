@@ -80,7 +80,7 @@ CashSettledEuropeanOption::CashSettledEuropeanOption(Option::Type type, Real str
 }
 
 CashSettledEuropeanOption::CashSettledEuropeanOption(Option::Type type, Real strike, const Date& expiryDate,
-                                                     Natural paymentLag, const Calendar& paymentCalendar,
+                                                     QuantLib::Integer paymentLag, const Calendar& paymentCalendar,
                                                      BusinessDayConvention paymentConvention, bool automaticExercise,
                                                      const boost::shared_ptr<Index>& underlying, bool exercised,
                                                      Real priceAtExercise)
@@ -112,7 +112,7 @@ CashSettledEuropeanOption::CashSettledEuropeanOption(Option::Type type, Real str
 }
 
 CashSettledEuropeanOption::CashSettledEuropeanOption(Option::Type type, Real strike, Real cashPayoff,
-                                                     const Date& expiryDate, Natural paymentLag,
+                                                     const Date& expiryDate, QuantLib::Integer paymentLag,
                                                      const Calendar& paymentCalendar,
                                                      BusinessDayConvention paymentConvention, bool automaticExercise,
                                                      const boost::shared_ptr<Index>& underlying, bool exercised,

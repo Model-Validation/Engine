@@ -55,6 +55,8 @@ public:
         const Real& quantity,
         //! Maturity date
         const Date& maturityDate,
+        //! Settlement date, typically 0 or 2 bd after maturity
+        const Date& settlementDate,
         //! Strike
         const Real& strike);
     //! \name Instrument interface
@@ -70,6 +72,7 @@ public:
     Position::Type longShort() const { return longShort_; }
     Real quantity() const { return quantity_; }
     Date maturityDate() const { return maturityDate_; }
+    Date settlementDate() const { return settlementDate_; }
     Real strike() const { return strike_; }
     //@}
 private:
@@ -79,6 +82,7 @@ private:
     Position::Type longShort_;
     Real quantity_;
     Date maturityDate_;
+    Date settlementDate_;
     Real strike_;
 };
 
@@ -90,6 +94,7 @@ public:
     Position::Type longShort;
     Real quantity;
     Date maturityDate;
+    Date settlementDate;
     Real strike;
     void validate() const override;
 };
