@@ -1156,6 +1156,9 @@
     <ClInclude Include="qle\termstructures\blackvolsurfacemoneyness.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\blackvolatilitysurfacesparse.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1968,6 +1971,9 @@
       <Filter>cashflows</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\blackvolsurfacemoneyness.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\blackvolatilitysurfacesparse.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>

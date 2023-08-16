@@ -41,6 +41,7 @@
 #include <qle/termstructures/blackdeltautilities.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
+#include <qle/termstructures/blackvolatilitysurfacesparse.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
 #include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
@@ -476,8 +477,9 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                     new BlackConstantVol(asof, Calendar(), callData[0], dayCounter_));
             } else {
                 // create a vol surface from the calls
-                boost::shared_ptr<BlackVarianceSurfaceSparse> callSurface =
-                    boost::make_shared<BlackVarianceSurfaceSparse>(asof, calendar_, callExpiries, callStrikes, callData,
+                boost::shared_ptr<BlackVolatilitySurfaceSparse> callSurface =
+                    boost::make_shared<BlackVolatilitySurfaceSparse>(asof, calendar_, callExpiries, callStrikes,
+                                                                     callData,
                                                                    dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
                                                                    flatTimeExtrap);
 
@@ -486,8 +488,8 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                     vol_ = callSurface;
                 } else {
                     // otherwise create a vol surface from puts and strip for a final surface
-                    boost::shared_ptr<BlackVarianceSurfaceSparse> putSurface =
-                        boost::make_shared<BlackVarianceSurfaceSparse>(asof, calendar_, putExpiries, putStrikes,
+                    boost::shared_ptr<BlackVolatilitySurfaceSparse> putSurface =
+                        boost::make_shared<BlackVolatilitySurfaceSparse>(asof, calendar_, putExpiries, putStrikes,
                                                                        putData, dayCounter_, flatStrikeExtrap,
                                                                        flatStrikeExtrap, flatTimeExtrap);
 
@@ -501,7 +503,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         } else {
             QL_FAIL("EquityVolatility: Invalid quote type provided.");
         }
-        DLOG("Setting BlackVarianceSurfaceSparse extrapolation to " << to_string(vssc.extrapolation()));
+        DLOG("Setting BlackVolatilitySurfaceSparse extrapolation to " << to_string(vssc.extrapolation()));
         vol_->enableExtrapolation(vssc.extrapolation());
 
     } catch (std::exception& e) {
