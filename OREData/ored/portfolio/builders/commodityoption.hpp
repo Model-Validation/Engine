@@ -61,7 +61,7 @@ public:
 class CommodityAmericanOptionFDEngineBuilder : public AmericanOptionFDEngineBuilder {
 public:
     CommodityAmericanOptionFDEngineBuilder()
-        : AmericanOptionFDEngineBuilder("BlackScholes", {"CommodityOptionAmerican"}, AssetClass::COM, expiryDate_) {}
+        : AmericanOptionFDEngineBuilder("BlackScholes", {"CommodityOptionAmerican"}, AssetClass::COM, expiryDate_, strike_) {}
 };
 
 /*! Engine builder for American commodity options using Barone-Adesi and Whaley approximation.

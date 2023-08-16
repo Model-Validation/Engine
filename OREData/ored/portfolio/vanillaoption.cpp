@@ -204,7 +204,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
                 boost::dynamic_pointer_cast<VanillaOptionEngineBuilder>(builder);
             QL_REQUIRE(vanillaOptionBuilder != nullptr, "No engine builder found for trade type " << tradeTypeBuilder);
 
-            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_));
+            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_, strike_));
 
             configuration = vanillaOptionBuilder->configuration(MarketContext::pricing);
         } else {

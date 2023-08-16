@@ -32,6 +32,7 @@
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
+#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/version.hpp>
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 #include <qle/pricingengines/analyticeuropeanforwardengine.hpp>
@@ -52,14 +53,18 @@ protected:
     boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> getBlackScholesProcess(const string& assetName,
                                                                              const Currency& ccy,
                                                                              const AssetClass& assetClassUnderlying,
-                                                                             const std::vector<Time>& timePoints = {}) {
+                                                                             const std::vector<Time>& timePoints = {},
+                                                                             double strike = 0.0) {
 
         using VVTS = QuantExt::BlackMonotoneVarVolTermStructure;
         string config = this->configuration(ore::data::MarketContext::pricing);
 
         if (assetClassUnderlying == AssetClass::EQ) {
             Handle<BlackVolTermStructure> vol = this->market_->equityVol(assetName, config);
-            if (!timePoints.empty()) {
+            if (timePoints.size() == 1) {
+                vol = Handle<BlackVolTermStructure>(boost::make_shared<BlackConstantVol>(vol->referenceDate(), vol->calendar(), vol->blackVol(timePoints[0], strike, true), vol->dayCounter()));
+                vol->enableExtrapolation();
+            } else if (!timePoints.empty()) {
                 vol = Handle<BlackVolTermStructure>(boost::make_shared<VVTS>(vol, timePoints));
                 vol->enableExtrapolation();
             }
@@ -109,29 +114,32 @@ protected:
     \ingroup builders
  */
 class VanillaOptionEngineBuilder
-    : public CachingOptionEngineBuilder<string, const string&, const Currency&, const AssetClass&, const Date&> {
+    : public CachingOptionEngineBuilder<string, const string&, const Currency&, const AssetClass&, const Date&, const double> {
 public:
     VanillaOptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes,
-                               const AssetClass& assetClass, const Date& expiryDate)
-        : CachingOptionEngineBuilder(model, engine, tradeTypes, assetClass), expiryDate_(expiryDate) {}
+                               const AssetClass& assetClass, const Date& expiryDate, const double strike = 0.0)
+        : CachingOptionEngineBuilder(model, engine, tradeTypes, assetClass), expiryDate_(expiryDate), strike_(strike) {}
 
-    boost::shared_ptr<PricingEngine> engine(const string& assetName, const Currency& ccy, const Date& expiryDate) {
+    boost::shared_ptr<PricingEngine> engine(const string& assetName, const Currency& ccy, const Date& expiryDate,
+                                            const double strike = 0.0) {
         return CachingPricingEngineBuilder<string, const string&, const Currency&, const AssetClass&,
-                                           const Date&>::engine(assetName, ccy, assetClass_, expiryDate);
+                                           const Date&, const double>::engine(assetName, ccy, assetClass_, expiryDate, strike);
     }
 
-    boost::shared_ptr<PricingEngine> engine(const Currency& ccy1, const Currency& ccy2, const Date& expiryDate) {
+    boost::shared_ptr<PricingEngine> engine(const Currency& ccy1, const Currency& ccy2, const Date& expiryDate,
+                                            const double strike = 0.0) {
         return CachingPricingEngineBuilder<string, const string&, const Currency&, const AssetClass&,
-                                           const Date&>::engine(ccy1.code(), ccy2, assetClass_, expiryDate);
+                                           const Date&, const double>::engine(ccy1.code(), ccy2, assetClass_, expiryDate, strike);
     }
 
 protected:
     virtual string keyImpl(const string& assetName, const Currency& ccy, const AssetClass& assetClassUnderlying,
-                           const Date& expiryDate) override {
-        return assetName + "/" + ccy.code() + "/" + to_string(expiryDate);
+                           const Date& expiryDate, double strike = 0.0) override {
+        return assetName + "/" + ccy.code() + "/" + to_string(expiryDate) + "/" + to_string(strike);
     }
 
     Date expiryDate_;
+    double strike_;
 };
 
 //! Abstract Engine Builder for European Vanilla Options
@@ -142,12 +150,12 @@ protected:
 class EuropeanOptionEngineBuilder : public VanillaOptionEngineBuilder {
 public:
     EuropeanOptionEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
-        : VanillaOptionEngineBuilder(model, "AnalyticEuropeanEngine", tradeTypes, assetClass, Date()) {}
+        : VanillaOptionEngineBuilder(model, "AnalyticEuropeanEngine", tradeTypes, assetClass, Date(), 0.0) {}
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                         const AssetClass& assetClassUnderlying,
-                                                        const Date& expiryDate) override {
+                                                        const Date& expiryDate, const double strike) override {
         boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
         Handle<YieldTermStructure> discountCurve =
@@ -164,12 +172,12 @@ protected:
 class EuropeanForwardOptionEngineBuilder : public VanillaOptionEngineBuilder {
 public:
     EuropeanForwardOptionEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
-        : VanillaOptionEngineBuilder(model, "AnalyticEuropeanForwardEngine", tradeTypes, assetClass, Date()) {}
+        : VanillaOptionEngineBuilder(model, "AnalyticEuropeanForwardEngine", tradeTypes, assetClass, Date(), 0.0) {}
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                        const AssetClass& assetClassUnderlying,
-                                                        const Date& expiryDate) override {
+                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                                        const double strike) override {
         boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
         Handle<YieldTermStructure> discountCurve =
@@ -184,12 +192,12 @@ protected:
 class EuropeanCSOptionEngineBuilder : public VanillaOptionEngineBuilder {
 public:
     EuropeanCSOptionEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
-        : VanillaOptionEngineBuilder(model, "AnalyticCashSettledEuropeanEngine", tradeTypes, assetClass, Date()) {}
+        : VanillaOptionEngineBuilder(model, "AnalyticCashSettledEuropeanEngine", tradeTypes, assetClass, Date(), 0.0) {}
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                        const AssetClass& assetClassUnderlying,
-                                                        const Date& expiryDate) override {
+                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                                        const double strike) override {
         boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
         Handle<YieldTermStructure> discountCurve =
@@ -206,8 +214,8 @@ protected:
 class AmericanOptionEngineBuilder : public VanillaOptionEngineBuilder {
 public:
     AmericanOptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes,
-                                const AssetClass& assetClass, const Date& expiryDate)
-        : VanillaOptionEngineBuilder(model, engine, tradeTypes, assetClass, expiryDate) {}
+                                const AssetClass& assetClass, const Date& expiryDate, const double strike)
+        : VanillaOptionEngineBuilder(model, engine, tradeTypes, assetClass, expiryDate, strike) {}
 };
 
 //! Abstract Engine Builder for American Vanilla Options using Finite Difference Method
@@ -218,12 +226,13 @@ public:
 class AmericanOptionFDEngineBuilder : public AmericanOptionEngineBuilder {
 public:
     AmericanOptionFDEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass,
-                                  const Date& expiryDate)
-        : AmericanOptionEngineBuilder(model, "FdBlackScholesVanillaEngine", tradeTypes, assetClass, expiryDate) {}
+                                  const Date& expiryDate, const double strike)
+        : AmericanOptionEngineBuilder(model, "FdBlackScholesVanillaEngine", tradeTypes, assetClass, expiryDate, strike) {}
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                        const AssetClass& assetClass, const Date& expiryDate) override {
+                                                        const AssetClass& assetClass, const Date& expiryDate,
+                                                        const double strike) override {
         // We follow the way FdBlackScholesBarrierEngine determines maturity for time grid generation
         Handle<YieldTermStructure> riskFreeRate =
             market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing));
@@ -254,7 +263,7 @@ protected:
             timePoints.insert(std::upper_bound(timePoints.begin(), timePoints.end(), 0.99 / 365), 0.99 / 365);
             gbsp = getBlackScholesProcess(assetName, ccy, assetClass, timePoints);
         } else {
-            gbsp = getBlackScholesProcess(assetName, ccy, assetClass);
+            gbsp = getBlackScholesProcess(assetName, ccy, assetClass, std::vector<Time>{expiry}, strike);
         }
         return boost::make_shared<FdBlackScholesVanillaEngine>(gbsp, tGrid, xGrid, dampingSteps, scheme);
     }
@@ -268,11 +277,12 @@ protected:
 class AmericanOptionBAWEngineBuilder : public AmericanOptionEngineBuilder {
 public:
     AmericanOptionBAWEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
-        : AmericanOptionEngineBuilder(model, "BaroneAdesiWhaleyApproximationEngine", tradeTypes, assetClass, Date()) {}
+        : AmericanOptionEngineBuilder(model, "BaroneAdesiWhaleyApproximationEngine", tradeTypes, assetClass, Date(), 0.0) {}
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                        const AssetClass& assetClass, const Date& expiryDate) override {
+                                                        const AssetClass& assetClass, const Date& expiryDate,
+                                                        const double strike) override {
         boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetName, ccy, assetClass);
         return boost::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
     }
