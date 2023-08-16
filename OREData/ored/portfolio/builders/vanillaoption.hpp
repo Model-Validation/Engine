@@ -30,7 +30,10 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
+#include <ql/pricingengines/vanilla/binomialengine.hpp>
+#include <ql/pricingengines/vanilla/bjerksundstenslandengine.hpp>
 #include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
+#include <ql/pricingengines/vanilla/juquadraticengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/version.hpp>
@@ -285,6 +288,74 @@ protected:
                                                         const double strike) override {
         boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetName, ccy, assetClass);
         return boost::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
+    }
+};
+
+//! Abstract Engine Builder for American Vanilla Options using a Binomial Tree
+/*! Pricing engines are cached by asset/currency
+
+    \ingroup builders
+ */
+class AmericanOptionBinomialEngineBuilder : public AmericanOptionEngineBuilder {
+public:
+    AmericanOptionBinomialEngineBuilder(const string& model, const set<string>& tradeTypes,
+                                        const AssetClass& assetClass, const Date& expiryDate, const double strike)
+        : AmericanOptionEngineBuilder(model, "BinomialVanillaEngine", tradeTypes, assetClass, expiryDate, strike) {}
+
+protected:
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+                                                        const AssetClass& assetClass, const Date& expiryDate,
+                                                        const double strike) override {
+        Handle<BlackVolTermStructure> vol =
+            market_->equityVol(assetName, configuration(ore::data::MarketContext::pricing));
+        Time expiry = vol->dayCounter().yearFraction(vol->referenceDate(), expiryDate);
+        boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
+            getBlackScholesProcess(assetName, ccy, assetClass, std::vector<Time>{expiry}, strike);
+        Size timeSteps = 300;
+        return boost::make_shared<QuantLib::BinomialVanillaEngine<QuantLib::CoxRossRubinstein>>(gbsp, timeSteps);
+    }
+};
+
+//! Abstract Engine Builder for American Vanilla Options using Ju Quadratic Approximation
+/*! Pricing engines are cached by asset/currency
+
+    \ingroup builders
+ */
+class AmericanOptionJuEngineBuilder : public AmericanOptionEngineBuilder {
+public:
+    AmericanOptionJuEngineBuilder(const string& model, const set<string>& tradeTypes,
+                                           const AssetClass& assetClass)
+        : AmericanOptionEngineBuilder(model, "JuQuadraticApproximationEngine", tradeTypes, assetClass, Date(), 0.0) {}
+
+protected:
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+                                                        const AssetClass& assetClass, const Date& expiryDate,
+                                                        const double strike) override {
+        boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
+            getBlackScholesProcess(assetName, ccy, assetClass);
+        return boost::make_shared<QuantLib::JuQuadraticApproximationEngine>(gbsp);
+    }
+};
+
+//! Abstract Engine Builder for American Vanilla Options using the Bjerksund and Stendland Approximation
+/*! Pricing engines are cached by asset/currency
+
+    \ingroup builders
+ */
+class AmericanOptionBSEngineBuilder : public AmericanOptionEngineBuilder {
+public:
+    AmericanOptionBSEngineBuilder(const string& model, const set<string>& tradeTypes,
+                                                  const AssetClass& assetClass)
+        : AmericanOptionEngineBuilder(model, "BjerksundStenslandApproximationEngine", tradeTypes, assetClass, Date(),
+                                      0.0) {}
+
+protected:
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+                                                        const AssetClass& assetClass, const Date& expiryDate,
+                                                        const double strike) override {
+        boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
+            getBlackScholesProcess(assetName, ccy, assetClass);
+        return boost::make_shared<QuantLib::BjerksundStenslandApproximationEngine>(gbsp);
     }
 };
 

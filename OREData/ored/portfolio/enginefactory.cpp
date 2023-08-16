@@ -192,6 +192,9 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<EquityEuropeanCSOptionEngineBuilder>());
     registerBuilder(boost::make_shared<EquityAmericanOptionFDEngineBuilder>());
     registerBuilder(boost::make_shared<EquityAmericanOptionBAWEngineBuilder>());
+    registerBuilder(boost::make_shared<EquityAmericanOptionBSEngineBuilder>());
+    registerBuilder(boost::make_shared<EquityAmericanOptionBinomialEngineBuilder>());
+    registerBuilder(boost::make_shared<EquityAmericanOptionJuEngineBuilder>());
     registerBuilder(boost::make_shared<EquityEuropeanAsianOptionMCDAAPEngineBuilder>());
     registerBuilder(boost::make_shared<EquityEuropeanAsianOptionMCDAASEngineBuilder>());
     registerBuilder(boost::make_shared<EquityEuropeanAsianOptionMCDGAPEngineBuilder>());

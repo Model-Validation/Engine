@@ -71,5 +71,39 @@ public:
         : AmericanOptionBAWEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"}, AssetClass::EQ) {}
 };
 
+//! Engine Builder for American Equity Options using a Binomial Tree
+/*! Pricing engines are cached by asset/currency
+
+    \ingroup builders
+ */
+class EquityAmericanOptionBinomialEngineBuilder : public AmericanOptionBinomialEngineBuilder {
+public:
+    EquityAmericanOptionBinomialEngineBuilder()
+        : AmericanOptionBinomialEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"}, AssetClass::EQ,
+                                              expiryDate_, strike_) {}
+};
+
+//! Engine Builder for American Equity Options using Ju Quadratic Approximation
+/*! Pricing engines are cached by asset/currency
+
+    \ingroup builders
+ */
+class EquityAmericanOptionJuEngineBuilder : public AmericanOptionJuEngineBuilder {
+public:
+    EquityAmericanOptionJuEngineBuilder()
+        : AmericanOptionJuEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"}, AssetClass::EQ) {}
+};
+
+//! Engine Builder for American Equity Options using the Bjerksund and Stendland Approximation
+/*! Pricing engines are cached by asset/currency
+
+    \ingroup builders
+ */
+class EquityAmericanOptionBSEngineBuilder : public AmericanOptionBSEngineBuilder {
+public:
+    EquityAmericanOptionBSEngineBuilder()
+        : AmericanOptionBSEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"}, AssetClass::EQ) {}
+};
+
 } // namespace data
 } // namespace ore
