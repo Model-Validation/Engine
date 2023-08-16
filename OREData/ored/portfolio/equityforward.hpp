@@ -68,6 +68,9 @@ private:
     string maturityDate_;
     QuantLib::Real strike_;
     string strikeCurrency_;
+
+    boost::optional<bool> physicallySettled_;
+    string paymentDate_;
 };
 } // namespace data
 } // namespace ore

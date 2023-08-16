@@ -28,6 +28,7 @@
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/utilities/currencycheck.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 #include <qle/instruments/equityforward.hpp>
 
@@ -61,11 +62,14 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
 
     QuantLib::Position::Type longShort = parsePositionType(longShort_);
     Date maturity = parseDate(maturityDate_);
+    Date paymentDate = Date();
+    if (physicallySettled_ && !(*physicallySettled_))
+        paymentDate = parseDate(paymentDate_);
 
     string name = eqName();
 
     boost::shared_ptr<Instrument> inst =
-        boost::make_shared<QuantExt::EquityForward>(name, ccy, longShort, quantity_, maturity, strike);
+        boost::make_shared<QuantExt::EquityForward>(name, ccy, longShort, quantity_, maturity, strike, paymentDate);
 
     // Pricing engine
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
@@ -103,6 +107,14 @@ void EquityForward::fromXML(XMLNode* node) {
     strike_ = XMLUtils::getChildValueAsDouble(eNode, "Strike", true);
     strikeCurrency_ = XMLUtils::getChildValue(eNode, "StrikeCurrency", false);
     quantity_ = XMLUtils::getChildValueAsDouble(eNode, "Quantity", true);
+
+    physicallySettled_ = boost::none;
+    if (XMLNode* n = XMLUtils::getChildNode(eNode, "PhysicallySettled"))
+        physicallySettled_ = parseBool(XMLUtils::getNodeValue(n));
+
+    paymentDate_ = "";
+    if (XMLNode* n = XMLUtils::getChildNode(eNode, "PaymentDate"))
+        paymentDate_ = XMLUtils::getNodeValue(n);
 }
 
 XMLNode* EquityForward::toXML(XMLDocument& doc) {
@@ -118,6 +130,13 @@ XMLNode* EquityForward::toXML(XMLDocument& doc) {
     if (!strikeCurrency_.empty())
         XMLUtils::addChild(doc, eNode, "StrikeCurrency", strikeCurrency_);
     XMLUtils::addChild(doc, eNode, "Quantity", quantity_);
+
+    if (physicallySettled_)
+        XMLUtils::addChild(doc, eNode, "PhysicallySettled", *physicallySettled_);
+
+    if (paymentDate_ != "")
+        XMLUtils::addChild(doc, eNode, "PaymentDate", paymentDate_);
+
     return node;
 }
 

@@ -54,13 +54,25 @@ void DiscountingEquityForwardEngine::calculate() const {
         Real qty = arguments_.quantity;
         Date maturity = arguments_.maturityDate;
         Real strike = arguments_.strike;
+
+        Date paymentDate = arguments_.paymentDate;
+        if (paymentDate == Null<Date>()) {
+            paymentDate = maturity;
+        }
+
         Real forwardPrice =
             equitySpot_->value() * divYieldCurve_->discount(maturity) / equityRefRateCurve_->discount(maturity);
-        DiscountFactor df = discountCurve_->discount(maturity);
+        DiscountFactor df = discountCurve_->discount(paymentDate);
         results_.value = (lsInd * qty) * (forwardPrice - strike) * df;
 
         results_.additionalResults["forwardPrice"] = forwardPrice;
         results_.additionalResults["currentNotional"] = forwardPrice * strike;
+        results_.additionalResults["discountAtPaymentDate"] = df;
+        results_.additionalResults["discountAtMaturity"] = equityRefRateCurve_->discount(maturity);
+        results_.additionalResults["discountRateAtMaturity"] = equityRefRateCurve_->zeroRate(maturity, Actual365Fixed(), Continuous);
+        results_.additionalResults["dividendDiscountAtMaturity"] = divYieldCurve_->discount(maturity);
+        results_.additionalResults["dividendDiscountRateAtMaturity"] =
+            divYieldCurve_->zeroRate(maturity, Actual365Fixed(), Continuous);
     }
 } // calculate
 

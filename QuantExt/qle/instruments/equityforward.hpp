@@ -56,7 +56,9 @@ public:
         //! Maturity date
         const Date& maturityDate,
         //! Strike
-        const Real& strike);
+        const Real& strike,
+        //! Payment date
+        const Date& paymentDate = Date());
     //! \name Instrument interface
     //@{
     bool isExpired() const;
@@ -70,6 +72,7 @@ public:
     Position::Type longShort() const { return longShort_; }
     Real quantity() const { return quantity_; }
     Date maturityDate() const { return maturityDate_; }
+    Date paymentDate() const { return paymentDate_; }
     Real strike() const { return strike_; }
     //@}
 private:
@@ -79,6 +82,7 @@ private:
     Position::Type longShort_;
     Real quantity_;
     Date maturityDate_;
+    Date paymentDate_;
     Real strike_;
 };
 
@@ -90,6 +94,7 @@ public:
     Position::Type longShort;
     Real quantity;
     Date maturityDate;
+    Date paymentDate;
     Real strike;
     void validate() const;
 };
