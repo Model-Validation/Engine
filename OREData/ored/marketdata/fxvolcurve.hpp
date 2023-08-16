@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -127,6 +128,18 @@ private:
                                    boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
                                    const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                                    const Conventions& conventions);
+    //! TODO: Remove fxSpots arg
+    void buildAbsoluteStrikeCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
+                                  boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots);
+
+    inline Date getExpiry(const QuantLib::Date& asof, const boost::shared_ptr<Expiry>& expiry,
+                          const Calendar& cal) const {
+        if (auto d = boost::dynamic_pointer_cast<ExpiryDate>(expiry))
+            return d->expiryDate();
+        else if (auto p = boost::dynamic_pointer_cast<ExpiryPeriod>(expiry))
+            return cal.advance(asof, p->expiryPeriod());
+        QL_FAIL("Unable to dynamically cast Expiry class");
+    }
 };
 } // namespace data
 } // namespace ore

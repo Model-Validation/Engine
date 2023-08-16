@@ -105,6 +105,11 @@ public:
 
     virtual void writeFixings(ore::data::Report& report, const boost::shared_ptr<ore::data::Loader>& loader);
 
+    virtual void writeVolatilityReport(ore::data::Report& report, const DateGrid& grid,
+                                       const TodaysMarketParameters& marketConfig,
+                                       const boost::shared_ptr<Market>& market, const string& configID,
+                                       const vector<double> strikes, const bool continueOnError = false);
+
     const std::string& nullString() const { return nullString_; }
 
 protected:

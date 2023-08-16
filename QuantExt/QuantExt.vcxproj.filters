@@ -882,9 +882,6 @@
     <ClInclude Include="qle\calendars\largejointcalendar.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
-    <ClInclude Include="qle\time\actual364.hpp">
-      <Filter>time</Filter>
-    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\inrmiborois.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
@@ -1157,6 +1154,9 @@
       <Filter>cashflows</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\blackvolsurfacemoneyness.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\commodityblackvolsurfaceproxy.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1796,9 +1796,6 @@
     <ClCompile Include="qle\calendars\largejointcalendar.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
-    <ClCompile Include="qle\time\actual364.cpp">
-      <Filter>time</Filter>
-    </ClCompile>
     <ClCompile Include="qle\termstructures\futurepricehelper.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
@@ -1974,6 +1971,9 @@
       <Filter>cashflows</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\blackvolsurfacemoneyness.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\commodityblackvolsurfaceproxy.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>

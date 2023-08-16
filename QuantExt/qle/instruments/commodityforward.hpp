@@ -56,10 +56,13 @@ public:
                                  cash settled. If omitted, physical settlement is assumed.
         \param paymentDate       If the forward is cash settled, provide a date on or after the \p maturityDate for 
                                  the cash settlement payment. If omitted, it is assumed equal to \p maturityDate.
+        \param observationDates  Applies to asian forwards otherwise left empty. List of dates that are used to
+                                 calculate the average price.
     */
     CommodityForward(const boost::shared_ptr<CommodityIndex>& index, const QuantLib::Currency& currency,
         QuantLib::Position::Type position, QuantLib::Real quantity, const QuantLib::Date& maturityDate,
-        QuantLib::Real strike, bool physicallySettled = true, const Date& paymentDate = Date());
+                     QuantLib::Real strike, bool physicallySettled = true, const Date& paymentDate = Date(),
+                     const std::vector<QuantLib::Date>& observationDates = std::vector<QuantLib::Date>());
     //@}
 
     //! \name Instrument interface
@@ -78,6 +81,7 @@ public:
     QuantLib::Real strike() const { return strike_; }
     bool physicallySettled() const { return physicallySettled_; }
     const QuantLib::Date& paymentDate() const { return paymentDate_; }
+    const std::vector<QuantLib::Date>& observationDates() const { return observationDates_; }
     //@}
 
 private:
@@ -89,6 +93,7 @@ private:
     QuantLib::Real strike_;
     bool physicallySettled_;
     QuantLib::Date paymentDate_;
+    std::vector<QuantLib::Date> observationDates_;
 };
 
 //! \ingroup instruments
@@ -102,6 +107,8 @@ public:
     QuantLib::Real strike;
     bool physicallySettled;
     QuantLib::Date paymentDate;
+    std::vector<QuantLib::Date> observationDates;
+
     void validate() const;
 };
 

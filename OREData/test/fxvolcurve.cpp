@@ -131,6 +131,14 @@ BOOST_AUTO_TEST_CASE(testFxVolWildCards) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(testFxVolSparseAbsoluteStrike) {
+
+    BOOST_TEST_MESSAGE("Testing FxVolatility Sparse Absolute Strike Curve ");
+    
+
+
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

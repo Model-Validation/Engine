@@ -114,6 +114,13 @@ Real CommodityIndex::forecastFixing(const Date& fixingDate) const {
         return curve_->price(fixingDate);
 }
 
+Real CommodityIndex::forecastFixing(const Time fixingTime) const {
+    if (isFuturesIndex_)
+        return curve_->price(expiryDate_);
+    else
+        return curve_->price(fixingTime);
+}
+
 boost::shared_ptr<CommodityIndex> CommoditySpotIndex::clone(const Date& expiryDate,
     const boost::optional<Handle<PriceTermStructure>>& ts) const {
     const auto& pts = ts ? *ts : priceCurve();

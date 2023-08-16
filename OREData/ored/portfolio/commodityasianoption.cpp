@@ -40,8 +40,12 @@
 
      // Populate the index_ in case the option is automatic exercise.
      // Intentionally use null calendar because we will ask for index value on the expiry date without adjustment.
+     index_ = *market->commodityIndex(assetName_, engineFactory->configuration(MarketContext::pricing));
      if (!isFuturePrice_ || *isFuturePrice_) {
+
          // Assume future price if isFuturePrice_ is not explicitly set or if it is and true.
+
+         auto index = *market->commodityIndex(assetName_, engineFactory->configuration(MarketContext::pricing));
 
          // If we are given an explicit future contract expiry date, use it, otherwise use option's expiry.
          Date expiryDate;
@@ -50,15 +54,13 @@
          } else {
              // Get the expiry date of the option. This is the expiry date of the commodity future index.
              const vector<string>& expiryDates = option_.exerciseDates();
-             QL_REQUIRE(expiryDates.size() == 1, "Expected exactly one expiry date for CommodityAsianOption but got "
-                                                     << expiryDates.size() << ".");
+             QL_REQUIRE(expiryDates.size() == 1,
+                        "Expected exactly one expiry date for CommodityOption but got " << expiryDates.size() << ".");
              expiryDate = parseDate(expiryDates[0]);
          }
 
-         index_ = boost::make_shared<QuantExt::CommodityFuturesIndex>(assetName_, expiryDate, NullCalendar(), priceCurve);
-     } else {
-         // If the underlying is a commodity spot, create a spot index.
-         index_ = boost::make_shared<QuantExt::CommoditySpotIndex>(assetName_, NullCalendar(), priceCurve);
+         // Clone the index with the relevant expiry date.
+         index_ = index->clone(expiryDate);
      }
 
      AsianOptionTrade::build(engineFactory);

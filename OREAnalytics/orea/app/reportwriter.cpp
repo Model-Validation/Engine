@@ -30,6 +30,7 @@
 #include <ql/cashflows/indexedcashflow.hpp>
 #include <ql/cashflows/inflationcoupon.hpp>
 #include <ql/errors.hpp>
+#include <ql/termstructures/volatility/capfloor/capfloortermvolatilitystructure.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/cashflowresults.hpp>
@@ -65,12 +66,7 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
         .addColumn("NotionalCurrency", string())
         .addColumn("Notional(Base)", double(), 2)
         .addColumn("NettingSet", string())
-        .addColumn("CounterParty", string())
-        // Custom option outputs added below:
-        .addColumn("ForecastDiscountFactor", double(), 6)
-        .addColumn("DividendDiscountFactor", double(), 6)
-        .addColumn("Volatility", double(), 6) // Vanilla Options
-        .addColumn("ForwardPrice", double(), 6);
+        .addColumn("CounterParty", string());
 
     for (auto trade : portfolio->trades()) {
         try {
@@ -100,56 +96,6 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                          : trade->notional() * fxNotional)
                 .add(trade->envelope().nettingSetId())
                 .add(trade->envelope().counterparty());
-
-            //// Custom outputs below
-
-            // Option volatility output
-            boost::shared_ptr<QuantLib::VanillaOption> qlVanOpt =
-                boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trade->instrument()->qlInstrument());
-            if (qlVanOpt) {
-                Real forDisc = 0.0;
-                Real divDisc = 0.0;
-                Volatility blackVol = 0.0;
-                Real fwdPrice = 0.0;
-
-                if (trade->tradeType() == "EquityOption") {
-                    boost::shared_ptr<ore::data::EquityOption> eqoTrn =
-                        boost::dynamic_pointer_cast<ore::data::EquityOption>(trade);
-                    const std::string& assetName = eqoTrn->asset(); // or equivalently equityName()
-                    blackVol = market->equityVol(assetName)->blackVol(maturity, eqoTrn->strike());
-                    
-                    forDisc = market->equityCurve(assetName, configuration)->equityForecastCurve()->discount(maturity);
-                    divDisc = market->equityCurve(assetName, configuration)->equityDividendCurve()->discount(maturity);
-                    Real eqSpot = market->equitySpot(assetName, configuration)->value();
-
-                    fwdPrice = eqSpot * divDisc / forDisc;
-
-                    DLOG("Derived forward price " << std::setprecision(12) << std::fixed << fwdPrice << " for maturity " << maturity << ", spot " << eqSpot
-                        << ", dividend discount " << divDisc << ", and forecast discount " << forDisc << ".");
-                } else if (trade->tradeType() == "FxOption") {
-                    boost::shared_ptr<ore::data::FxOption> fxoTrn =
-                        boost::dynamic_pointer_cast<ore::data::FxOption>(trade);
-                    const std::string& ccyPair = fxoTrn->boughtCurrency() + fxoTrn->soldCurrency();
-                    blackVol = market->fxVol(ccyPair)->blackVol(maturity, fxoTrn->strike());
-                } else if (trade->tradeType() == "CommodityOption") {
-                    boost::shared_ptr<ore::data::CommodityOption> comoTrn =
-                        boost::dynamic_pointer_cast<ore::data::CommodityOption>(trade);
-                    const std::string& assetName = comoTrn->asset();
-                    blackVol =
-                        market->commodityVolatility(assetName, configuration)->blackVol(maturity, comoTrn->strike());
-                    fwdPrice = market->commodityPriceCurve(assetName, configuration)->price(maturity);
-                }
-                report.add(forDisc);
-                report.add(divDisc);
-                report.add(blackVol);
-                report.add(fwdPrice);
-            } else {
-                // Need to output something if not VanillaOption trade
-                report.add(Null<Real>());
-                report.add(Null<Real>());
-                report.add(Null<Real>());
-                report.add(Null<Real>());
-            }
         } catch (std::exception& e) {
             ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during trade pricing", e.what()));
             Date maturity = trade->maturity();
@@ -166,10 +112,7 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(nullString_)
                 .add(Null<Real>())
                 .add(nullString_)
-                .add(nullString_)
-                .add(Null<Real>())
-                .add(Null<Real>())
-                .add(Null<Real>());
+                .add(nullString_);
         }
     }
     report.end();
@@ -1287,6 +1230,101 @@ void ReportWriter::writeFixings(Report& report, const boost::shared_ptr<Loader>&
     report.end();
     LOG("Fixings report written");
 }
+
+void ReportWriter::writeVolatilityReport(ore::data::Report& report, const DateGrid& grid,
+                                         const TodaysMarketParameters& marketConfig,
+                                         const boost::shared_ptr<Market>& market, const string& configID,
+                                         const vector<Real> strikes, const bool continueOnError) {
+    LOG("Writing volatility report");
+    map<string, string> equityVols, fxVols, commodityVols, capFloorVols;
+    if (marketConfig.hasMarketObject(MarketObject::EquityVol))
+        equityVols = marketConfig.mapping(MarketObject::EquityVol, configID);
+    if (marketConfig.hasMarketObject(MarketObject::FXVol))
+        fxVols = marketConfig.mapping(MarketObject::FXVol, configID);
+    if (marketConfig.hasMarketObject(MarketObject::CommodityVolatility))
+        commodityVols = marketConfig.mapping(MarketObject::CommodityVolatility, configID);
+    if (marketConfig.hasMarketObject(MarketObject::CapFloorVol))
+        capFloorVols = marketConfig.mapping(MarketObject::CapFloorVol, configID);
+
+    vector<pair<string, boost::shared_ptr<VolatilityTermStructure>>> volTerms;
+
+    // Add column of date, instruments and strikes
+    report.addColumn("Date", Date()).addColumn("Instrument", string());
+    for (auto it : strikes) {
+        report.addColumn(to_string(it), Real(), 8);
+    }
+    // report.addColumn("Tenor", Period()).addColumn("Date", Date());
+
+    // Fetch all instances of the above MarketObjects
+    for (auto& it : equityVols) {
+        DLOG("Equity volatility - " << it.first);
+        try {
+            volTerms.emplace_back(it.first, market->equityVol(it.first, configID).currentLink());
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                WLOG("skipping this volatility structure: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
+    }
+    for (auto& it : fxVols) {
+        DLOG("FX volatility - " << it.first);
+        try {
+            volTerms.emplace_back(it.first, market->fxVol(it.first, configID).currentLink());
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                WLOG("skipping this volatility structure: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
+    }
+    for (auto& it : commodityVols) {
+        DLOG("Commodities volatility - " << it.first);
+        try {
+            volTerms.emplace_back(it.first, market->commodityVolatility(it.first, configID).currentLink());
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                WLOG("skipping this volatility structure: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
+    }
+    for (auto& it : capFloorVols) {
+        DLOG("Cap/floor volatility - " << it.first);
+        try {
+            volTerms.emplace_back(it.first, market->capFloorVol(it.first, configID).currentLink());
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                WLOG("skipping this volatility structure: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
+    }
+
+    // Write all vols
+    for (auto& volTerm : volTerms) {
+        for (Size j = 0; j < grid.size(); ++j) {
+            Date date = grid[j];
+            report.next().add(date).add(volTerm.first);
+            for (auto strike : strikes) {
+                if (boost::shared_ptr<BlackVolTermStructure> vs =
+                        boost::dynamic_pointer_cast<BlackVolTermStructure>(volTerm.second)) {
+                    report.add(vs->blackVol(date, strike) * 100);
+                } else if (boost::shared_ptr<OptionletVolatilityStructure> capVs =
+                               boost::dynamic_pointer_cast<OptionletVolatilityStructure>(volTerm.second)) {
+                    report.add(capVs->volatility(date, strike) * 100);
+                } else {
+                    QL_FAIL("Didn't cast properly");
+                }
+            }
+        }
+    }
+}
+
 
 } // namespace analytics
 } // namespace ore

@@ -62,6 +62,8 @@ public:
     const std::string& quoteSuffix() const;
     OneDimSolverConfig solverConfig() const;
     const boost::optional<bool>& preferOutOfTheMoney() const;
+    const string& proxySurface() const { return proxySurface_; }
+    bool isProxySurface() const { return !proxySurface_.empty(); };
     //@}
 
     //! \name Serialisation
@@ -84,6 +86,7 @@ private:
     std::string quoteSuffix_;
     OneDimSolverConfig solverConfig_;
     boost::optional<bool> preferOutOfTheMoney_;
+    std::string proxySurface_;
 
     //! Populate CurveConfig::quotes_ with the required quotes.
     void populateQuotes();

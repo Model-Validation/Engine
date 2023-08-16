@@ -111,6 +111,13 @@ private:
                          const QuantLib::Handle<QuantLib::BlackVolTermStructure>& baseVts,
                          const QuantLib::Handle<QuantExt::PriceTermStructure>& basePts, const Conventions& conventions);
 
+    //! Build a volatility surface as a proxy from another volatility surface
+    void buildVolatility(const QuantLib::Date& asof, const CommodityVolatilityCurveSpec& spec,
+                         const CurveConfigurations& curveConfigs,
+                         const map<string, boost::shared_ptr<CommodityCurve>>& comCurves,
+                         const map<string, boost::shared_ptr<CommodityVolCurve>>& comVolCurves,
+                         const Conventions& conventions);
+
     /*! Assume that the input price curve \p pts is a future price curve giving the price of a sequence of future
         contracts at the contract expiry. Create a copy of this input curve with additional pillar points at
         the future option contract expiries. The price returned when this curve is queried at the option contract
@@ -135,6 +142,11 @@ private:
 
     //! Check and return moneyness levels.
     std::vector<QuantLib::Real> checkMoneyness(const std::vector<std::string>& moneynessLevels) const;
+
+    
+    //! Build the calibration info
+    void buildCalibrationInfo(const QuantLib::Date& asof, const CommodityVolatilityConfig& vc,
+                              const EquityVolatilityCurveConfig& config, const Handle<QuantExt::EquityIndex>& eqIndex);
 };
 
 } // namespace data

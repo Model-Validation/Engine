@@ -102,7 +102,7 @@
  public:
      EquityEuropeanAsianOptionADAAPEngineBuilder()
          : EuropeanAsianOptionADAAPEngineBuilder("BlackScholesMerton", {"EquityAsianOptionArithmeticPrice"},
-                                                 AssetClass::EQ) {}
+                                                 AssetClass::EQ, expiryDate_) {}
  };
 
  } // namespace data

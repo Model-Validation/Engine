@@ -58,6 +58,11 @@ void CommodityVolatilityConfig::populateRequiredCurveIds() {
         requiredCurveIds_[CurveSpec::CurveType::CommodityVolatility].insert(
             parseCurveSpec(vapo->baseVolatilityId())->curveConfigID());
     }
+    if (isProxySurface()) {
+        // The proxy surface dependency setup follows from the equity vol proxy design
+        requiredCurveIds_[CurveSpec::CurveType::CommodityVolatility].insert(proxySurface());
+        requiredCurveIds_[CurveSpec::CurveType::Commodity].insert(proxySurface());
+    }
 }
 
 const string& CommodityVolatilityConfig::currency() const { return currency_; }
@@ -118,11 +123,15 @@ void CommodityVolatilityConfig::fromXML(XMLNode* node) {
         volatilityConfig_ = boost::make_shared<VolatilityMoneynessSurfaceConfig>();
     } else if ((n = XMLUtils::getChildNode(node, "ApoFutureSurface"))) {
         volatilityConfig_ = boost::make_shared<VolatilityApoFutureSurfaceConfig>();
+    } else if ((n = XMLUtils::getChildNode(node, "ProxySurface"))) {
+        proxySurface_ = XMLUtils::getChildValue(node, "ProxySurface", true);
     } else {
         QL_FAIL("CommodityVolatility node expects one child node with name in list: Constant,"
-                << " Curve, StrikeSurface, DeltaSurface, MoneynessSurface, ApoFutureSurface.");
+                << " Curve, StrikeSurface, DeltaSurface, MoneynessSurface, ApoFutureSurface, "
+                << " ProxySurface.");
     }
-    volatilityConfig_->fromXML(n);
+    if (!isProxySurface())
+        volatilityConfig_->fromXML(n);
 
     dayCounter_ = "A365";
     if ((n = XMLUtils::getChildNode(node, "DayCounter")))
@@ -165,8 +174,12 @@ XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
 
-    XMLNode* n = volatilityConfig_->toXML(doc);
-    XMLUtils::appendNode(node, n);
+    if (!isProxySurface()) {
+        XMLNode* n = volatilityConfig_->toXML(doc);
+        XMLUtils::appendNode(node, n);
+    } else {
+        XMLUtils::addChild(doc, node, "proxuSurface", proxySurface_);
+    }
 
     XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
     XMLUtils::addChild(doc, node, "Calendar", calendar_);
@@ -205,8 +218,8 @@ void CommodityVolatilityConfig::populateQuotes() {
                 q += "/" + quoteSuffix_;
             quotes_.push_back(q);
         }
-    } else {
-        QL_FAIL("CommodityVolatilityConfig expected a constant, curve or surface");
+    } else if (!isProxySurface()) {
+        QL_FAIL("CommodityVolatilityConfig expected a constant, curve, surface or proxy config");
     }
 }
 

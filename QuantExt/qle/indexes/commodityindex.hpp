@@ -79,6 +79,7 @@ public:
     //! \name Fixing calculations
     //@{
     virtual Real forecastFixing(const Date& fixingDate) const;
+    virtual Real forecastFixing(const Time fixingTime) const;
     virtual Real pastFixing(const Date& fixingDate) const;
     // @}
 

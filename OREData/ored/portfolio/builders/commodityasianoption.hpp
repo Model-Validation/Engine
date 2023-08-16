@@ -94,7 +94,7 @@
                                                  AssetClass::COM) {}
  };
 
- //! Discrete Analytic Engine Builder for European Asian Commodity Arithmetic Average Price Options
+ //! Discrete Analytic TW Engine Builder for European Asian Commodity Arithmetic Average Price Options
  /*! Pricing engines are cached by asset/currency
      \ingroup builders
   */
@@ -102,7 +102,18 @@
  public:
      CommodityEuropeanAsianOptionADAAPEngineBuilder()
          : EuropeanAsianOptionADAAPEngineBuilder("BlackScholesMerton", {"CommodityAsianOptionArithmeticPrice"},
-                                                 AssetClass::COM) {}
+                                                 AssetClass::COM, expiryDate_) {}
+ };
+
+  //! Discrete Analytic Levy Engine Builder for European Asian Commodity Arithmetic Average Price Options
+ /*! Pricing engines are cached by asset/currency
+     \ingroup builders
+  */
+ class CommodityEuropeanAsianOptionLevyADAAPEngineBuilder : public EuropeanAsianOptionLevyADAAPEngineBuilder {
+ public:
+     CommodityEuropeanAsianOptionLevyADAAPEngineBuilder()
+         : EuropeanAsianOptionLevyADAAPEngineBuilder("BlackScholesMerton", {"CommodityAsianOptionArithmeticPrice"},
+                                                 AssetClass::COM, expiryDate_) {}
  };
 
  } // namespace data

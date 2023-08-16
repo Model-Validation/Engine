@@ -42,6 +42,9 @@ InterpolatedSmileSection::InterpolatedSmileSection(Real spot, Real rd, Real rf, 
         interpolator_ = Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
                               CubicInterpolation::FirstDerivative)
                             .interpolate(strikes_.begin(), strikes_.end(), vols_.begin());
+    else if (method == InterpolationMethod::CubicSpline)
+        //interpolator_ = CubicNaturalSpline(strikes_.begin(), strikes_.end(), vols_.begin());
+        interpolator_ = MonotonicCubicNaturalSpline(strikes_.begin(), strikes_.end(), vols_.begin());
     else {
         QL_FAIL("Invalid method " << (int)method);
     }
@@ -111,6 +114,8 @@ BlackVolatilitySurfaceDelta::BlackVolatilitySurfaceDelta(
 
         // BlackVarianceCurve will make a local copy of vols and dates
         interpolators_.push_back(
+            // boost::make_shared<QuantLib::BlackStdDevCurve>(referenceDate, dates, vols, dayCounter,
+            // forceMonotoneVariance));
             boost::make_shared<BlackVarianceCurve>(referenceDate, dates, vols, dayCounter, forceMonotoneVariance));
     }
 

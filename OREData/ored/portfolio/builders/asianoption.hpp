@@ -34,6 +34,7 @@
  #include <ql/pricingengines/asian/mc_discr_arith_av_strike.hpp>
  #include <ql/experimental/asian/analytic_discr_arith_av_price.hpp>
  #include <ql/utilities/null.hpp>
+#include <ql/experimental/asian/analytic_levy_discr_arith_av_price.hpp>
 
  namespace ore {
  namespace data {
@@ -264,15 +265,15 @@
      }
  };
 
- //! Discrete Analytic Engine Builder for European Asian Arithmetic Average Price Options
+ //! Discrete Analytic TW Engine Builder for European Asian Arithmetic Average Price Options
  /*! Pricing engines are cached by asset/currency
      \ingroup builders
   */
  class EuropeanAsianOptionADAAPEngineBuilder : public AsianOptionEngineBuilder {
  public:
      EuropeanAsianOptionADAAPEngineBuilder(const string& model, const set<string>& tradeTypes,
-                                           const AssetClass& assetClass)
-         : AsianOptionEngineBuilder(model, "AnalyticDiscreteArithmeticAPEngine", tradeTypes, assetClass, Date()) {}
+                                           const AssetClass& assetClass, const Date& expiryDate)
+         : AsianOptionEngineBuilder(model, "AnalyticDiscreteArithmeticAPEngine", tradeTypes, assetClass, expiryDate) {}
 
      std::string processType() override { return "Discrete"; }
 
@@ -283,6 +284,27 @@
          boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
              getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
          return boost::make_shared<AnalyticDiscreteArithmeticAveragePriceAsianEngine>(gbsp);
+     }
+ };
+
+ //! Discrete Analytic Levy Engine Builder for European Asian Arithmetic Average Price Options
+ /*! Pricing engines are cached by asset/currency
+     \ingroup builders
+  */
+ class EuropeanAsianOptionLevyADAAPEngineBuilder : public AsianOptionEngineBuilder {
+ public:
+     EuropeanAsianOptionLevyADAAPEngineBuilder(const string& model, const set<string>& tradeTypes,
+                                           const AssetClass& assetClass, const Date& expiryDate)
+         : AsianOptionEngineBuilder(model, "AnalyticLevyDiscreteArithmeticAPEngine", tradeTypes, assetClass, expiryDate) {}
+
+     std::string processType() override { return "Discrete"; }
+
+ protected:
+     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+                                                         const AssetClass& assetClassUnderlying, const Date& expiryDate) override {
+         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
+             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
+         return boost::make_shared<AnalyticLevyDiscreteArithmeticAveragePriceAsianEngine>(gbsp);
      }
  };
 

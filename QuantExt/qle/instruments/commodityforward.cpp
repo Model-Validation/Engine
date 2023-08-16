@@ -26,10 +26,10 @@ using namespace QuantLib;
 namespace QuantExt {
 
 CommodityForward::CommodityForward(const boost::shared_ptr<CommodityIndex>& index, const Currency& currency,
-    Position::Type position, Real quantity, const Date& maturityDate, Real strike, bool physicallySettled,
-    const Date& paymentDate)
+    Position::Type position, Real quantity, const Date& maturityDate, Real strike, bool physicallySettled, const Date& paymentDate,
+                                   const std::vector<QuantLib::Date>& observationDates)
     : index_(index), currency_(currency), position_(position), quantity_(quantity), maturityDate_(maturityDate),
-      strike_(strike), physicallySettled_(physicallySettled), paymentDate_(paymentDate) {
+      strike_(strike), physicallySettled_(physicallySettled), paymentDate_(paymentDate), observationDates_(observationDates) {
 
     QL_REQUIRE(quantity_ > 0, "Commodity forward quantity should be positive: " << quantity);
     QL_REQUIRE(strike_ > 0, "Commodity forward strike should be positive: " << strike);
@@ -68,6 +68,7 @@ void CommodityForward::setupArguments(PricingEngine::arguments* args) const {
     arguments->strike = strike_;
     arguments->physicallySettled = physicallySettled_;
     arguments->paymentDate = paymentDate_;
+    arguments->observationDates = observationDates_;
 }
 
 void CommodityForward::arguments::validate() const {

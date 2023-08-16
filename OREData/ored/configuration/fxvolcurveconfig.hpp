@@ -52,7 +52,7 @@ public:
      *  as per  Castagna& Mercurio(2006), to use. The second approximation is more accurate
      *  but can ask for the square root of a negative number under unusual circumstances.
      */
-    enum class Dimension { ATM, SmileVannaVolga, SmileDelta, SmileBFRR, ATMTriangulated };
+    enum class Dimension { ATM, SmileVannaVolga, SmileDelta, SmileBFRR, ATMTriangulated, SmileAbsoluteStrike };
     enum class SmileInterpolation {
         VannaVolga1,
         VannaVolga2,
@@ -91,6 +91,7 @@ public:
     const Dimension& dimension() const { return dimension_; }
     const vector<string>& expiries() const { return expiries_; }
     const vector<string>& deltas() const { return deltas_; }
+    const vector<string>& strikes() const { return strikes_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
     const Calendar& calendar() const { return calendar_; }
     // only required for Smile
@@ -105,6 +106,7 @@ public:
     const string& baseVolatility2() const { return baseVolatility2_; }
     const string& fxIndexTag() const { return fxIndexTag_; }
     const ReportConfig& reportConfig() const { return reportConfig_; }
+    bool optionalQuotes() const { return optionalQuotes_; }
     //@}
 
     //! \name Setters
@@ -112,6 +114,7 @@ public:
     Dimension& dimension() { return dimension_; }
     SmileInterpolation& smileInterpolation() { return smileInterpolation_; }
     vector<string>& deltas() { return deltas_; }
+    vector<string>& strikes() { return strikes_; }
     DayCounter& dayCounter() { return dayCounter_; }
     Calendar& calendar() { return calendar_; }
     string& fxSpotID() { return fxSpotID_; }
@@ -130,6 +133,7 @@ private:
     Dimension dimension_;
     vector<string> expiries_;
     vector<string> deltas_;
+    vector<string> strikes_;
     DayCounter dayCounter_;
     Calendar calendar_;
     string fxSpotID_;
@@ -143,6 +147,7 @@ private:
     string baseVolatility2_;
     string fxIndexTag_;
     ReportConfig reportConfig_;
+    bool optionalQuotes_ = false;
 };
 } // namespace data
 } // namespace ore

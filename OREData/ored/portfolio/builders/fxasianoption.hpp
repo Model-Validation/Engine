@@ -102,7 +102,7 @@
  public:
      FxEuropeanAsianOptionADAAPEngineBuilder()
          : EuropeanAsianOptionADAAPEngineBuilder("GarmanKohlhagen", {"FxAsianOptionArithmeticPrice"},
-                                                 AssetClass::FX) {}
+                                                 AssetClass::FX, expiryDate_) {}
  };
 
  } // namespace data

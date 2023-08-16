@@ -224,6 +224,7 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionADGAPEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionADGASEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionADAAPEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionLevyADAAPEngineBuilder>());
     registerBuilder(boost::make_shared<QuantoEquityEuropeanOptionEngineBuilder>());
 
     registerLegBuilder(boost::make_shared<DurationAdjustedCmsLegBuilder>());

@@ -33,6 +33,7 @@
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <qle/termstructures/fxsmilesection.hpp>
+#include <ql/termstructures/volatility/equityfx/blackstddevcurve.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -40,7 +41,7 @@ using namespace QuantLib;
 class InterpolatedSmileSection : public FxSmileSection {
 public:
     //! Supported interpolation methods
-    enum class InterpolationMethod { Linear, NaturalCubic, FinancialCubic };
+    enum class InterpolationMethod { Linear, NaturalCubic, FinancialCubic, CubicSpline };
 
     //! ctor
     InterpolatedSmileSection(Real spot, Real rd, Real rf, Time t, const std::vector<Real>& strikes,
@@ -137,6 +138,7 @@ private:
     std::vector<Real> putDeltas_;
     std::vector<Real> callDeltas_;
     bool hasAtm_;
+    //std::vector<boost::shared_ptr<BlackStdDevCurve> > interpolators_;
     std::vector<boost::shared_ptr<BlackVarianceCurve> > interpolators_;
 
     Handle<Quote> spot_;

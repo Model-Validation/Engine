@@ -43,6 +43,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
+#include <qle/termstructures/commodityblackvolsurfaceproxy.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -231,7 +232,10 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
             populateCurves(config, yieldCurves, commodityCurves, true);
 
             buildVolatility(asof, config, *vapo, baseVs, basePts, conventions);
-
+        } else if (config.isProxySurface()) {
+            // It's a proxy surface so we follow the method used in EquityVolCurve in the below setup
+            DLOG("Building proxy vol surface with ID " << spec.curveConfigID());
+            buildVolatility(asof, spec, curveConfigs, commodityCurves, commodityVolCurves, conventions);
         } else {
             QL_FAIL("Unexpected VolatilityConfig in CommodityVolatilityConfig");
         }
@@ -1025,6 +1029,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         im = InterpolatedSmileSection::InterpolationMethod::NaturalCubic;
     } else if (vdsc.strikeInterpolation() == "FinancialCubic") {
         im = InterpolatedSmileSection::InterpolationMethod::FinancialCubic;
+    } else if (vdsc.strikeInterpolation() == "CubicSpline") {
+        im = InterpolatedSmileSection::InterpolationMethod::CubicSpline;
     } else {
         im = InterpolatedSmileSection::InterpolationMethod::Linear;
         DLOG("BlackVolatilitySurfaceDelta does not support strike interpolation '" << vdsc.strikeInterpolation()
@@ -1347,6 +1353,46 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     volatility_->enableExtrapolation(vapo.extrapolation());
 
     LOG("CommodityVolCurve: finished building the APO surface");
+}
+
+void CommodityVolCurve::buildVolatility(const Date& asof, const CommodityVolatilityCurveSpec& spec,
+                                        const CurveConfigurations& curveConfigs,
+                                        const map<string, boost::shared_ptr<CommodityCurve>>& comCurves,
+                                        const map<string, boost::shared_ptr<CommodityVolCurve>>& comVolCurves,
+                                        const Conventions& conventions) {
+    // get all the configurations and the curve needed for proxying
+    auto config = *curveConfigs.commodityVolatilityConfig(spec.curveConfigID());
+
+    auto proxy = config.proxySurface();
+    auto comConfig = *curveConfigs.commodityCurveConfig(spec.curveConfigID());
+    auto proxyConfig = *curveConfigs.commodityCurveConfig(proxy);
+    auto proxyVolConfig = *curveConfigs.commodityVolatilityConfig(proxy);
+
+    // create dummy specs to look up the required curves
+    CommodityCurveSpec comSpec(comConfig.currency(), spec.curveConfigID());
+    CommodityCurveSpec proxySpec(proxyConfig.currency(), proxy);
+    CommodityVolatilityCurveSpec proxyVolSpec(proxyVolConfig.currency(), proxy);
+
+    // Get all necessary curves
+    auto curve = comCurves.find(comSpec.name());
+    QL_REQUIRE(curve != comCurves.end(), "Failed to find commodity curve, when building commodity vol curve " << spec.name());
+    auto proxyCurve = comCurves.find(proxySpec.name());
+    QL_REQUIRE(proxyCurve != comCurves.end(), "Failed to find commodity curve for proxy "
+                                                 << proxySpec.name() << ", when building commodity vol curve "
+                                                 << spec.name());
+    auto proxyVolCurve = comVolCurves.find(proxyVolSpec.name());
+    QL_REQUIRE(proxyVolCurve != comVolCurves.end(), "Failed to find commodity vol curve for proxy "
+                                                       << proxyVolSpec.name() << ", when building commodity vol curve "
+                                                       << spec.name());
+    auto basePriceCurve = curve->second->commodityPriceCurve();
+    auto proxyPriceCurve = proxyCurve->second->commodityPriceCurve();
+    auto baseIndex =
+        parseCommodityIndex(comConfig.conventionsId(), conventions, false, Handle<PriceTermStructure>(basePriceCurve));
+    auto proxyIndex = parseCommodityIndex(proxyConfig.conventionsId(), conventions, false,
+                                          Handle<PriceTermStructure>(proxyPriceCurve));
+
+    volatility_ = boost::make_shared<CommodityBlackVolatilitySurfaceProxy>(
+        proxyVolCurve->second->volatility(), baseIndex, proxyIndex);
 }
 
 Handle<PriceTermStructure> CommodityVolCurve::correctFuturePriceCurve(const Date& asof, const string& contractName,

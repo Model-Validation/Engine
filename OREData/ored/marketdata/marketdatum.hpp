@@ -30,6 +30,7 @@
 #include <ored/utilities/serializationdaycounter.hpp>
 #include <ored/utilities/serializationperiod.hpp>
 #include <ored/utilities/strike.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <ql/currency.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -1180,15 +1181,22 @@ class FXOptionQuote : public MarketDatum {
 public:
     FXOptionQuote() {}
     //! Constructor
+    //! Converts the Period into a string for backward compatibility
     FXOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string unitCcy, string ccy,
                   Period expiry, string strike)
+        : FXOptionQuote(value, asofDate, name, quoteType, unitCcy, ccy, parseExpiry(to_string(expiry)), strike) {}
+    //! Constructor
+    FXOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string unitCcy, string ccy,
+                  const boost::shared_ptr<Expiry>& expiry, string strike)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::FX_OPTION), unitCcy_(unitCcy), ccy_(ccy),
           expiry_(expiry), strike_(strike) {
 
         Strike s = parseStrike(strike);
         QL_REQUIRE(s.type == Strike::Type::DeltaCall || s.type == Strike::Type::DeltaPut ||
-                       s.type == Strike::Type::ATM || s.type == Strike::Type::BF || s.type == Strike::Type::RR,
+                       s.type == Strike::Type::ATM || s.type == Strike::Type::BF || s.type == Strike::Type::RR ||
+                       s.type == Strike::Type::Absolute,
                    "Unsupported FXOptionQuote strike (" << strike << ")");
+
     }
 
     //! Make a copy of the market datum
@@ -1200,13 +1208,23 @@ public:
     //@{
     const string& unitCcy() const { return unitCcy_; }
     const string& ccy() const { return ccy_; }
-    const Period& expiry() const { return expiry_; }
+    const boost::shared_ptr<Expiry>& expiry() const { return expiry_; }
+    inline const Period expiryPeriod() const {
+        if (auto p = boost::dynamic_pointer_cast<ExpiryPeriod>(expiry_))
+            return p->expiryPeriod();
+        return Period();
+    }
+    inline const Date expiryDate() const {
+        if (auto d = boost::dynamic_pointer_cast<ExpiryDate>(expiry_))
+            return d->expiryDate();
+        return Date();
+    }
     const string& strike() const { return strike_; }
     //@}
 private:
     string unitCcy_;
     string ccy_;
-    Period expiry_;
+    boost::shared_ptr<Expiry> expiry_;
     string strike_; // TODO: either: ATM, 25RR, 25BF. Should be an enum?
     //! Serialization
     friend class boost::serialization::access;

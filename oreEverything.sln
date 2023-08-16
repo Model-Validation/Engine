@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 14 for Windows Desktop
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31729.503
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ore", "App\ore.vcxproj", "{CC051A76-5ABD-49EF-8C88-4C2C6A04D292}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -179,11 +179,13 @@ Global
 		{643BCBE7-4369-42EC-9766-DCB8DAD6615F}.Release (static runtime)|x64.ActiveCfg = Release (static runtime)|x64
 		{643BCBE7-4369-42EC-9766-DCB8DAD6615F}.Release (static runtime)|x64.Build.0 = Release (static runtime)|x64
 		{643BCBE7-4369-42EC-9766-DCB8DAD6615F}.Release|Win32.ActiveCfg = Release|Win32
-		{643BCBE7-4369-42EC-9766-DCB8DAD6615F}.Release|Win32.Build.0 = Release|Win32
 		{643BCBE7-4369-42EC-9766-DCB8DAD6615F}.Release|x64.ActiveCfg = Release|x64
 		{643BCBE7-4369-42EC-9766-DCB8DAD6615F}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {02D20382-CC8E-41B3-8146-EEDC812857A4}
 	EndGlobalSection
 EndGlobal
