@@ -83,13 +83,14 @@ if(MSVC)
     #add_compile_options(/we4265) #no-virtual-destructor
     #add_compile_options(/we4388) # 'equality-operator' : signed/unsigned mismatch
     add_compile_options(/we5038) # reorder 
-    # add_compile_options(/we4101) # unreferenced local variable (too strict)
+    add_compile_options(/wd4101) # unreferenced local variable
     add_compile_options(/we4189) # 'identifier' : local variable is initialized but not referenced
     add_compile_options(/we4700) # uninitialized local variable 'name' used
     add_compile_options(/we5233) # unused lambda 
     add_compile_options(/we4508) # 'function' : function should return a value; 'void' return type assumed
     add_compile_options(/wd4834)
-    add_compile_options(/wd4267)
+    add_compile_options(/wd4267) # conversion from 'size_t' to 'QuantLib::Natural', possible loss of data
+    add_compile_options(/wd4146) # unary minus operator applied to unsigned type, result still unsigned)
     add_compile_options(/we26815) # dangling references/pointer
     # add_compiler_flag("/we4389" signed_compare_mscv)
     
