@@ -338,14 +338,10 @@ public:
                                                  maturityDate_, tenor_);
     }
 
-    //! \name Inspectors
+//! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
-    //! The swap's forward start tenor if the quote is tenor based
     const Period& fwdStart() const { return fwdStart_; }
-    //! The swap's start date if the quote is date based
-    const QuantLib::Date& startDate() const { return startDate_; }
-    //! The swap's term if the quote is tenor based
     const Period& term() const { return term_; }
     const Period& tenor() const { return tenor_; }
     const std::string& indeName() const { return indexName_; }
@@ -355,9 +351,7 @@ public:
 private:
     string ccy_;
     Period fwdStart_;
-    Date startDate_;
     Period term_;
-    QuantLib::Date expiryDate_;
     Period tenor_;
     std::string indexName_;
     Date startDate_;
