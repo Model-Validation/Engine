@@ -95,6 +95,7 @@ const std::map<std::string, boost::any>& FxAverageForward::additionalData() cons
         }
         additionalData_["average rate"] = inverted_ ? 1.0 / avg->fxRate() : avg->fxRate();
         additionalData_["effective rate"] = avg->fxRate();
+        additionalData_["numberOfFixings"] = avg->fxFixingDates().size();
     }
     return additionalData_;
 }
