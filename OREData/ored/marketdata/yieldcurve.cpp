@@ -1681,11 +1681,11 @@ void YieldCurve::addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
             oisQuote = boost::dynamic_pointer_cast<SwapQuote>(marketQuote);
 
             // Create a swap helper if we do.
+            Period oisTenor = oisQuote->term(); // A merge that git didnt handle... So moved manually here...
             boost::shared_ptr<RateHelper> oisHelper;
             if (brlCdiIndex) {
                 QL_REQUIRE(segment->pillarChoice() == QuantLib::Pillar::LastRelevantDate,
                            "OIS segment for BRL-CDI does not support pillar choice " << segment->pillarChoice());
-                Period oisTenor = oisQuote->term();
                 oisHelper = boost::make_shared<BRLCdiRateHelper>(
                     oisTenor, oisQuote->quote(), brlCdiIndex,
                     discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true);
