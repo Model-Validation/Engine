@@ -50,7 +50,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Swap::build() called for trade " << id());
     
     QL_REQUIRE(legData_.size() >= 1, "Swap must have at least 1 leg");
-    const boost::shared_ptr<Market> market = engineFactory->market();
+    market_ = engineFactory->market();
 
     // allow minor currencies in case first leg is equity
     Currency currency = parseCurrencyWithMinors(legData_[0].currency());
@@ -264,20 +264,31 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
 
     // Calculate parRate
     // Check IR Swap (!isXCCY_)
+    Handle<YieldTermStructure> discountCurve;
+
+    std::string ccy = legData_[0].currency();
+    std::string configuration = "default";
+    discountCurve = market_->discountCurve(ccy, configuration);
+
     if (!isXCCY_ && numLegs == 2) {
         Date asof = Settings::instance().evaluationDate();
         std::map<std::string, Real> sumCashFlow;
         Rate fixedRate = 0.0;
+        
         for (Size i = 0; i < numLegs; ++i) {
             std::string legType = legData_[i].legType();
 
             for (Size j = 0; j < legs_[i].size(); ++j) {
                 boost::shared_ptr<CashFlow> flow = legs_[i][j];
                 if (flow->date() > asof) {
-                    Real flowAmount = 0.0;
+                    Date payDate = flow->date();
+                    Real flowAmount = Null<Real>();
+                    Real discountFactor = discountCurve->discount(payDate);
+                    Real presentValue = Null<Real>();
                     try {
-                        flowAmount = flow->amount(); // TODO need discounted cash flow
-                        sumCashFlow[legType] += flowAmount;
+                        flowAmount = flow->amount();
+                        presentValue = discountFactor * flowAmount;
+                        sumCashFlow[legType] += presentValue;
 
                         if (legType == "Fixed") {
                             boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
@@ -294,6 +305,11 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
         // Calculate par rate
         Real parRate = fixedRate * std::abs(sumCashFlow["Floating"]) / std::abs(sumCashFlow["Fixed"]);
         additionalData_["parRate"] = parRate;
+
+        // Next way of calculating
+        static const Spread basisPoint = 1.0e-4;
+        Real parRate2 = fixedRate - swap->NPV() / ( swap->legBPS(1)  / basisPoint);
+        additionalData_["parRate2"] = parRate2;
     }
 
     return additionalData_;

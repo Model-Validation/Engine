@@ -85,6 +85,7 @@ protected:
 private:
     bool isResetting_;
     Size notionalTakenFromLeg_;
+    boost::shared_ptr<Market> market_;
 };
 
 std::string isdaSubProductSwap(const std::string& tradeId, const vector<LegData>& legData);
