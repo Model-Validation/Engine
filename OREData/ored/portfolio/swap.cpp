@@ -259,42 +259,43 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
                 ALOG("cross currency swap underlying instrument not set, skip leg npv reporting");
         }
 
-        // Calculate parRate
-        // Check IR Swap (!isXCCY_)
-        if (!isXCCY_ && numLegs == 2) {
-            Date asof = Settings::instance().evaluationDate();
-            std::map<std::string, Real> sumCashFlow;
-            Rate fixedRate = 0.0;
-            for (Size i = 0; i < numLegs; ++i) {
-                std::string legType = legData_[i].legType();
+        setLegBasedAdditionalData(i);
+    } // for numLegs
 
-                for (Size j = 0; j < legs_[i].size(); ++j) {
-                    boost::shared_ptr<CashFlow> flow = legs_[i][j];
-                    if (flow->date() > asof) {
-                        Real flowAmount = 0.0;
-                        try {
-                            flowAmount = flow->amount(); // TODO need discounted cash flow
-                            sumCashFlow[legType] += flowAmount;
+    // Calculate parRate
+    // Check IR Swap (!isXCCY_)
+    if (!isXCCY_ && numLegs == 2) {
+        Date asof = Settings::instance().evaluationDate();
+        std::map<std::string, Real> sumCashFlow;
+        Rate fixedRate = 0.0;
+        for (Size i = 0; i < numLegs; ++i) {
+            std::string legType = legData_[i].legType();
 
-                            if (legType == "Fixed") {
-                                boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
-                                fixedRate = coupon->rate();
-                            }
+            for (Size j = 0; j < legs_[i].size(); ++j) {
+                boost::shared_ptr<CashFlow> flow = legs_[i][j];
+                if (flow->date() > asof) {
+                    Real flowAmount = 0.0;
+                    try {
+                        flowAmount = flow->amount(); // TODO need discounted cash flow
+                        sumCashFlow[legType] += flowAmount;
 
-                        } catch (std::exception& e) {
+                        if (legType == "Fixed") {
+                            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
+                            fixedRate = coupon->rate();
+                        }
+
+                    } catch (std::exception& e) {
                             ALOG("flow amount could not be determined for trade " << id()
                                                                                   << ", set to zero: " << e.what());
-                        }
                     }
                 }
             }
-            // Calculate par rate
-            Real parRate = fixedRate * std::abs(sumCashFlow["Floating"]) / std::abs(sumCashFlow["Fixed"]);
-            additionalData_["parRate"] = parRate;
         }
-
-        setLegBasedAdditionalData(i);
+        // Calculate par rate
+        Real parRate = fixedRate * std::abs(sumCashFlow["Floating"]) / std::abs(sumCashFlow["Fixed"]);
+        additionalData_["parRate"] = parRate;
     }
+
     return additionalData_;
 }
 
