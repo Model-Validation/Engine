@@ -307,9 +307,9 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
         additionalData_["parRate"] = parRate;
 
         // Next way of calculating
-        static const Spread basisPoint = 1.0e-4;
-        Real parRate2 = fixedRate - swap->NPV() / ( swap->legBPS(1)  / basisPoint);
-        additionalData_["parRate2"] = parRate2;
+        //static const Spread basisPoint = 1.0e-4;
+        //Real parRate2 = fixedRate - swap->NPV() / ( swap->legBPS(1)  / basisPoint);
+        //additionalData_["parRate2"] = parRate2;
     }
 
     return additionalData_;
