@@ -15,7 +15,6 @@ calendars/ice.cpp
 calendars/ireland.cpp
 calendars/islamicweekendsonly.cpp
 calendars/israel.cpp
-calendars/largejointcalendar.cpp
 calendars/luxembourg.cpp
 calendars/malaysia.cpp
 calendars/mauritius.cpp
@@ -167,6 +166,7 @@ methods/fdmblackscholesmesher.cpp
 methods/fdmblackscholesop.cpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.cpp
 methods/fdmdefaultableequityjumpdiffusionop.cpp
+methods/fdmlgmop.cpp
 methods/fdmquantohelper.cpp
 methods/multipathgeneratorbase.cpp
 methods/multipathvariategenerator.cpp
@@ -209,6 +209,7 @@ models/jyimpliedzeroinflationtermstructure.cpp
 models/lgm.cpp
 models/lgmcalibrationinfo.cpp
 models/lgmconvolutionsolver2.cpp
+models/lgmfdsolver.cpp
 models/lgmimplieddefaulttermstructure.cpp
 models/lgmimpliedyieldtermstructure.cpp
 models/lgmvectorised.cpp
@@ -413,7 +414,6 @@ calendars/ice.hpp
 calendars/ireland.hpp
 calendars/islamicweekendsonly.hpp
 calendars/israel.hpp
-calendars/largejointcalendar.hpp
 calendars/luxembourg.hpp
 calendars/malaysia.hpp
 calendars/mauritius.hpp
@@ -642,6 +642,7 @@ methods/fdmblackscholesmesher.hpp
 methods/fdmblackscholesop.hpp
 methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp
 methods/fdmdefaultableequityjumpdiffusionop.hpp
+methods/fdmlgmop.hpp
 methods/fdmquantohelper.hpp
 methods/multipathgeneratorbase.hpp
 methods/multipathvariategenerator.hpp
@@ -710,8 +711,10 @@ models/irmodel.hpp
 models/jyimpliedyoyinflationtermstructure.hpp
 models/jyimpliedzeroinflationtermstructure.hpp
 models/lgm.hpp
+models/lgmbackwardsolver.hpp
 models/lgmcalibrationinfo.hpp
 models/lgmconvolutionsolver2.hpp
+models/lgmfdsolver.hpp
 models/lgmimplieddefaulttermstructure.hpp
 models/lgmimpliedyieldtermstructure.hpp
 models/lgmvectorised.hpp

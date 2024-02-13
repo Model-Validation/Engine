@@ -23,7 +23,6 @@
 #include <qle/calendars/ireland.hpp>
 #include <qle/calendars/islamicweekendsonly.hpp>
 #include <qle/calendars/israel.hpp>
-#include <qle/calendars/largejointcalendar.hpp>
 #include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/mauritius.hpp>
@@ -252,6 +251,7 @@
 #include <qle/methods/fdmblackscholesop.hpp>
 #include <qle/methods/fdmdefaultableequityjumpdiffusionfokkerplanckop.hpp>
 #include <qle/methods/fdmdefaultableequityjumpdiffusionop.hpp>
+#include <qle/methods/fdmlgmop.hpp>
 #include <qle/methods/fdmquantohelper.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
@@ -320,8 +320,10 @@
 #include <qle/models/jyimpliedyoyinflationtermstructure.hpp>
 #include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/lgm.hpp>
+#include <qle/models/lgmbackwardsolver.hpp>
 #include <qle/models/lgmcalibrationinfo.hpp>
 #include <qle/models/lgmconvolutionsolver2.hpp>
+#include <qle/models/lgmfdsolver.hpp>
 #include <qle/models/lgmimplieddefaulttermstructure.hpp>
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 #include <qle/models/lgmvectorised.hpp>
