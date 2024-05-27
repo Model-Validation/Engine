@@ -338,7 +338,7 @@ public:
                                                  maturityDate_, tenor_);
     }
 
-    //! \name Inspectors
+//! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
     const Period& fwdStart() const { return fwdStart_; }

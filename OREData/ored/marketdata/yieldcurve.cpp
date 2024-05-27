@@ -2451,9 +2451,11 @@ void YieldCurve::addFXForwards(const QuantLib::ext::shared_ptr<YieldCurveSegment
                "FX Forward segment does not support pillar choice " << segment->pillarChoice());
     DLOG("YieldCurve::addFXForwards(), create FX forward quotes and helpers");
     auto fxForwardQuoteIDs = fxForwardSegment->quotes();
-    for (Size i = 0; i < fxForwardQuoteIDs.size(); i++) {
-        QuantLib::ext::shared_ptr<MarketDatum> marketQuote = loader_.get(fxForwardQuoteIDs[i], asofDate_);
-
+    set<string> fxFwdQuoteStrings;
+    transform(fxForwardQuoteIDs.begin(), fxForwardQuoteIDs.end(), inserter(fxFwdQuoteStrings, fxFwdQuoteStrings.begin()),
+              [](const auto& p) { return p.first; });
+    auto fXFwdQuotes = loader_.get(fxFwdQuoteStrings, asofDate_);
+    for (auto marketQuote : fXFwdQuotes) {        
         // Check that we have a valid FX forward quote
         if (marketQuote) {
             QuantLib::ext::shared_ptr<FXForwardQuote> fxForwardQuote;
@@ -2466,7 +2468,7 @@ void YieldCurve::addFXForwards(const QuantLib::ext::shared_ptr<YieldCurveSegment
             QL_REQUIRE(fxSpotQuote->unitCcy() == fxForwardQuote->unitCcy() &&
                            fxSpotQuote->ccy() == fxForwardQuote->ccy(),
                        "Currency mismatch between spot \"" << spotRateID << "\" and fwd \""
-                                                           << fxForwardQuoteIDs[i].first << "\"");
+                                                           << marketQuote->name() << "\"");
                         
             // QL expects the FX Fwd quote to be per spot, not points. If the quote is an outright, handle conversion to points convention here.
 
