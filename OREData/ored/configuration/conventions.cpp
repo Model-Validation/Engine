@@ -913,10 +913,11 @@ QuantLib::ext::shared_ptr<IborIndex> BMABasisSwapConvention::index() const { ret
 
 FXConvention::FXConvention(const string& id, const string& spotDays, const string& sourceCurrency,
                            const string& targetCurrency, const string& pointsFactor, const string& advanceCalendar,
-                           const string& spotRelative, const string& endOfMonth, const string& convention)
+                           const string& spotRelative, const string& endOfMonth, const string& convention,
+                           const string& tradingCalendar)
     : Convention(id, Type::FX), strSpotDays_(spotDays), strSourceCurrency_(sourceCurrency),
       strTargetCurrency_(targetCurrency), strPointsFactor_(pointsFactor), strAdvanceCalendar_(advanceCalendar),
-      strSpotRelative_(spotRelative), strEndOfMonth_(endOfMonth), strConvention_(convention) {
+      strSpotRelative_(spotRelative), strEndOfMonth_(endOfMonth), strConvention_(convention), strTradingCalendar_(tradingCalendar) {
     build();
 }
 
@@ -929,6 +930,7 @@ void FXConvention::build() {
     spotRelative_ = strSpotRelative_.empty() ? true : parseBool(strSpotRelative_);
     endOfMonth_ = strEndOfMonth_.empty() ? false : parseBool(strEndOfMonth_);
     convention_ = strConvention_.empty() ? Following : parseBusinessDayConvention(strConvention_);
+    tradingCalendar_ = strTradingCalendar_.empty() ? Calendar() : parseCalendar(strTradingCalendar_);
 }
 
 void FXConvention::fromXML(XMLNode* node) {
@@ -946,6 +948,7 @@ void FXConvention::fromXML(XMLNode* node) {
     strSpotRelative_ = XMLUtils::getChildValue(node, "SpotRelative", false);
     strEndOfMonth_ = XMLUtils::getChildValue(node, "EOM", false);
     strConvention_ = XMLUtils::getChildValue(node, "Convention", false);
+    strTradingCalendar_ = XMLUtils::getChildValue(node, "TradingCalendar", false);
 
     build();
 }
@@ -967,6 +970,8 @@ XMLNode* FXConvention::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "EOM", strEndOfMonth_);
     if (!strConvention_.empty())
         XMLUtils::addChild(doc, node, "Convention", strConvention_);
+    if (!strTradingCalendar_.empty())
+        XMLUtils::addChild(doc, node, "TradingCalendar", strTradingCalendar_);
 
     return node;
 }

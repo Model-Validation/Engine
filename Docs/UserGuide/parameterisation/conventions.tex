@@ -528,6 +528,7 @@ structure of this node is shown in Listing \ref{lst:fx_conventions}.
   <SpotRelative> </SpotRelative>
   <EOM> </EOM>
   <Convention> </Convention>
+  <TradingCalendar> </TradingCalendar>
 </FX>
 \end{minted}
 \caption{FX conventions}
@@ -550,6 +551,8 @@ not provided, it defaults to a calendar with no holidays.
 defaults to \emph{True}.
 \item EOM [Optional]: A flag indicating whether the end of month roll convention is to be used for FX forward quotes. If not provided, it defaults to \emph{False}.
 \item Convention [Optional]: The business day convention used when advancing dates. If not provided, it defaults to \emph{Following}.
+\item TradingCalendar [Optional]: Trading center calendar used when adjusting valid business days for the FX swap rate helper, joined with the above AdvanceCalendar. If
+not provided, it defaults to a calendar with no holidays.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
