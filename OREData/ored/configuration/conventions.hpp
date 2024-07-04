@@ -796,7 +796,7 @@ public:
     //! Detailed constructor
     FXConvention(const string& id, const string& spotDays, const string& sourceCurrency, const string& targetCurrency,
                  const string& pointsFactor, const string& advanceCalendar = "", const string& spotRelative = "",
-                 const string& endOfMonth = "", const string& convention = "");
+                 const string& endOfMonth = "", const string& convention = "", const string& tradingCalendar = "");
     //@}
 
     //! \name Inspectors
@@ -809,6 +809,7 @@ public:
     bool spotRelative() const { return spotRelative_; }
     bool endOfMonth() const { return endOfMonth_; }
     BusinessDayConvention convention() const { return convention_; }
+    const Calendar& tradingCalendar() const { return tradingCalendar_; }
     //@}
 
     //! \name Serialisation
@@ -827,6 +828,7 @@ private:
     bool spotRelative_;
     bool endOfMonth_;
     BusinessDayConvention convention_;
+    Calendar tradingCalendar_;
 
     // Strings to store the inputs
     string strSpotDays_;
@@ -837,6 +839,7 @@ private:
     string strSpotRelative_;
     string strEndOfMonth_;
     string strConvention_;
+    string strTradingCalendar_;
 };
 
 //! Container for storing Cross Currency Basis Swap quote conventions

@@ -2544,7 +2544,7 @@ void YieldCurve::addFXForwards(const QuantLib::ext::shared_ptr<YieldCurveSegment
             QuantLib::ext::shared_ptr<RateHelper> fxForwardHelper(new FxSwapRateHelper(
                 qlFXForwardQuote, spotFx, fxForwardTenor, fxStartTenor.length(), fxConvention->advanceCalendar(), 
                 fxConvention->convention(), fxConvention->endOfMonth(), isFxBaseCurrencyCollateralCurrency,
-                knownDiscountCurve));
+                knownDiscountCurve, fxConvention->tradingCalendar()));
 
             instruments.push_back(fxForwardHelper);
         }

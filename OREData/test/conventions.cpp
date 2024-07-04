@@ -351,6 +351,41 @@ BOOST_AUTO_TEST_CASE(testIborConventionConstruction7D) {
     testIborIndexConvention("CNY-REPO-7D", "CNY", "A365F", 2, "MF", true, "CNY-REPO-1W");
 }
 
+BOOST_AUTO_TEST_CASE(testFxConventionFromXml) {
+
+    BOOST_TEST_MESSAGE("Testing parsing of FX convention from XML");
+
+    // XML string convention
+    string xml;
+    xml.append("<FX>");
+    xml.append("  <Id>EUR-INR-FX-CONVENTION</Id>");
+    xml.append("  <SpotDays>2</SpotDays>");
+    xml.append("  <SourceCurrency>EUR</SourceCurrency>");
+    xml.append("  <TargetCurrency>INR</TargetCurrency>");
+    xml.append("  <PointsFactor>10000</PointsFactor>");
+    xml.append("  <AdvanceCalendar>TARGET,INR</AdvanceCalendar>");
+    xml.append("  <SpotRelative>true</SpotRelative>");
+    xml.append("  <EOM>false</EOM>");
+    xml.append("  <Convention>Following</Convention>");
+    xml.append("  <TradingCalendar>US-FED</TradingCalendar>");
+    xml.append("</FX>");
+
+    // Parse convention from XML
+    boost::shared_ptr<FXConvention> convention = boost::make_shared<FXConvention>();
+    BOOST_CHECK_NO_THROW(convention->fromXMLString(xml));
+
+    BOOST_CHECK_EQUAL(convention->id(), "EUR-INR-FX-CONVENTION");
+    BOOST_CHECK_EQUAL(convention->spotDays(), 2);
+    BOOST_CHECK_EQUAL(convention->sourceCurrency(), EURCurrency());
+    BOOST_CHECK_EQUAL(convention->targetCurrency(), INRCurrency());
+    BOOST_CHECK_EQUAL(convention->pointsFactor(), 10000);
+    BOOST_CHECK_EQUAL(convention->advanceCalendar(), JointCalendar(TARGET(), India()));
+    BOOST_CHECK_EQUAL(convention->spotRelative(), true);
+    BOOST_CHECK_EQUAL(convention->endOfMonth(), false);
+    BOOST_CHECK_EQUAL(convention->convention(), BusinessDayConvention::Following);
+    BOOST_CHECK_EQUAL(convention->tradingCalendar(), UnitedStates(UnitedStates::FederalReserve));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
