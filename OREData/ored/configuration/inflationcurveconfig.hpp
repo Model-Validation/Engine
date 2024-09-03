@@ -53,7 +53,8 @@ public:
                          const Period& lag, const Frequency& frequency, const Real baseRate, const Real tolerance, 
                          const bool useLastAvailableFixingAsBaseDate, const Date& seasonalityBaseDate, 
                          const Frequency& seasonalityFrequency, const vector<string>& seasonalityFactors,
-                         const vector<double>& overrideSeasonalityFactors = std::vector<double>());
+                         const vector<double>& overrideSeasonalityFactors = std::vector<double>(),
+                         const string& interpolationVariable = "Zero", const string& interpolationMethod = "Linear");
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -75,6 +76,8 @@ public:
     const vector<string>& seasonalityFactors() const { return seasonalityFactors_; }
     const vector<double>& overrideSeasonalityFactors() const { return overrideSeasonalityFactors_; }
     const vector<string>& swapQuotes() { return swapQuotes_; }
+    const string& interpolationVariable() const { return interpolationVariable_; }
+    const string& interpolationMethod() const { return interpolationMethod_; }
 
     // Setters
     string& nominalTermStructure() { return nominalTermStructure_; }
@@ -92,6 +95,8 @@ public:
     Frequency& seasonalityFrequency() { return seasonalityFrequency_; }
     vector<string>& seasonalityFactors() { return seasonalityFactors_; }
     vector<double>& overrideSeasonalityFactors() { return overrideSeasonalityFactors_; }
+    string& interpolationVariable() { return interpolationVariable_; }
+    string& interpolationMethod() { return interpolationMethod_; }
 
 private:
     void populateRequiredCurveIds();
@@ -100,7 +105,6 @@ private:
     string nominalTermStructure_;
     Type type_;
     string conventions_;
-    string interpolationMethod_;
     bool extrapolate_;
     Calendar calendar_;
     DayCounter dayCounter_;
@@ -113,6 +117,8 @@ private:
     Frequency seasonalityFrequency_;
     vector<string> seasonalityFactors_;
     vector<double> overrideSeasonalityFactors_;
+    string interpolationVariable_;
+    string interpolationMethod_;
 };
 } // namespace data
 } // namespace ore

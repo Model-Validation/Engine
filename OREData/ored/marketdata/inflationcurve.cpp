@@ -28,6 +28,7 @@
 #include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
 #include <qle/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/math/interpolations/loginterpolation.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <algorithm>
 
@@ -37,6 +38,24 @@ using namespace ore::data;
 
 namespace ore {
 namespace data {
+
+InflationCurve::InterpolationVariable parseInflationCurveInterpolationVariable(const string& s) {
+    if (s == "Zero")
+        return InflationCurve::InterpolationVariable::Zero;
+    else if (s == "Discount")
+        return InflationCurve::InterpolationVariable::Discount;
+    else
+        QL_FAIL("Inflation curve interpolation variable " << s << " not recognized");
+};
+
+InflationCurve::InterpolationMethod parseInflationCurveInterpolationMethod(const string& s) {
+    if (s == "Linear")
+        return InflationCurve::InterpolationMethod::Linear;
+    else if (s == "LogLinear")
+        return InflationCurve::InterpolationMethod::LogLinear;
+    else
+        QL_FAIL("Inflation curve interpolation method " << s << " not recognized");
+};
 
 InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader& loader,
                                const CurveConfigurations& curveConfigs,
@@ -63,6 +82,9 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                                                       "of the curve, "
                                                    << spec.name() << ", was not found.");
         }
+
+        interpolationVariable_ = parseInflationCurveInterpolationVariable(config->interpolationVariable());
+        interpolationMethod_ = parseInflationCurveInterpolationMethod(config->interpolationMethod());
 
         // We loop over all market data, looking for quotes that match the configuration
 
@@ -216,6 +238,25 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             
             // force bootstrap so that errors are thrown during the build, not later
             QuantLib::ext::static_pointer_cast<QuantExt::PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(QL_EPSILON);
+            // interpolation method & variable
+            auto dates =
+                QuantLib::ext::static_pointer_cast<QuantExt::PiecewiseZeroInflationCurve<Linear>>(curve_)->dates();
+            std::vector<Rate> zc_rates;
+            auto zcCurve = QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(curve_);
+            for (auto date : dates) {
+                zc_rates.push_back(zcCurve->zeroRate(date, Period(0, Days)));
+            }
+
+            if (interpolationVariable_ == InterpolationVariable::Zero) {
+                ;
+            } else if (interpolationVariable_ == InterpolationVariable::Discount) {
+                curve_ =
+                    QuantLib::ext::make_shared<QuantLib::InterpolatedZeroInflationCurve<QuantLib::LogLinear>>(
+                        asof, config->calendar(), config->dayCounter(), curveObsLag, config->frequency(), dates, zc_rates, true);
+            } else {
+                QL_FAIL("Interpolation variable not recognized.");
+            }
+
             if (derive_yoy_from_zc) {
                 // set up yoy wrapper with empty ts, so that zero index is used to forecast fixings
                 // for this link the appropriate curve to the zero index

@@ -30,17 +30,19 @@ namespace data {
 
 InflationCurveConfig::InflationCurveConfig(
     const string& curveID, const string& curveDescription, const string& nominalTermStructure, const Type type,
-    const vector<string>& swapQuotes, const string& conventions, const bool extrapolate, const Calendar& calendar,
-    const DayCounter& dayCounter, const Period& lag, const Frequency& frequency, const Real baseRate,
-    const Real tolerance, const bool useLastAvailableFixingAsBaseDate, const Date& seasonalityBaseDate,
-    const Frequency& seasonalityFrequency,
-    const vector<string>& seasonalityFactors, const vector<double>& overrideSeasonalityFactors)
+    const vector<string>& swapQuotes, const string& conventions, const bool extrapolate, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag, 
+    const Frequency& frequency, const Real baseRate, const Real tolerance, const bool useLastAvailableFixingAsBaseDate, 
+    const Date& seasonalityBaseDate, const Frequency& seasonalityFrequency, const vector<string>& seasonalityFactors,
+    const vector<double>& overrideSeasonalityFactors, const string& interpolationVariable,
+    const string& interpolationMethod)
     : CurveConfig(curveID, curveDescription), swapQuotes_(swapQuotes), nominalTermStructure_(nominalTermStructure),
-      type_(type), conventions_(conventions), extrapolate_(extrapolate), calendar_(calendar), dayCounter_(dayCounter),
+      type_(type), conventions_(conventions), extrapolate_(extrapolate), calendar_(calendar),
+      dayCounter_(dayCounter),
       lag_(lag), frequency_(frequency), baseRate_(baseRate), tolerance_(tolerance),
       useLastAvailableFixingAsBaseDate_(useLastAvailableFixingAsBaseDate),
-      seasonalityBaseDate_(seasonalityBaseDate), seasonalityFrequency_(seasonalityFrequency),
-      seasonalityFactors_(seasonalityFactors), overrideSeasonalityFactors_(overrideSeasonalityFactors) {
+      seasonalityBaseDate_(seasonalityBaseDate), seasonalityFrequency_(seasonalityFrequency), seasonalityFactors_(seasonalityFactors),
+      overrideSeasonalityFactors_(overrideSeasonalityFactors), interpolationVariable_(interpolationVariable),
+      interpolationMethod_(interpolationMethod) {
     quotes_ = swapQuotes;
     quotes_.insert(quotes_.end(), seasonalityFactors.begin(), seasonalityFactors.end());
     populateRequiredCurveIds();
@@ -106,6 +108,9 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
         std::string overrideFctStr = XMLUtils::getChildValue(seasonalityNode, "OverrideFactors", false);
         overrideSeasonalityFactors_ = parseListOfValues<Real>(overrideFctStr, &parseReal);
     }
+
+    interpolationVariable_ = XMLUtils::getChildValue(node, "InterpolationVariable", false, "Zero");
+    interpolationMethod_ = XMLUtils::getChildValue(node, "InterpolationMethod", false, "Linear");
     populateRequiredCurveIds();
 }
 
@@ -127,6 +132,8 @@ XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Conventions", conventions_);
     string extrap = (extrapolate_ ? "true" : "false");
     XMLUtils::addChild(doc, node, "Extrapolation", extrap);
+    XMLUtils::addChild(doc, node, "InterpolationVariable", interpolationVariable_);
+    XMLUtils::addChild(doc, node, "InterpolationMethod", interpolationMethod_);
 
     string baseRateStr;
     if (baseRate_ != QuantLib::Null<Real>())

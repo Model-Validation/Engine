@@ -47,6 +47,12 @@ using namespace data;
 */
 class InflationCurve {
 public:
+    //! Supported interpolation variables
+    enum class InterpolationVariable { Zero, Discount };
+
+    //! Supported interpolation methods
+    enum class InterpolationMethod { Linear, LogLinear };
+
     InflationCurve() : interpolatedIndex_(false) {}
     InflationCurve(Date asof, InflationCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
                    map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves, const bool buildCalibrationInfo);
@@ -65,6 +71,8 @@ private:
     QuantLib::ext::shared_ptr<InflationTermStructure> curve_;
     bool interpolatedIndex_;
     QuantLib::ext::shared_ptr<InflationCurveCalibrationInfo> calibrationInfo_;
+    InterpolationVariable interpolationVariable_;
+    InterpolationMethod interpolationMethod_;
 };
 
 /*! Given an \p asof and inflation swap \p convention, determine the start date of an inflation swap.

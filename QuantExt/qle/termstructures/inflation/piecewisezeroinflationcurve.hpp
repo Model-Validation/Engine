@@ -55,7 +55,7 @@ public:
                                 QuantLib::Real accuracy = 1.0e-12,
                                 QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex> index = nullptr,
                                 bool useLastAvailableFixingAsBaseDate = false, const Interpolator& i = Interpolator())
-        : base_curve(referenceDate, calendar, dayCounter, lag, frequency, baseZeroRate, i),
+        : base_curve(referenceDate, calendar, dayCounter, lag, frequency, baseZeroRate, false, i),
           instruments_(std::move(instruments)), accuracy_(accuracy), index_(index),
           useLastAvailableFixingAsBaseDate_(useLastAvailableFixingAsBaseDate) {
         bootstrap_.setup(this);
