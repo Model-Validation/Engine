@@ -242,9 +242,10 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             auto dates =
                 QuantLib::ext::static_pointer_cast<QuantExt::PiecewiseZeroInflationCurve<Linear>>(curve_)->dates();
             std::vector<Rate> zc_rates;
+            zc_rates.push_back(0);
             auto zcCurve = QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(curve_);
-            for (auto date : dates) {
-                zc_rates.push_back(zcCurve->zeroRate(date, Period(0, Days)));
+            for (auto quote : quotes) {
+                zc_rates.push_back(quote->value());
             }
 
             if (interpolationVariable_ == InterpolationVariable::Zero) {
