@@ -332,7 +332,9 @@ QuantLib::ext::shared_ptr<IborIndex> parseIborIndex(const string& s, string& ten
         {"GBP-BoEBase", QuantLib::ext::make_shared<BOEBaseRateIndex>()},
         {"HKD-HONIA", QuantLib::ext::make_shared<HKDHonia>()},
         {"SEK-STINA", QuantLib::ext::make_shared<SEKStina>()},
+        {"SEK-SWESTR", QuantLib::ext::make_shared<Swestr>()},
         {"DKK-CITA", QuantLib::ext::make_shared<DKKCita>()},
+        {"DKK-DESTR", QuantLib::ext::make_shared<Destr>()},
         {"THB-THOR", QuantLib::ext::make_shared<THBThor>()}};
 
     // Map from our _unique internal name_ to an ibor index (the period does not matter here)
