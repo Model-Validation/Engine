@@ -198,7 +198,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
 
     for (auto const& [id, trade] : portfolio_->trades()) {
         auto qlInstr = QuantLib::ext::dynamic_pointer_cast<ScriptedInstrument>(trade->instrument()->qlInstrument());
-        QL_REQUIRE(qlInstr, "XvaEngineCG: expeced trade to provide ScriptedInstrument, trade '" << id << "' does not.");
+        QL_REQUIRE(qlInstr, "XvaEngineCG: expected trade to provide ScriptedInstrument, trade '" << id << "' does not.");
         auto engine = QuantLib::ext::dynamic_pointer_cast<ScriptedInstrumentPricingEngineCG>(qlInstr->pricingEngine());
         QL_REQUIRE(engine, "XvaEngineCG: expected to get ScriptedInstrumentPricingEngineCG, trade '"
                                << id << "' has a different engine.");

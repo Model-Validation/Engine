@@ -280,7 +280,7 @@ void MarketCalibrationReport::addCommodityCurve(const QuantLib::Date& refdate,
     }
 
     addRowReport(commodityStr, id, "calendar", "", "", "", info->calendar);
-    addRowReport(commodityStr, id, "currenct", "", "", "", info->currency);
+    addRowReport(commodityStr, id, "currency", "", "", "", info->currency);
     addRowReport(commodityStr, id, "interpolationMethod", "", "", "", info->interpolationMethod);
 
     for (Size i = 0; i < info->pillarDates.size(); ++i) {

@@ -17,7 +17,7 @@
 */
 
 /*! \file qle/termstructures/inflation/inflationtraits.hpp
-    \brief interpolated correlation term structure
+    \brief inflation bootstrap traits
 */
 
 #pragma once

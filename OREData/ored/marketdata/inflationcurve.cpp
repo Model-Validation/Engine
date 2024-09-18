@@ -194,7 +194,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 instrument->unregisterWith(Settings::instance().evaluationDate());
                 instruments.push_back(instrument);
             }
-            // base zero / yoy rate: if given, take it, otherwise set it to observered zeroRate
+            // base zero / yoy rate: if given, take it, otherwise set it to observed zeroRate
             Real baseRate = quotes[0]->value();
             if (config->baseRate() != Null<Real>()) {
                 baseRate = config->baseRate();
