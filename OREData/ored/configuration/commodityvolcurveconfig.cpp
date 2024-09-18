@@ -56,7 +56,6 @@ void CommodityVolatilityConfig::populateRequiredCurveIds() {
                 parseCurveSpec(vapo->baseVolatilityId())->curveConfigID());
         }
         if (auto p = QuantLib::ext::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
-            requiredCurveIds_[CurveSpec::CurveType::Commodity].insert(p->proxyVolatilityCurve());
             requiredCurveIds_[CurveSpec::CurveType::CommodityVolatility].insert(p->proxyVolatilityCurve());
             if (!p->fxVolatilityCurve().empty())
                 requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(p->fxVolatilityCurve());
