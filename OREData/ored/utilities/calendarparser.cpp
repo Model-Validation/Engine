@@ -332,6 +332,7 @@ void CalendarParser::reset() {
         {"AED", AmendedCalendar(UnitedArabEmirates(), "AED")},
         {"AE", AmendedCalendar(UnitedArabEmirates(), "AED")},
         {"ARE", AmendedCalendar(UnitedArabEmirates(), "AED")},
+        {"JOD", AmendedCalendar(IslamicWeekendsOnly(), "JOD")},
 
         // fallback to amended Mauritius calendar.
         {"MU", AmendedCalendar(Mauritius(), "MUR")},
@@ -359,7 +360,6 @@ void CalendarParser::reset() {
         {"GEL", AmendedCalendar(WeekendsOnly(), "GEL")},
         {"GHS", AmendedCalendar(WeekendsOnly(), "GHS")},
         {"HRK", AmendedCalendar(WeekendsOnly(), "HRK")},
-        {"JOD", AmendedCalendar(WeekendsOnly(), "JOD")},
         {"KES", AmendedCalendar(WeekendsOnly(), "KES")},
         {"LKR", AmendedCalendar(WeekendsOnly(), "LKR")},
         {"RSD", AmendedCalendar(WeekendsOnly(), "RSD")},
