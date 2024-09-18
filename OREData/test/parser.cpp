@@ -45,9 +45,11 @@ using namespace std;
 
 using ore::data::CommodityForwardQuote;
 using ore::data::CommoditySpotQuote;
+using ore::data::EventWeightQuote;
 using ore::data::FXOptionQuote;
 using ore::data::MarketDatum;
 using ore::data::parseMarketDatum;
+using ore::data::WeekdayWeightQuote;
 
 namespace {
 
@@ -904,6 +906,53 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
             BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/1M", value), Error);
             BOOST_CHECK_THROW(parseMarketDatum(d, "FX_OPTION/RATE_LNVOL/EUR/USD/2019-12", value), Error);
         }
+    }
+
+    
+    BOOST_TEST_MESSAGE("Testing weight market datum parsing...");
+
+    // test normal parsing
+    {
+        Date d(29, Jul, 2019);
+        Real value = 0.95;
+
+        // Test parse with weekday
+        string input = "WEIGHT/RATE/FX-ISDA-EUR-SEK/MON";
+        QuantLib::ext::shared_ptr<MarketDatum> datum = parseMarketDatum(d, input, value);
+
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == MarketDatum::InstrumentType::WEIGHT);
+        BOOST_CHECK(datum->quoteType() == MarketDatum::QuoteType::RATE);
+
+        QuantLib::ext::shared_ptr<WeekdayWeightQuote> wkdq = QuantLib::ext::dynamic_pointer_cast<WeekdayWeightQuote>(datum);
+        BOOST_CHECK(wkdq->weekday() == Weekday::Monday);
+        
+        // Test parse with date
+        input = "WEIGHT/RATE/FX-ISDA-EUR-SEK/2023-01-01";
+        datum = parseMarketDatum(d, input, value);
+
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == MarketDatum::InstrumentType::WEIGHT);
+        BOOST_CHECK(datum->quoteType() == MarketDatum::QuoteType::RATE);
+
+        QuantLib::ext::shared_ptr<EventWeightQuote> ewq = QuantLib::ext::dynamic_pointer_cast<EventWeightQuote>(datum);
+        BOOST_CHECK(ewq->eventDate() == "2023-01-01");
+
+        // Test parse with date and explanatory comment
+        input = "WEIGHT/RATE/FX-ISDA-EUR-SEK/2023-01-01/NEW_YEARS";
+        datum = parseMarketDatum(d, input, value);
+    }
+
+    // test possible exceptions
+    {
+        Date d(29, Jul, 2019);
+        Real value = 0.95;
+
+        BOOST_CHECK_THROW(parseMarketDatum(d, "WEIGHT/RATE/FX-ISDA-EUR-SEK/MONDAY", value), Error);
+        BOOST_CHECK_THROW(parseMarketDatum(d, "WEIGHT/RATE/FX-ISDA-EUR-SEK/MONDAY/A_WEEKDAY_QUOTE", value), Error);
+        BOOST_CHECK_THROW(parseMarketDatum(d, "WEIGHT/RATE/FX-ISDA-EUR-SEK", value), Error);
     }
 }
 
