@@ -25,6 +25,8 @@
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
+#include <qle/termstructures/pricetermstructure.hpp>
 #include <ql/errors.hpp>
 #include <ql/instruments/asianoption.hpp>
 #include <ql/instruments/averagetype.hpp>
@@ -125,45 +127,39 @@ void AsianOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
         QL_REQUIRE(fxIndex->targetCurrency() == payCcy,
                    "FX domestic ccy " << fxIndex->targetCurrency() << " must match pay ccy " << payCcy);
         assetName_ = fxIndex->sourceCurrency().code();
+        index = buildFxIndex(fxIndex->oreName(), currency_, assetName_, engineFactory->market(),
+                             engineFactory->configuration(MarketContext::pricing));
     } else if (auto eqIndex = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityIndex2>(index)) {
         // FIXME for EQ and COMM indices check whether EQ, COMM ccy = payCcy (in the engine builders probably)
         assetName_ = eqIndex->name();
+        const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
+        index = *market->equityCurve(assetName_, engineFactory->configuration(MarketContext::pricing));
     } else if (auto commIndex = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
         assetName_ = commIndex->underlyingName();
+
+        const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
+        index = *market->commodityIndex(assetName_, engineFactory->configuration(MarketContext::pricing));
     }
 
-    // FIXME the engine should handle the historical part of the averaging as well!
     QuantLib::ext::shared_ptr<QuantLib::Instrument> asian;
     auto exercise = QuantLib::ext::make_shared<QuantLib::EuropeanExercise>(expiryDate);
     if (processType == "Discrete") {
-        QuantLib::Date today = engineFactory->market()->asofDate();
-        Real runningAccumulator = option_.payoffType2() == "Geometric" ? 1.0 : 0.0;
-        Size pastFixings = 0;
+        QL_REQUIRE(observationDates_.hasData(), "ObservationDates is missing data");
         Schedule observationSchedule = makeSchedule(observationDates_);
         std::vector<QuantLib::Date> observationDates = observationSchedule.dates();
 
         // Sort for the engine's sake. Not needed - instrument also sorts...?
         std::sort(observationDates.begin(), observationDates.end());
 
-        for (QuantLib::Date observationDate : observationDates) {
-            // TODO: Verify. Should today be read too? a enforcesTodaysHistoricFixings() be used?
-            if (observationDate < today ||
-                (observationDate == today && Settings::instance().enforcesTodaysHistoricFixings())) {
-                // FIXME all observation dates lead to a required fixing
-                requiredFixings_.addFixingDate(observationDate, indexName());
-                Real fixingValue = index->fixing(observationDate);
-                if (option_.payoffType2() == "Geometric") {
-                    runningAccumulator *= fixingValue;
-                } else if (option_.payoffType2() == "Arithmetic") {
-                    runningAccumulator += fixingValue;
-                }
-                ++pastFixings;
-            }
+        std::vector<Real> fixingValues;
+        for (Date observationDate : observationDates) {
+            requiredFixings_.addFixingDate(observationDate, indexName());
+            fixingValues.push_back(index->fixing(observationDate));
         }
         asian = QuantLib::ext::make_shared<QuantLib::DiscreteAveragingAsianOption>(
             option_.payoffType2() == "Geometric" ? QuantLib::Average::Type::Geometric
                                                  : QuantLib::Average::Type::Arithmetic,
-            runningAccumulator, pastFixings, observationDates, payoff, exercise);
+            observationDates, payoff, exercise, fixingValues);
     } else if (processType == "Continuous") {
         // FIXME how is the accumulated average handled in this case?
         asian = QuantLib::ext::make_shared<QuantLib::ContinuousAveragingAsianOption>(option_.payoffType2() == "Geometric"
