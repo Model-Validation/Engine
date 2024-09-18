@@ -79,7 +79,8 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"CORRELATION", MarketDatum::InstrumentType::CORRELATION},
         {"COMMODITY_OPTION", MarketDatum::InstrumentType::COMMODITY_OPTION},
         {"CPR", MarketDatum::InstrumentType::CPR},
-        {"RATING", MarketDatum::InstrumentType::RATING}};
+        {"RATING", MarketDatum::InstrumentType::RATING},
+        {"WEIGHT", MarketDatum::InstrumentType::WEIGHT}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -811,6 +812,27 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         const string& toRating = tokens[4];
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::TRANSITION_PROBABILITY, "Invalid quote type for " << datumName);
         return QuantLib::ext::make_shared<TransitionProbabilityQuote>(value, asof, datumName, name, fromRating, toRating);
+    }
+
+    case MarketDatum::InstrumentType::WEIGHT: {
+        QL_REQUIRE(tokens.size() == 4 || tokens.size() == 5, "4 or 5 tokens expected for WEIGHT quote " << datumName);
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE, "Invalid quote type for " << datumName);
+        Weekday weekday;
+        Date dummy;
+        const string& index = tokens[2];
+        string lowerWeekday = tokens[3];
+        std::transform(tokens[3].begin(), tokens[3].end(), lowerWeekday.begin(),
+                       [](unsigned char c) { return std::tolower(c); });
+        lowerWeekday[0] = toupper(lowerWeekday[0]);
+        if (tryParse<Weekday>(lowerWeekday, weekday, &parseWeekday)) {
+            // Weekday quote
+            QL_REQUIRE(tokens.size() == 4, "4 tokens expected for WeekdayWeightQuote " << datumName);
+            return QuantLib::ext::make_shared<WeekdayWeightQuote>(value, asof, datumName, index, weekday);
+        } else if (tryParse<Date>(tokens[3], dummy, &parseDate)) {
+            // Try for dated quoted -> EventWeightQuote
+            string eventDate = tokens[3];
+            return QuantLib::ext::make_shared<EventWeightQuote>(value, asof, datumName, index, eventDate);
+        }
     }
 
     default:

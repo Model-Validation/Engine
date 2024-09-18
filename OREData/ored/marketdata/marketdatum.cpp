@@ -654,6 +654,19 @@ template <class Archive> void TransitionProbabilityQuote::serialize(Archive& ar,
     ar& toRating_;
 }
 
+template <class Archive> void WeekdayWeightQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& id_;
+    ar& weekday_; // TODO
+}
+
+template <class Archive> void EventWeightQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& id_;
+    ar& eventDate_;
+    //ar& index_; // TODO
+}
+
 template void MarketDatum::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void MarketDatum::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void MoneyMarketQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
@@ -744,6 +757,10 @@ template void BondPriceQuote::serialize(boost::archive::binary_oarchive& ar, con
 template void BondPriceQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 template void TransitionProbabilityQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void TransitionProbabilityQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void WeekdayWeightQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void WeekdayWeightQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void EventWeightQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void EventWeightQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 
 } // namespace data
 } // namespace ore
@@ -792,3 +809,5 @@ BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CorrelationQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CPRQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BondPriceQuote);
 BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::TransitionProbabilityQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::WeekdayWeightQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::EventWeightQuote);

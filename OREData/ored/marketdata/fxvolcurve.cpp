@@ -32,6 +32,7 @@
 #include <qle/termstructures/blackvolsurfaceabsolute.hpp>
 #include <qle/termstructures/blackvolsurfacebfrr.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
+#include <qle/termstructures/blackvolsurfacewithtimeweight.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
 
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
@@ -242,6 +243,37 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
         asof, dates, putDeltasNum, callDeltasNum, hasATM, blackVolMatrix, dc, cal, fxSpot_, domYts_, forYts_,
         deltaType_, atmType_, boost::none, switchTenor_, longTermDeltaType_, longTermAtmType_, boost::none, interp,
         flatExtrapolation);
+
+    unordered_map<Weekday, Real> weekdayWeights;
+    unordered_map<Date, Real> datedWeights;
+    if (config->applyWeekdayWeights() || config->eventWeightDates().size() > 0) {
+        Wildcard w(config->weightQuotePrefix());
+        auto desiredEventDates = config->eventWeightDates();
+
+        for (const auto& md : loader.get(w, asof)) {
+            if (auto q = QuantLib::ext::dynamic_pointer_cast<WeekdayWeightQuote>(md)) {
+                weekdayWeights[q->weekday()] = q->quote()->value();
+                DLOG("Added weekday weight for weekday " << q->weekday()
+                                                         << " with value: " << weekdayWeights[q->weekday()] << ".");
+            } else if (auto q = QuantLib::ext::dynamic_pointer_cast<EventWeightQuote>(md)) {
+                Date eventDate = parseDate(q->eventDate());
+                if (std::count(desiredEventDates.begin(), desiredEventDates.end(), eventDate)) {
+                    datedWeights[eventDate] = q->quote()->value();
+                    DLOG("Added event weight for date " << eventDate << " with value: " << datedWeights[eventDate]
+                                                        << ".");
+                }
+            } else {
+                QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '"
+                                  << md->name() << "' to WeekdayWeightQuote or EventWeightQuote");
+            }
+        }
+        QL_REQUIRE(weekdayWeights.size() == 7, "Must provide weight quotes for all 7 weekdays");
+
+        auto baseTS = vol_;
+        vol_ = QuantLib::ext::make_shared<QuantExt::BlackVolatilityWithTimeWeighting>(vol_, dates, weekdayWeights, datedWeights);
+    }
+
+
 
     vol_->enableExtrapolation();
 }

@@ -107,6 +107,9 @@ public:
     const string& baseVolatility1() const { return baseVolatility1_; }
     const string& baseVolatility2() const { return baseVolatility2_; }
     const string& fxIndexTag() const { return fxIndexTag_; }
+    const string& weightQuotePrefix() const { return weightQuotePrefix_; }
+    const bool applyWeekdayWeights() const { return applyWeekdayWeights_; }
+    const vector<QuantLib::Date>& eventWeightDates() const { return eventWeightDates_; }
     const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
 
@@ -127,6 +130,8 @@ public:
     string& baseVolatility1() { return baseVolatility1_; }
     string& baseVolatility2() { return baseVolatility2_; }
     string& fxIndexTag() { return fxIndexTag_; }
+    string& weightQuotePrefix() { return weightQuotePrefix_; }
+    bool& applyWeekdayWeights() { return applyWeekdayWeights_; }
     //@}
 
 private:
@@ -148,6 +153,9 @@ private:
     string baseVolatility1_;
     string baseVolatility2_;
     string fxIndexTag_;
+    string weightQuotePrefix_;
+    bool applyWeekdayWeights_;
+    vector<QuantLib::Date> eventWeightDates_;
     ReportConfig reportConfig_;
 };
 } // namespace data

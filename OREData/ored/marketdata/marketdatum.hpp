@@ -119,6 +119,7 @@ public:
         COMMODITY_OPTION,
         CPR,
         RATING,
+        WEIGHT,
         NONE
     };
 
@@ -1959,6 +1960,60 @@ private:
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
+//! Weekday weight data class
+/*!
+ This class holds single market points of type
+ - WEIGHT
+ Specific data comprise reference name of affected item, e.g., an FX pair, and the weekday
+
+ \ingroup marketdata
+ */
+class WeekdayWeightQuote : public MarketDatum {
+public:
+    WeekdayWeightQuote() {}
+    WeekdayWeightQuote(Real value, Date asofDate, const string& name, const string& id, Weekday weekday)
+        : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::WEIGHT), id_(id), weekday_(weekday) {}
+
+    //! \name Inspectors
+    //@{
+    const string& id() const { return id_; }
+    const Weekday weekday() const { return weekday_; }
+    //@}
+private:
+    string id_;
+    Weekday weekday_;
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
+};
+
+//! Event weight data class
+/*!
+ This class holds single market points of type
+ - WEIGHT
+ Specific data comprise reference name of affected item, e.g., an FX pair, and the event's date.
+
+ \ingroup marketdata
+ */
+class EventWeightQuote : public MarketDatum {
+public:
+    EventWeightQuote() {}
+    EventWeightQuote(Real value, Date asofDate, const string& name, const string& id, const string& eventDate)
+        : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::WEIGHT), id_(id), eventDate_(eventDate) {}
+
+    //! \name Inspectors
+    //@{
+    const string& id() const { return id_; }
+    const string& eventDate() const { return eventDate_; }
+    //@}
+private:
+    string id_;
+    string eventDate_;
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
+};
+
 } // namespace data
 } // namespace ore
 
@@ -2006,3 +2061,5 @@ BOOST_CLASS_EXPORT_KEY(ore::data::CorrelationQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::CPRQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::BondPriceQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::TransitionProbabilityQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::WeekdayWeightQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::EventWeightQuote);

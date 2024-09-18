@@ -197,6 +197,23 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
         reportConfig_.fromXML(tmp);
     }
 
+    applyWeekdayWeights_ = false;
+    if (auto tmp = XMLUtils::getChildNode(node, "TimeWeighting")) {
+        weightQuotePrefix_ = XMLUtils::getChildValue(tmp, "WeightQuotePrefix");
+
+        /*<ApplyWeekdayWeights>true</ApplyWeekdayWeights>*/
+        applyWeekdayWeights_ = parseBool(XMLUtils::getChildValue(tmp, "ApplyWeekdayWeights", false, "false"));
+
+        /*
+        <EventDates> <!-- TODO decide whether to apply ScheduleDates here? -->
+          <Date>2023-06-19</Date>
+          <Date>2023-07-19</Date>
+        </EventDates> <!-- TODO This should support wildcards? E.g. '*' -->
+        */
+        auto eventDateStr = XMLUtils::getChildrenValues(tmp, "EventDates", "Date", false);
+        eventWeightDates_ = parseVectorOfValues<QuantLib::Date>(eventDateStr, &parseDate);
+    }
+
     populateRequiredCurveIds();
 }
 
