@@ -93,6 +93,7 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     }
 
     maturity_ = parseDate(maturityDate_);
+    // Get the commodity index from the market.
     auto index = *market->commodityIndex(commodityName_, engineFactory->configuration(MarketContext::pricing));
     bool isFutureAccordingToConventions = InstrumentConventions::instance().conventions()->has(commodityName_, Convention::Type::CommodityFuture);
 
@@ -100,9 +101,6 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     maturity_ = index->fixingCalendar().adjust(maturity_, Preceding);
 
     if ((isFuturePrice_ && *isFuturePrice_) || isFutureAccordingToConventions) {
-
-        // Get the commodity index from the market.
-        index = *market->commodityIndex(commodityName_, engineFactory->configuration(MarketContext::pricing));
 
         // May have been given an explicit future expiry date or an offset and calendar or neither.
         Date expiryDate = maturity_;
