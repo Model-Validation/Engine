@@ -1101,6 +1101,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         im = InterpolatedSmileSection::InterpolationMethod::FinancialCubic;
     } else if (vdsc.strikeInterpolation() == "CubicSpline") {
         im = InterpolatedSmileSection::InterpolationMethod::CubicSpline;
+    } else if (vdsc.strikeInterpolation() == "Lagrange") {
+        im = InterpolatedSmileSection::InterpolationMethod::Lagrange;
     } else {
         im = InterpolatedSmileSection::InterpolationMethod::Linear;
         DLOG("BlackVolatilitySurfaceDelta does not support strike interpolation '" << vdsc.strikeInterpolation()
