@@ -282,12 +282,13 @@ Schedule makeSchedule(const ScheduleDates& data) {
     if (!data.endOfMonthConvention().empty())
         endOfMonthConvention = parseBusinessDayConvention(data.endOfMonthConvention());
 
-    // Ensure that Schedule ctor is passed a vector of unique ordered dates.
-    std::set<Date> uniqueDates;
+    // Ensure that Schedule ctor is passed a vector of adjusted and ordered dates.
+    std::vector<Date> adjustedDates;
+    adjustedDates.reserve(data.dates().size());
     for (const string& d : data.dates())
-        uniqueDates.insert(calendar.adjust(parseDate(d), convention));
+        adjustedDates.emplace_back(calendar.adjust(parseDate(d), convention));
 
-    return QuantLib::Schedule(vector<Date>(uniqueDates.begin(), uniqueDates.end()), calendar, convention, boost::none,
+    return QuantLib::Schedule(adjustedDates, calendar, convention, boost::none,
                               tenor, boost::none, endOfMonth, vector<bool>(0), false, false, endOfMonthConvention);
 }
 
