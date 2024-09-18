@@ -20,6 +20,7 @@
 #include <ql/errors.hpp>
 #include <ql/experimental/fx/blackdeltacalculator.hpp>
 #include <ql/math/interpolations/cubicinterpolation.hpp>
+#include <ql/math/interpolations/lagrangeinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 
@@ -45,6 +46,8 @@ InterpolatedSmileSection::InterpolatedSmileSection(Real spot, Real rd, Real rf, 
                             .interpolate(strikes_.begin(), strikes_.end(), vols_.begin());
     else if (method == InterpolationMethod::CubicSpline)
         interpolator_ = CubicNaturalSpline(strikes_.begin(), strikes_.end(), vols_.begin());
+    else if (method == InterpolationMethod::Lagrange)
+        interpolator_ = LagrangeInterpolation(strikes_.begin(), strikes_.end(), vols_.begin());
     else {
         QL_FAIL("Invalid method " << (int)method);
     }
