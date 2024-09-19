@@ -92,6 +92,7 @@
 #include <ored/portfolio/builders/fxdoubletouchoption.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
+#include <ored/portfolio/builders/fxpartialtimebarrieroption.hpp>
 #include <ored/portfolio/builders/fxtouchoption.hpp>
 #include <ored/portfolio/builders/indexcreditdefaultswap.hpp>
 #include <ored/portfolio/builders/indexcreditdefaultswapoption.hpp>
@@ -164,6 +165,7 @@
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxkikobarrieroption.hpp>
 #include <ored/portfolio/fxoption.hpp>
+#include <ored/portfolio/fxpartialtimebarrieroption.hpp>
 #include <ored/portfolio/fxswap.hpp>
 #include <ored/portfolio/fxtouchoption.hpp>
 #include <ored/portfolio/indexcreditdefaultswap.hpp>
@@ -321,6 +323,7 @@ void dataBuilders() {
     ORE_REGISTER_TRADE_BUILDER("CreditDefaultSwap", CreditDefaultSwap, false)
     ORE_REGISTER_TRADE_BUILDER("FxKIKOBarrierOption", FxKIKOBarrierOption, false)
     ORE_REGISTER_TRADE_BUILDER("FxBarrierOption", FxBarrierOption, false)
+    ORE_REGISTER_TRADE_BUILDER("FxPartialTimeBarrierOption", FxPartialTimeBarrierOption, false)
     ORE_REGISTER_TRADE_BUILDER("EquityOption", EquityOption, false)
     ORE_REGISTER_TRADE_BUILDER("FxOption", FxOption, false)
     ORE_REGISTER_TRADE_BUILDER("CBO", CBO, false)
@@ -494,6 +497,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(FxBarrierOptionAnalyticEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxBarrierOptionFDEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxBarrierOptionVVEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(FxPartialTimeBarrierOptionAnalyticEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanCSOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityAmericanOptionFDEngineBuilder, false)
