@@ -55,7 +55,7 @@ Date ConventionsBasedFutureExpiry::nextExpiry(bool includeExpiry, const Date& re
 
     // If offset is greater than 0, keep getting next expiry out
     while (offset > 0) {
-        expiryDate = nextExpiry(expiryDate + 1 * Days, forOption);
+        expiryDate = nextExpiry(expiryDate + 1 * Months, forOption);
         offset--;
     }
 
