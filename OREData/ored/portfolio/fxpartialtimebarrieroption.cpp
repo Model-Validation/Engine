@@ -82,14 +82,14 @@ void FxPartialTimeBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFac
     // Real exercisePrice = Null<Real>();
     Barrier::Type barrierType = parseBarrierType(barrier_.type());
 
-    Option::Type rebateType;
-    if (barrierType == Barrier::Type::UpIn || barrierType == Barrier::Type::DownOut) {
-        // Payoff - Up&Out / Down&In Digital Option with barrier B payoff rebate
-        rebateType = Option::Put;
-    } else {
-        // Payoff - Up&In / Down&Out Digital Option with barrier B payoff rebate
-        rebateType = Option::Call;
-    }
+    // Option::Type rebateType;
+    // if (barrierType == Barrier::Type::UpIn || barrierType == Barrier::Type::DownOut) {
+    //     // Payoff - Up&Out / Down&In Digital Option with barrier B payoff rebate
+    //     rebateType = Option::Put;
+    // } else {
+    //     // Payoff - Up&In / Down&Out Digital Option with barrier B payoff rebate
+    //     rebateType = Option::Call;
+    // }
 
     PartialBarrier::Range barrierRangeType;
     Date coverEventDate;
