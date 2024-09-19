@@ -41,10 +41,10 @@ Volatility BlackVolatilityWithTimeWeighting::blackVolImpl(Time t, Real strike) c
         return surface_->blackVol(t, strike);
 
     if (expiryDate <= skewDates_.front()) {
-        Date firstSkewDate = skewDates_.front();
+        // Date firstSkewDate = skewDates_.front();
         return surface_->blackVol(t, strike); // * W(0, t) / W(0, T1);
     } else if (expiryDate >= skewDates_.back()) {
-        Date maxSkewDate = skewDates_.back();
+        // Date maxSkewDate = skewDates_.back();
         return surface_->blackVol(t, strike); // * W(0, t) / W(0, TN);
     } else {
         auto nextSkewIndex =
