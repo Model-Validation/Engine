@@ -17,6 +17,7 @@
 */
 
 #include <qle/termstructures/pricetermstructureadapter.hpp>
+#include <qle/utilities/time.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -25,8 +26,10 @@ namespace QuantExt {
 
 PriceTermStructureAdapter::PriceTermStructureAdapter(const QuantLib::ext::shared_ptr<PriceTermStructure>& priceCurve,
                                                      const QuantLib::ext::shared_ptr<YieldTermStructure>& discount,
-                                                     Natural spotDays, const Calendar& spotCalendar)
-    : priceCurve_(priceCurve), discount_(discount), spotDays_(spotDays), spotCalendar_(spotCalendar) {
+                                                     Natural spotDays, const Calendar& spotCalendar,
+                                                     bool invertedQuotation, bool flatZeroExtrapolation)
+    : priceCurve_(priceCurve), discount_(discount), spotDays_(spotDays), spotCalendar_(spotCalendar),
+      invertedQuotation_(invertedQuotation), flatZeroExtrapolation_(flatZeroExtrapolation) {
 
     QL_REQUIRE(
         priceCurve_->referenceDate() == discount_->referenceDate(),
@@ -38,8 +41,10 @@ PriceTermStructureAdapter::PriceTermStructureAdapter(const QuantLib::ext::shared
 
 PriceTermStructureAdapter::PriceTermStructureAdapter(const QuantLib::ext::shared_ptr<PriceTermStructure>& priceCurve,
                                                      const QuantLib::ext::shared_ptr<YieldTermStructure>& discount,
-                                                     const Handle<Quote>& spotQuote)
-    : priceCurve_(priceCurve), discount_(discount), spotDays_(0), spotQuote_(spotQuote) {
+                                                     const Handle<Quote>& spotQuote, bool invertedQuotation,
+                                                     bool flatZeroExtrapolation)
+    : priceCurve_(priceCurve), discount_(discount), spotDays_(0), spotQuote_(spotQuote),
+      invertedQuotation_(invertedQuotation), flatZeroExtrapolation_(flatZeroExtrapolation) {
 
     QL_REQUIRE(
         priceCurve_->referenceDate() == discount_->referenceDate(),
@@ -73,6 +78,10 @@ Natural PriceTermStructureAdapter::spotDays() const { return spotDays_; }
 
 const Calendar& PriceTermStructureAdapter::spotCalendar() const { return spotCalendar_; }
 
+bool PriceTermStructureAdapter::invertedQuotation() const { return invertedQuotation_; }
+
+bool PriceTermStructureAdapter::flatZeroExtrapolation() const { return flatZeroExtrapolation_; }
+
 DiscountFactor PriceTermStructureAdapter::discountImpl(Time t) const {
     if (t == 0.0)
         return 1.0;
@@ -85,9 +94,32 @@ DiscountFactor PriceTermStructureAdapter::discountImpl(Time t) const {
     } else {
         spotPrice = spotQuote_->value();
     }
-    Real forwardPrice = priceCurve_->price(t, true);
-    DiscountFactor discount = discount_->discount(t, true);
-    return discount * forwardPrice / spotPrice;
+
+    Real forwardPrice;
+    DiscountFactor discount;
+    Time time;
+    if (flatZeroExtrapolation_ && t < priceCurve_->minTime()) {
+        time = priceCurve_->minTime();
+    } else if (flatZeroExtrapolation_ && t > priceCurve_->maxTime()) {
+        time = priceCurve_->maxTime();
+    } else {
+        time = t;
+    }
+
+    forwardPrice = priceCurve_->price(time, true);
+    // Reversing the conversion to year fraction below since the discount curve may have a different DC method
+    discount = discount_->discount(lowerDate(time, referenceDate(), dayCounter()), true);
+
+    DiscountFactor resultDf;
+    if (invertedQuotation_)
+        resultDf = discount * spotPrice / forwardPrice;
+    else
+        resultDf = discount * forwardPrice / spotPrice;
+
+    if (flatZeroExtrapolation_ && (t < priceCurve_->minTime() || t > priceCurve_->maxTime()))
+        resultDf = std::exp(std::log(resultDf) / time * t);
+
+    return resultDf;
 }
 
 } // namespace QuantExt
