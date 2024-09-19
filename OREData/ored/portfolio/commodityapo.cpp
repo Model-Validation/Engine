@@ -216,6 +216,7 @@ Leg CommodityAveragePriceOption::buildLeg(const QuantLib::ext::shared_ptr<Engine
                                           const string& configuration) {
 
     // Create the ScheduleData for use in the LegData. Tenor is not needed.
+    QL_REQUIRE(parseDate(startDate_) < parseDate(endDate_), "APO StartDate must be prior to the EndDate.");
     ScheduleData scheduleData(ScheduleDates("NullCalendar", "Unadjusted", "", {startDate_, endDate_}));
 
     // Create the CommodityFloatingLegData. Want to generate a single averaging commodity coupon.
