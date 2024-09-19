@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2024 Oleg Kulkov
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -381,7 +382,8 @@ public:
                   const string& fixedCalendar, const string& paymentLag = "", const string& eom = "",
                   const string& fixedFrequency = "", const string& fixedConvention = "",
                   const string& fixedPaymentConvention = "", const string& rule = "",
-                  const std::string& paymentCalendar = "");
+                  const std::string& paymentCalendar = "",
+                  const std::string& rateCutoff = "");
     //@}
 
     //! \name Inspectors
@@ -399,6 +401,7 @@ public:
     BusinessDayConvention fixedPaymentConvention() const { return fixedPaymentConvention_; }
     DateGeneration::Rule rule() const { return rule_; }
     QuantLib::Calendar paymentCalendar() const { return paymentCal_; }
+    Natural rateCutoff() const { return rateCutoff_; }
     //@}
 
     //! \name Serialisation
@@ -419,6 +422,7 @@ private:
     BusinessDayConvention fixedPaymentConvention_;
     DateGeneration::Rule rule_;
     QuantLib::Calendar paymentCal_;
+    Natural rateCutoff_;
 
     // Strings to store the inputs
     string strSpotLag_;
@@ -432,6 +436,7 @@ private:
     string strFixedPaymentConvention_;
     string strRule_;
     std::string strPaymentCal_;
+    string strRateCutoff_;
 };
 
 //! Container for storing Ibor Index conventions
@@ -791,7 +796,7 @@ public:
     //! Detailed constructor
     FXConvention(const string& id, const string& spotDays, const string& sourceCurrency, const string& targetCurrency,
                  const string& pointsFactor, const string& advanceCalendar = "", const string& spotRelative = "",
-                 const string& endOfMonth = "", const string& convention = "");
+                 const string& endOfMonth = "", const string& convention = "", const string& tradingCalendar = "");
     //@}
 
     //! \name Inspectors
@@ -804,6 +809,7 @@ public:
     bool spotRelative() const { return spotRelative_; }
     bool endOfMonth() const { return endOfMonth_; }
     BusinessDayConvention convention() const { return convention_; }
+    const Calendar& tradingCalendar() const { return tradingCalendar_; }
     //@}
 
     //! \name Serialisation
@@ -822,6 +828,7 @@ private:
     bool spotRelative_;
     bool endOfMonth_;
     BusinessDayConvention convention_;
+    Calendar tradingCalendar_;
 
     // Strings to store the inputs
     string strSpotDays_;
@@ -832,6 +839,7 @@ private:
     string strSpotRelative_;
     string strEndOfMonth_;
     string strConvention_;
+    string strTradingCalendar_;
 };
 
 //! Container for storing Cross Currency Basis Swap quote conventions

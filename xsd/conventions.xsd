@@ -105,6 +105,7 @@
       <xs:element type="businessDayConvention" name="FixedPaymentConvention" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dateRule" name="Rule" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="PaymentCalendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="RateCutoff" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
@@ -191,6 +192,7 @@
       <xs:element type="bool" name="SpotRelative" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="EOM" minOccurs="0"/>
       <xs:element type="businessDayConvention" name="Convention" minOccurs="0"/>
+      <xs:element type="xs:string" name="TradingCalendar" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
