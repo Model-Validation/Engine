@@ -1996,7 +1996,8 @@ void YieldCurve::addOISs(const QuantLib::ext::shared_ptr<YieldCurveSegment>& seg
                 
                 if (oisQuote->startDate() == Null<Date>() || oisQuote->maturityDate() == Null<Date>())
                     oisHelper = QuantLib::ext::make_shared<QuantExt::OISRateHelper>(
-                        oisConvention->spotLag(), oisTenor, oisQuote->quote(), onIndex, oisConvention->fixedDayCounter(),
+                        oisQuote->fwdStart().length(), oisTenor, oisQuote->quote(), onIndex,
+                        oisConvention->fixedDayCounter(),
                         oisConvention->fixedCalendar(), oisConvention->paymentLag(), oisConvention->eom(),
                         oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
                         oisConvention->fixedPaymentConvention(), oisConvention->rule(),
