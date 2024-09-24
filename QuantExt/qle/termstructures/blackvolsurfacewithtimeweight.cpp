@@ -67,10 +67,12 @@ Real BlackVolatilityWithTimeWeighting::accruedWeightBetween(Date prevDate, Date 
     if (prevDate == endDate)
         return eventWeights_.count(prevDate) == 1 ? eventWeights_.at(prevDate) : weekdayWeights_.at(prevDate.weekday());
 
-    Schedule schedule(prevDate, endDate, Period(1, QuantLib::Days), NullCalendar(), QuantLib::Unadjusted,
-                      QuantLib::Unadjusted, DateGeneration::Forward, true);
-    Real accruedWeight =
-        std::accumulate(schedule.begin(), schedule.end(), Real(0.0), [&](Real accWeight, const Date d) {
+    std::vector<Date> dates;
+    dates.reserve(endDate - prevDate + 1);
+    for (int i = 0; i < endDate - prevDate + 1; ++i) {
+        dates.push_back(prevDate + i * Days);
+    }
+    Real accruedWeight = std::accumulate(dates.begin(), dates.end(), Real(0.0), [&](Real accWeight, const Date d) {
             return accWeight + (eventWeights_.count(d) == 1 ? eventWeights_.at(d) : weekdayWeights_.at(d.weekday()));
         });
 
