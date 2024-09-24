@@ -15,6 +15,7 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
+#define _WIN32_WINNT 0x0600
 
 #include <iomanip>
 #include <iostream>
