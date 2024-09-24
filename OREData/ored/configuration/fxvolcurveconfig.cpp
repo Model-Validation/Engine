@@ -70,6 +70,9 @@ const vector<string>& FXVolatilityCurveConfig::quotes() {
                 }
             }
         }
+        if (!weightQuotePrefix_.empty()) {
+            quotes_.push_back(weightQuotePrefix_);
+        }
     }
     return quotes_;
 }
