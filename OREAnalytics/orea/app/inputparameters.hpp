@@ -120,7 +120,6 @@ public:
     void setIncludePastCashflows(bool b) { includePastCashflows_ = b; }
 
     // Setters for curves/markets
-    void setOutputCurves(bool b) { outputCurves_ = b; }
     void setOutputTodaysMarketCalibration(bool b) { outputTodaysMarketCalibration_ = b; }
     void setCurvesMarketConfig(const std::string& s) { curvesMarketConfig_ = s; }
     void setCurvesGrid(const std::string& s) { curvesGrid_ = s; }
@@ -489,7 +488,6 @@ public:
     /****************************
      * Getters for curves/markets
      ****************************/
-    bool outputCurves() const { return outputCurves_; };
     bool outputTodaysMarketCalibration() const { return outputTodaysMarketCalibration_; };
     const std::string& curvesMarketConfig() { return curvesMarketConfig_; }
     const std::string& curvesGrid() const { return curvesGrid_; }
@@ -834,7 +832,6 @@ protected:
      *************/
     bool outputAdditionalResults_ = false;
     std::size_t additionalResultsReportPrecision_ = 6;
-    bool outputCurves_ = false;
     std::string curvesMarketConfig_ = Market::defaultConfiguration;
     std::string curvesGrid_ = "240,1M";
     bool outputTodaysMarketCalibration_ = true;

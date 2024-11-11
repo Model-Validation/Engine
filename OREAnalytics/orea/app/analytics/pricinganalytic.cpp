@@ -60,9 +60,15 @@ void PricingAnalyticImpl::runAnalytic(
     analytic()->buildMarket(loader);
     CONSOLE("OK");
 
-    CONSOLEW("Pricing: Build Portfolio");
-    analytic()->buildPortfolio();
-    CONSOLE("OK");
+    if (runTypes.size() == 1 && *runTypes.begin() == "CURVES") {
+        CONSOLEW("Pricing: Only Curve Analytics");
+        CONSOLE("OK");
+    } else {
+        CONSOLEW("Pricing: Build Portfolio");
+        analytic()->buildPortfolio();
+        CONSOLE("OK");
+    }
+    
 
     // Check coverage
     for (const auto& rt : runTypes) {
@@ -101,18 +107,17 @@ void PricingAnalyticImpl::runAnalytic(
                 analytic()->reports()[type]["additional_results"] = addReport;
                 CONSOLE("OK");
             }
-            if (inputs_->outputCurves()) {
-                CONSOLEW("Pricing: Curves Report");
-                LOG("Write curves report");
-                QuantLib::ext::shared_ptr<InMemoryReport> curvesReport = QuantLib::ext::make_shared<InMemoryReport>();
-                DateGrid grid(inputs_->curvesGrid());
-                std::string config = inputs_->curvesMarketConfig();
-                ReportWriter(inputs_->reportNaString())
-                    .writeCurves(*curvesReport, config, grid, *inputs_->todaysMarketParams(),
-                                 analytic()->market(), inputs_->continueOnError());
-                analytic()->reports()[type]["curves"] = curvesReport;
-                CONSOLE("OK");
-            }
+        } else if (type == "CURVES") {
+            CONSOLEW("Pricing: Curves Report");
+            LOG("Write curves report");
+            QuantLib::ext::shared_ptr<InMemoryReport> curvesReport = QuantLib::ext::make_shared<InMemoryReport>();
+            DateGrid grid(inputs_->curvesGrid());
+            std::string config = inputs_->curvesMarketConfig();
+            ReportWriter(inputs_->reportNaString())
+                .writeCurves(*curvesReport, config, grid, *inputs_->todaysMarketParams(), analytic()->market(),
+                             inputs_->continueOnError());
+            analytic()->reports()[type]["curves"] = curvesReport;
+            CONSOLE("OK");
         }
         else if (type == "CASHFLOW") {
             CONSOLEW("Pricing: Cashflow Report");
