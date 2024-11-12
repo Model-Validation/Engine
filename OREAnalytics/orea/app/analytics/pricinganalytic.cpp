@@ -60,10 +60,8 @@ void PricingAnalyticImpl::runAnalytic(
     analytic()->buildMarket(loader);
     CONSOLE("OK");
 
-    if (runTypes.size() == 1 && *runTypes.begin() == "CURVES") {
-        CONSOLEW("Pricing: Only Curve Analytics");
-        CONSOLE("OK");
-    } else {
+    // Do not build portfolio if only curve analytic is requested
+    if (!(runTypes.size() == 1 && inputs_->outputCurves())) {
         CONSOLEW("Pricing: Build Portfolio");
         analytic()->buildPortfolio();
         CONSOLE("OK");
