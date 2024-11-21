@@ -818,9 +818,9 @@ void OREAppInputParameters::loadParameters() {
      *************/
 
     tmp = params_->get("curves", "active", false);
-    if (tmp != "") {
-        bool mkt = parseBool(tmp);
-        setOutputCurves(mkt);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("CURVES");
+        setOutputCurves(true);
     }
 
     tmp = params_->get("curves", "grid", false);
