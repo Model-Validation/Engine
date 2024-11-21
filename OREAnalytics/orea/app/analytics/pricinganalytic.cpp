@@ -65,6 +65,8 @@ void PricingAnalyticImpl::runAnalytic(
         CONSOLEW("Pricing: Build Portfolio");
         analytic()->buildPortfolio();
         CONSOLE("OK");
+    } else {
+        TLOG("Skip building portfolio");
     }
     
 
