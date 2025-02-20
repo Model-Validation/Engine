@@ -84,6 +84,11 @@ public:
                          const VolatilityDeltaSurfaceConfig& vdsc, const Loader& loader,
                          const QuantLib::Handle<QuantExt::EquityIndex2>& eqIndex);
 
+    //! Build a volatility surface from a collection of SVI skews
+    void buildVolatility(const QuantLib::Date& asof, EquityVolatilityCurveConfig& vc,
+                         const VolatilitySviSurfaceConfig& vsvisc, const Loader& loader,
+                         const QuantLib::Handle<QuantExt::EquityIndex2>& eqIndex);
+
     //! Build a volatility surface as a proxy from another volatility surface
     void buildVolatility(const QuantLib::Date& asof, const EquityVolatilityCurveSpec& spec,
                          const CurveConfigurations& curveConfigs, const ProxyVolatilityConfig& epvc,
