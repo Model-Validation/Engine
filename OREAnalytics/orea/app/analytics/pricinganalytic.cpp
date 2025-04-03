@@ -109,7 +109,8 @@ void PricingAnalyticImpl::runAnalytic(
                 CONSOLEW("Pricing: Curves Report");
                 LOG("Write curves report");
                 QuantLib::ext::shared_ptr<InMemoryReport> curvesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                DateGrid grid(inputs_->curvesGrid());
+                Calendar gridCalendar = parseCalendar(inputs_->curvesGridCalendar());
+                DateGrid grid(inputs_->curvesGrid(), gridCalendar);
                 std::string config = inputs_->curvesMarketConfig();
                 ReportWriter(inputs_->reportNaString())
                     .writeCurves(*curvesReport, config, grid, *analytic()->configurations().todaysMarketParams,
