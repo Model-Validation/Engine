@@ -502,7 +502,7 @@ VolatilitySviSurfaceConfig::VolatilitySviSurfaceConfig(MarketDatum::QuoteType qu
 
 void VolatilitySviSurfaceConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "SviSurface");
-    VolatilityConfig::fromBaseNode(node);
+    QuoteBasedVolatilityConfig::fromBaseNode(node);
 
     // Read in the skews
     XMLNode* segmentsNode = XMLUtils::getChildNode(node, "SmileSections");
@@ -511,7 +511,9 @@ void VolatilitySviSurfaceConfig::fromXML(XMLNode* node) {
             XMLUtils::checkNode(child, "Smile");
             const std::string expiry = XMLUtils::getChildValue(child, "Expiry", true);
             std::vector<Real> sviParameters = XMLUtils::getChildrenValuesAsDoublesCompact(child, "SviParameters", true);
-            QL_REQUIRE(sviParameters.size() == 5, "The SviParameters node expects 5 values (a,b,sigma,rho,m)");
+            QL_REQUIRE(
+                sviParameters.size() == 5 || sviParameters.size() == 6,
+                "The SviParameters node expects 5 values (a,b,sigma,rho,m) or 6 values (a,b,sigma,rho,m,forward)");
             // TODO: Should probably check that expiry is strictly greater than the most recent expiry in the vector (if any)
 
             expiries_.push_back(expiry);
@@ -520,9 +522,9 @@ void VolatilitySviSurfaceConfig::fromXML(XMLNode* node) {
     }
 }
 
-ore::data::XMLNode* VolatilitySviSurfaceConfig::toXML(ore::data::XMLDocument& doc) {
+ore::data::XMLNode* VolatilitySviSurfaceConfig::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("SviSurface");
-    VolatilityConfig::addBaseNode(doc, node);
+    QuoteBasedVolatilityConfig::toBaseNode(doc, node);
     for (size_t i = 0; i < expiries_.size(); ++i) {
         XMLUtils::addChild(doc, node, "Expiry", expiries_[i]);
         XMLUtils::addGenericChildAsList(doc, node, "SviParameters", sviParameters_[i]);
