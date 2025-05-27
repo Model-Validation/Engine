@@ -641,6 +641,8 @@ QuantLib::ext::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const stri
         {"FR CPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<FRCPI>>()},
         {"UKRPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<UKRPI>>()},
         {"UK RPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<UKRPI>>()},
+        {"UKHICP", QuantLib::ext::make_shared<ZeroInflationIndexParser<UKHICP>>()},
+        {"UK HICP", QuantLib::ext::make_shared<ZeroInflationIndexParser<UKHICP>>()},
         {"USCPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<USCPI>>()},
         {"US CPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<USCPI>>()},
         {"ZACPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<ZACPI>>()},
