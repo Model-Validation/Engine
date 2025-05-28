@@ -214,7 +214,6 @@ void CalendarParser::reset() {
         {"BE", Belgium()},
         {"LU", Luxembourg()},
         {"ES", Spain()},
-        {"AT", QuantExt::Austria()},
 
         // ISO 3166-1 Alpha-3 code
         {"ARG", Argentina()},
