@@ -24,8 +24,8 @@
 #include <ored/utilities/parsers.hpp>
 #include <ql/errors.hpp>
 #include <ql/exercise.hpp>
-#include <ql/experimental/exoticoptions/partialtimebarrieroption.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
+#include <ql/instruments/partialtimebarrieroption.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 #include <qle/indexes/fxindex.hpp>
 
