@@ -95,7 +95,8 @@ QuantLib::ext::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex,
                                                   const QuantLib::ext::shared_ptr<Market>& market, const string& configuration,
                                                   bool useXbsCurves = false);
 
-std::tuple<Natural, Calendar, BusinessDayConvention> getFxIndexConventions(const string& index);
+/*! Fixing/settlement dates, fixing/advance calendar, business day convention for date adjustments, trading calendar */
+std::tuple<Natural, Calendar, BusinessDayConvention, Calendar> getFxIndexConventions(const string& index);
 
 std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear,
                                               QuantLib::Period tenor,

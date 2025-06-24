@@ -215,10 +215,11 @@ QuantLib::ext::shared_ptr<FxIndex> parseFxIndex(const string& s, const Handle<Qu
     Natural fixingDays = 0;
     Calendar fixingCalendar = NullCalendar();
     BusinessDayConvention bdc;
+    Calendar tradingCalendar = NullCalendar();
     if (useConventions)
-        std::tie(fixingDays, fixingCalendar, bdc) = getFxIndexConventions(s);
+        std::tie(fixingDays, fixingCalendar, bdc, tradingCalendar) = getFxIndexConventions(s);
     auto index = QuantLib::ext::make_shared<FxIndex>(tokens[1], fixingDays, parseCurrency(tokens[2]), parseCurrency(tokens[3]),
-                                             fixingCalendar, fxSpot, sourceYts, targetYts);
+                                            fixingCalendar, fxSpot, sourceYts, targetYts, true, tradingCalendar);
 
     IndexNameTranslator::instance().add(index->name(), s);
     return index;

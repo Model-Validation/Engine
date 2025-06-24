@@ -195,7 +195,7 @@ QuantLib::ext::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex,
                         xccyYieldCurve(market, domestic, configuration));
 }
 
-std::tuple<Natural, Calendar, BusinessDayConvention> getFxIndexConventions(const string& index) {
+std::tuple<Natural, Calendar, BusinessDayConvention, Calendar> getFxIndexConventions(const string& index) {
     // can take an fx index or ccy pair e.g. EURUSD
     string ccy1, ccy2;
     string fixingSource;
@@ -213,7 +213,7 @@ std::tuple<Natural, Calendar, BusinessDayConvention> getFxIndexConventions(const
     }
 
     if (ccy1 == ccy2)
-        return std::make_tuple(0, NullCalendar(), Unadjusted);
+        return std::make_tuple(0, NullCalendar(), Unadjusted, NullCalendar());
 
     const QuantLib::ext::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
     QuantLib::ext::shared_ptr<Convention> con;
@@ -237,13 +237,15 @@ std::tuple<Natural, Calendar, BusinessDayConvention> getFxIndexConventions(const
     }
     if (auto fxCon = QuantLib::ext::dynamic_pointer_cast<FXConvention>(con)) {
         TLOG("getFxIndexConvention(" << index << "): " << fxCon->spotDays() << " / " << fxCon->advanceCalendar().name()
+                                     << " & " << fxCon->tradingCalendar()
                                      << " from convention.");
-        return std::make_tuple(fxCon->spotDays(), fxCon->advanceCalendar(), fxCon->convention());
+        return std::make_tuple(fxCon->spotDays(), fxCon->advanceCalendar(), fxCon->convention(),
+                               fxCon->tradingCalendar());
     } else if (auto comCon = QuantLib::ext::dynamic_pointer_cast<CommodityForwardConvention>(con); comCon !=nullptr
                && (isPseudoCurrency(ccy1) || isPseudoCurrency(ccy2))) {
         TLOG("getFxIndexConvention(" << index << "): " << fxCon->spotDays() << " / " << fxCon->advanceCalendar().name()
                                      << " from convention.");
-        return std::make_tuple(0, comCon->advanceCalendar(), comCon->bdc());
+        return std::make_tuple(0, comCon->advanceCalendar(), comCon->bdc(), NullCalendar()); // TODO???
     }
 
     // default calendar for pseudo currencies is USD
@@ -256,14 +258,14 @@ std::tuple<Natural, Calendar, BusinessDayConvention> getFxIndexConventions(const
 	    Calendar cal = parseCalendar(ccy1 + "," + ccy2);
         WLOG("getFxIndexConvention(" << index << "): 2 (default) / " << cal.name()
                                      << " (from ccys), no convention found.");
-        return std::make_tuple(2, cal, Following);
+        return std::make_tuple(2, cal, Following, NullCalendar());
     } catch (const std::exception& e) {
         ALOG("could not get fx index convention for '" << index << "': " << e.what() << ", continue with 'USD'");
     }
     WLOG("getFxIndexConvention(" << index
                                  << "): 2 (default) / USD (default), no convention found, could not parse calendar '"
                                  << (ccy1 + "," + ccy2) << "'");
-    return std::make_tuple(2, parseCalendar("USD"), Following);
+    return std::make_tuple(2, parseCalendar("USD"), Following, NullCalendar());
 }
 
 std::pair<std::string, QuantLib::Period> splitCurveIdWithTenor(const std::string& creditCurveId) {

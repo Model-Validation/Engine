@@ -163,7 +163,7 @@ protected:
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
         if (assetClassUnderlying == AssetClass::FX && useFxSpot){
-            auto [fixingDays, calendar, bdc] = ore::data::getFxIndexConventions(assetName + ccy.code());
+            auto [fixingDays, calendar, bdc, _] = ore::data::getFxIndexConventions(assetName + ccy.code());
             spotDays = fixingDays;
             spotCalendar = calendar;
         }

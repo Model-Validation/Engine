@@ -35,6 +35,7 @@
 #include <ql/math/functional.hpp>
 #include <ql/quotes/derivedquote.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <ql/time/calendars/jointcalendar.hpp>
 #include <qle/indexes/fxindex.hpp>
 
 using namespace std;
@@ -44,9 +45,9 @@ namespace QuantExt {
 
 FxRateQuote::FxRateQuote(Handle<Quote> spotQuote, const Handle<YieldTermStructure>& sourceYts,
                          const Handle<YieldTermStructure>& targetYts, Natural fixingDays,
-                         const Calendar& fixingCalendar)
+                         const Calendar& fixingCalendar, const Calendar& tradingCalendar)
     : spotQuote_(spotQuote), sourceYts_(sourceYts), targetYts_(targetYts), fixingDays_(fixingDays),
-      fixingCalendar_(fixingCalendar) {
+      fixingCalendar_(fixingCalendar), tradingCalendar_(tradingCalendar) {
     registerWith(spotQuote_);
     registerWith(sourceYts_);
     registerWith(targetYts_);
@@ -61,6 +62,8 @@ Real FxRateQuote::value() const {
             return spotQuote_->value();
         Date today = sourceYts_->referenceDate();
         Date refValueDate = fixingCalendar_.advance(today, fixingDays_, Days);
+        Calendar cal = JointCalendar(fixingCalendar_, tradingCalendar_);
+        refValueDate = cal.adjust(refValueDate);
         return spotQuote_->value() * targetYts_->discount(refValueDate) / sourceYts_->discount(refValueDate);
     }
 }
@@ -71,9 +74,9 @@ void FxRateQuote::update() { notifyObservers(); }
 
 FxSpotQuote::FxSpotQuote(Handle<Quote> todaysQuote, const Handle<YieldTermStructure>& sourceYts,
                          const Handle<YieldTermStructure>& targetYts, Natural fixingDays,
-                         const Calendar& fixingCalendar)
+                         const Calendar& fixingCalendar, const Calendar& tradingCalendar)
     : todaysQuote_(todaysQuote), sourceYts_(sourceYts), targetYts_(targetYts), fixingDays_(fixingDays),
-      fixingCalendar_(fixingCalendar) {
+      fixingCalendar_(fixingCalendar), tradingCalendar_(tradingCalendar) {
     registerWith(todaysQuote_);
     registerWith(sourceYts_);
     registerWith(targetYts_);
@@ -88,6 +91,8 @@ Real FxSpotQuote::value() const {
             return todaysQuote_->value();
         Date today = sourceYts_->referenceDate();
         Date refValueDate = fixingCalendar_.advance(today, fixingDays_, Days);
+        Calendar cal = JointCalendar(fixingCalendar_, tradingCalendar_);
+        refValueDate = cal.adjust(refValueDate);
         return todaysQuote_->value() / targetYts_->discount(refValueDate) * sourceYts_->discount(refValueDate);
     }
 }
@@ -100,10 +105,10 @@ void FxSpotQuote::update() { notifyObservers(); }
 
 FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
                  const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts,
-                 const Handle<YieldTermStructure>& targetYts, bool fixingTriangulation)
+                 const Handle<YieldTermStructure>& targetYts, bool fixingTriangulation, const Calendar& tradingCalendar)
     : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source), targetCurrency_(target),
       sourceYts_(sourceYts), targetYts_(targetYts), useQuote_(false), fixingCalendar_(fixingCalendar),
-      fixingTriangulation_(fixingTriangulation) {
+      fixingTriangulation_(fixingTriangulation), tradingCalendar_(tradingCalendar) {
 
     initialise();
 }
@@ -111,10 +116,10 @@ FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Curren
 FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
                  const Calendar& fixingCalendar, const Handle<Quote> fxSpot,
                  const Handle<YieldTermStructure>& sourceYts, const Handle<YieldTermStructure>& targetYts,
-                 bool fixingTriangulation)
+                 bool fixingTriangulation, const Calendar& tradingCalendar)
     : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source), targetCurrency_(target),
       sourceYts_(sourceYts), targetYts_(targetYts), fxSpot_(fxSpot), useQuote_(true), fixingCalendar_(fixingCalendar),
-      fixingTriangulation_(fixingTriangulation) {
+      fixingTriangulation_(fixingTriangulation), tradingCalendar_(tradingCalendar) {
 
     initialise();
 }
@@ -149,7 +154,7 @@ const Handle<Quote> FxIndex::fxQuote(bool withSettlementLag) const {
 
             // adjust for spot
             fxRate_ = Handle<Quote>(
-                QuantLib::ext::make_shared<FxRateQuote>(tmpQuote, sourceYts_, targetYts_, fixingDays_, fixingCalendar_));
+                QuantLib::ext::make_shared<FxRateQuote>(tmpQuote, sourceYts_, targetYts_, fixingDays_, fixingCalendar_, tradingCalendar_));
         }
         quote = fxRate_;
     }

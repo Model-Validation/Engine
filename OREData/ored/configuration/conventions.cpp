@@ -33,6 +33,7 @@
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
+#include <ql/time/calendars/unitedstates.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -930,7 +931,8 @@ void FXConvention::build() {
     spotRelative_ = strSpotRelative_.empty() ? true : parseBool(strSpotRelative_);
     endOfMonth_ = strEndOfMonth_.empty() ? false : parseBool(strEndOfMonth_);
     convention_ = strConvention_.empty() ? Following : parseBusinessDayConvention(strConvention_);
-    tradingCalendar_ = strTradingCalendar_.empty() ? Calendar() : parseCalendar(strTradingCalendar_);
+    tradingCalendar_ =
+        strTradingCalendar_.empty() ? UnitedStates(UnitedStates::FederalReserve) : parseCalendar(strTradingCalendar_);
 }
 
 void FXConvention::fromXML(XMLNode* node) {

@@ -194,7 +194,7 @@ Handle<FxIndex> FXTriangulation::getIndex(const std::string& indexOrPair, const 
 
     // get the conventions of the result index
 
-    auto [fixingDays, fixingCalendar, bdc] = getFxIndexConventions(indexOrPair);
+    auto [fixingDays, fixingCalendar, bdc, tradingCalendar] = getFxIndexConventions(indexOrPair);
 
     // get the discount curves for the result index
 
@@ -212,7 +212,7 @@ Handle<FxIndex> FXTriangulation::getIndex(const std::string& indexOrPair, const 
         auto fxSpot = getQuote(path[0], path[1]);
         result = Handle<FxIndex>(QuantLib::ext::make_shared<FxIndex>(familyName, fixingDays, parseCurrency(forCcy),
                                                              parseCurrency(domCcy), fixingCalendar, fxSpot, sourceYts,
-                                                             targetYts));
+                                                             targetYts, true, tradingCalendar));
 
     } else {
 
@@ -228,10 +228,10 @@ Handle<FxIndex> FXTriangulation::getIndex(const std::string& indexOrPair, const 
 
             // we store a quote "as of today" to account for possible spot lag differences
 
-            auto [fd, fc, bdc] = getFxIndexConventions(path[i] + path[i + 1]);
+            auto [fd, fc, bdc, tc] = getFxIndexConventions(path[i] + path[i + 1]);
             auto s_yts = getMarketDiscountCurve(market, path[i], configuration);
             auto t_yts = getMarketDiscountCurve(market, path[i + 1], configuration);
-            quotes.push_back(Handle<Quote>(QuantLib::ext::make_shared<FxRateQuote>(q, s_yts, t_yts, fd, fc)));
+            quotes.push_back(Handle<Quote>(QuantLib::ext::make_shared<FxRateQuote>(q, s_yts, t_yts, fd, fc, tc)));
         }
 
         // build the composite quote "as of today"
@@ -243,14 +243,14 @@ Handle<FxIndex> FXTriangulation::getIndex(const std::string& indexOrPair, const 
 
         // build the spot quote
 
-        Handle<Quote> spotQuote(
-            QuantLib::ext::make_shared<FxSpotQuote>(compQuote, sourceYts, targetYts, fixingDays, fixingCalendar));
+        Handle<Quote> spotQuote(QuantLib::ext::make_shared<FxSpotQuote>(compQuote, sourceYts, targetYts, fixingDays,
+                                                                        fixingCalendar, tradingCalendar));
 
         // build the idnex
 
         result = Handle<FxIndex>(QuantLib::ext::make_shared<FxIndex>(familyName, fixingDays, parseCurrency(forCcy),
                                                              parseCurrency(domCcy), fixingCalendar, spotQuote,
-                                                             sourceYts, targetYts));
+                                                                     sourceYts, targetYts, true, tradingCalendar));
     }
 
     // add the result to the lookup cache and return it

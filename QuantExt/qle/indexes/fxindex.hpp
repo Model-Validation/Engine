@@ -43,6 +43,7 @@
 #include <ql/handle.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendar.hpp>
+#include <ql/time/calendars/nullcalendar.hpp>
 #include <qle/indexes/eqfxindexbase.hpp>
 
 namespace QuantExt {
@@ -52,7 +53,8 @@ class FxRateQuote : public Quote, public Observer {
 public:
     //! if sourceYts, targetYts are not given, the non-discounted spot quote will be returned as a fallback
     FxRateQuote(Handle<Quote> spotQuote, const Handle<YieldTermStructure>& sourceYts,
-                const Handle<YieldTermStructure>& targetYts, Natural fixingDays, const Calendar& fixingCalendar);
+                const Handle<YieldTermStructure>& targetYts, Natural fixingDays, const Calendar& fixingCalendar,
+                const Calendar& tradingCalendar);
     //! \name Quote interface
     //@{
     Real value() const override;
@@ -66,13 +68,14 @@ private:
     const Handle<Quote> spotQuote_;
     const Handle<YieldTermStructure> sourceYts_, targetYts_;
     Natural fixingDays_;
-    Calendar fixingCalendar_;
+    Calendar fixingCalendar_, tradingCalendar_;
 };
 
 class FxSpotQuote : public Quote, public Observer {
 public:
     FxSpotQuote(Handle<Quote> todaysQuote, const Handle<YieldTermStructure>& sourceYts,
-                const Handle<YieldTermStructure>& targetYts, Natural fixingDays, const Calendar& fixingCalendar);
+                const Handle<YieldTermStructure>& targetYts, Natural fixingDays, const Calendar& fixingCalendar,
+                const Calendar& tradingCalendar);
     //! \name Quote interface
     //@{
     Real value() const override;
@@ -86,7 +89,7 @@ private:
     const Handle<Quote> todaysQuote_;
     const Handle<YieldTermStructure> sourceYts_, targetYts_;
     Natural fixingDays_;
-    Calendar fixingCalendar_;
+    Calendar fixingCalendar_, tradingCalendar_;
 };
 
 //! FX Index
@@ -103,12 +106,12 @@ public:
     FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
             const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
             const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(),
-            bool fixingTriangulation = false);
+            bool fixingTriangulation = false, const Calendar& tradingCalendar = NullCalendar());
     FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
             const Calendar& fixingCalendar, const Handle<Quote> fxSpot,
             const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
             const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(),
-            bool fixingTriangulation = true);
+            bool fixingTriangulation = true, const Calendar& tradingCalendar = NullCalendar());
     //! \name Index interface
     //@{
     std::string name() const override;
@@ -130,6 +133,7 @@ public:
     const Currency& targetCurrency() const { return targetCurrency_; }
     const Handle<YieldTermStructure>& sourceCurve() const { return sourceYts_; }
     const Handle<YieldTermStructure>& targetCurve() const { return targetYts_; }
+    Calendar tradingCalendar() const { return tradingCalendar_; }
 
     //! fxQuote returns instantaneous Quote by default, otherwise settlement after fixingDays
     const Handle<Quote> fxQuote(bool withSettlementLag = false) const;
@@ -166,6 +170,7 @@ protected:
 private:
     Calendar fixingCalendar_;
     bool fixingTriangulation_;
+    Calendar tradingCalendar_;
 
     void initialise();
 };
