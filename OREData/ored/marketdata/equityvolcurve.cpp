@@ -1021,8 +1021,9 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
     }
 
     for (auto const& sviParameters : vsvisc.sviParameterSets()) {
-        QL_REQUIRE(sviParameters.size() == 5,
-                   "Expected each SVI parameter set to have a length of 5 (a,b,sigma,rho,m)");
+        QL_REQUIRE(
+            sviParameters.size() == 5 || sviParameters.size() == 6,
+            "Expected each SVI parameter set to have a length of 5 (a,b,sigma,rho,m) or 6 (a,b,sigma,rho,m,forward)");
     }
 
     vol_ = boost::make_shared<SviVolSurface>(asof, eqIndex->equitySpot(), eqIndex->equityForecastCurve(),
