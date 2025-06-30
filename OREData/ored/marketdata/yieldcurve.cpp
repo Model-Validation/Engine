@@ -2190,10 +2190,9 @@ void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_pt
 
                 if (oisQuote->startDate() == Null<Date>() || oisQuote->maturityDate() == Null<Date>())
                     oisHelper = QuantLib::ext::make_shared<QuantExt::OISRateHelper>(
-                        oisQuote->fwdStart().length(), oisTenor, oisQuote->quote(), onIndex,
-                        oisConvention->fixedDayCounter(),
-                        oisConvention->fixedCalendar(), oisConvention->paymentLag(), oisConvention->eom(),
-                        oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
+                        oisQuote->fwdStart().length(), oisTenor, oisQuote->quote(), onIndex, onIndexGiven,
+                        oisConvention->fixedDayCounter(), oisConvention->fixedCalendar(), oisConvention->paymentLag(),
+                        oisConvention->eom(), oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
                         oisConvention->fixedPaymentConvention(), oisConvention->rule(), discountCurve_[index],
                         discountCurveGiven_[index], true, oisSegment->pillarChoice());
                 else {
