@@ -428,8 +428,8 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
             } else if (type == YieldCurveSegment::Type::BondYieldShifted) {
                 DLOG("Building BondYieldShiftedCurve " << curveSpec_[index]);
                 buildBondYieldShiftedCurve(index);
-            } else if (curveSegments_[0]->type() == YieldCurveSegment::Type::FXForward &&
-                interpolationVariable_ == YieldCurve::InterpolationVariable::SwapPoints) {
+            } else if (type == YieldCurveSegment::Type::FXForward &&
+                       interpolationVariable_[index] == YieldCurve::InterpolationVariable::SwapPoints) {
                 DLOG("Building interpolated FX forward price curve " << curveSpec_[index]);
                 buildInterpolatedFxForwardCurve(index);
             } else {
@@ -1417,25 +1417,25 @@ void YieldCurve::buildInterpolatedFxForwardCurve(const std::size_t index) {
     DLOG("Building instrument set for yield curve FX forward segment.");
 
     std::vector<boost::shared_ptr<RateHelper>> instruments;
-    addFXForwards(curveSegments_[0], instruments);
+    addFXForwards(index, curveSegments_[index][0], instruments);
 
     // A bit of duplication below, snipped from addFXForwards for curve and spot handling
     boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
-    boost::shared_ptr<Convention> convention = conventions->get(curveSegments_[0]->conventionsID());
-    QL_REQUIRE(convention, "No conventions found with ID: " << curveSegments_[0]->conventionsID());
+    boost::shared_ptr<Convention> convention = conventions->get(curveSegments_[index][0]->conventionsID());
+    QL_REQUIRE(convention, "No conventions found with ID: " << curveSegments_[index][0]->conventionsID());
     QL_REQUIRE(convention->type() == Convention::Type::FX, "Conventions ID does not give FX forward conventions.");
 
     boost::shared_ptr<FXConvention> fxConvention = boost::dynamic_pointer_cast<FXConvention>(convention);
     boost::shared_ptr<CrossCcyYieldCurveSegment> fxForwardSegment =
-        boost::dynamic_pointer_cast<CrossCcyYieldCurveSegment>(curveSegments_[0]);
+        boost::dynamic_pointer_cast<CrossCcyYieldCurveSegment>(curveSegments_[index][0]);
 
     /* Need to retrieve the discount curve in the other currency. These are called the known discount
        curve and known discount currency respectively. */
     Currency knownCurrency;
-    bool invertPrices = false;
-    if (currency_ == fxConvention->sourceCurrency()) {
+    bool invertPrices = false; // TODO Wrong when convention order != spot/quote order!!
+    if (currency_[index] == fxConvention->sourceCurrency()) {
         knownCurrency = fxConvention->targetCurrency();
-    } else if (currency_ == fxConvention->targetCurrency()) {
+    } else if (currency_[index] == fxConvention->targetCurrency()) {
         invertPrices = true;
         knownCurrency = fxConvention->sourceCurrency();
     } else {
@@ -1455,13 +1455,13 @@ void YieldCurve::buildInterpolatedFxForwardCurve(const std::size_t index) {
             QL_FAIL("The foreign discount curve, " << knownDiscountID
                                                    << ", required in the building "
                                                       "of the curve, "
-                                                   << curveSpec_.name() << ", was not found.");
+                                                   << curveSpec_[index]->name() << ", was not found.");
         }
     } else {
         // fall back on the foreign discount curve if no index given
         // look up the inccy discount curve - falls back to default if no inccy
         DLOG("YieldCurve::buildInterpolatedFxForwardCurve No discount curve provided for building curve "
-             << curveSpec_.name() << ", looking up the inccy curve in the market.")
+             << curveSpec_[index]->name() << ", looking up the inccy curve in the market.")
         knownDiscountCurve = market_->discountCurve(knownCurrency.code(), Market::inCcyConfiguration);
     }
 
@@ -1523,21 +1523,20 @@ void YieldCurve::buildInterpolatedFxForwardCurve(const std::size_t index) {
         }
         DLOG("Processed FX forward with date " << fxForwardHelper->maturityDate() << ", spread "
                                                << fxForwardHelper->quote()->value() << " and spot "
-                                               << fxForwardHelper->spot() << " for curve spec "
-                                               << curveSpec_.name());
+                                               << fxForwardHelper->spot() << " for curve spec " << curveSpec_[index]->name());
     }
 
-    boost::shared_ptr<PriceTermStructure> interpolatedCurve(
-        boost::make_shared<InterpolatedPriceCurve<Linear>>(asofDate_, dates, quotes, zeroDayCounter_, currency_));
-    p_ = boost::make_shared<PriceTermStructureAdapter>(interpolatedCurve, knownDiscountCurve.currentLink(), 0,
+    boost::shared_ptr<PriceTermStructure> interpolatedCurve(boost::make_shared<InterpolatedPriceCurve<Linear>>(
+        asofDate_, dates, quotes, zeroDayCounter_[index], currency_[index]));
+    p_[index] = boost::make_shared<PriceTermStructureAdapter>(interpolatedCurve, knownDiscountCurve.currentLink(), 0,
                                                        NullCalendar(), invertPrices, true); // Spot or cash rate?
-    p_->setAdjustReferenceDate(false);
+    p_[index]->setAdjustReferenceDate(false);
 
     if (buildCalibrationInfo_) {
-        if (calibrationInfo_ == nullptr)
-            calibrationInfo_ = boost::make_shared<PiecewiseYieldCurveCalibrationInfo>();
+        if (calibrationInfo_[index] == nullptr)
+            calibrationInfo_[index] = boost::make_shared<PiecewiseYieldCurveCalibrationInfo>();
         for (const auto date : dates) {
-            calibrationInfo_->pillarDates.push_back(date);
+            calibrationInfo_[index]->pillarDates.push_back(date);
         }
     }
 }
