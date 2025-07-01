@@ -784,6 +784,14 @@ void OREAppInputParameters::loadParameters() {
         WLOG("Using default Ibor fallback config");
     }
 
+    if (params_->has("setup", "baselTrafficLightConfig") && params_->get("setup", "baselTrafficLightConfig") != "") {
+        filesystem::path tmp = inputPath / params_->get("setup", "baselTrafficLightConfig");
+        LOG("Loading Basel Traffic Light from file: " << tmp);
+        setBaselTrafficLightFromFile(tmp.generic_string());
+    } else {
+        WLOG("Using default Basel Traffic Light config");
+    }
+
     if (params_->has("setup", "curveConfigFile") && params_->get("setup", "curveConfigFile") != "") {
         filesystem::path curveConfigFile = inputPath / params_->get("setup", "curveConfigFile");
         LOG("Load curve configurations from file: ");
@@ -1309,6 +1317,10 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("historicalSimulationVar", "breakdown", false);
         if (tmp != "")
             setVarBreakDown(parseBool(tmp));
+
+        tmp = params_->get("historicalSimulationVar", "tradePnl", false);
+            if (tmp != "")
+                setTradePnl(parseBool(tmp));
 
         tmp = params_->get("historicalSimulationVar", "portfolioFilter", false);
         if (tmp != "")
@@ -1860,6 +1872,10 @@ void OREAppInputParameters::loadParameters() {
         if (!tmp.empty())
             setXvaCgRegressionOrder(parseInteger(tmp));
 
+        tmp = params_->get("simulation", "xvaCgRegressionVarianceCutoff", false);
+        if (!tmp.empty())
+            setXvaCgRegressionVarianceCutoff(parseReal(tmp));
+
         tmp = params_->get("simulation", "xvaCgTradeLevelBreakDown", false);
         if (!tmp.empty())
             setXvaCgTradeLevelBreakdown(parseBool(tmp));
@@ -1874,6 +1890,12 @@ void OREAppInputParameters::loadParameters() {
      * Note: This is a copy from the XVA section and will be cut down to the PFE-only 
      *       parameters during iterative dev testing
      **********************/
+
+    tmp = params_->get("pfe", "useDoublePrecisionCubes", false);
+    if (tmp != "")
+        setXvaUseDoublePrecisionCubes(parseBool(tmp));
+    else
+        setXvaUseDoublePrecisionCubes(false);
 
     tmp = params_->get("pfe", "baseCurrency", false);
     if (tmp != "")
@@ -2194,6 +2216,12 @@ void OREAppInputParameters::loadParameters() {
     /**********************
      * XVA specifically
      **********************/
+
+    tmp = params_->get("xva", "useDoublePrecisionCubes", false);
+    if (tmp != "")
+        setXvaUseDoublePrecisionCubes(parseBool(tmp));
+    else
+        setXvaUseDoublePrecisionCubes(false);
 
     tmp = params_->get("xva", "baseCurrency", false);
     if (tmp != "")
