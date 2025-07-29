@@ -362,11 +362,14 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     calInfo->zeroRates.push_back(zcCurve->zeroRate(pillarDates[i], 0 * Days));
                     calInfo->times.push_back(zcCurve->timeFromReference(pillarDates[i]));
                     Real cpi = 0.0;
+                    Real unSeasonalizedCpi = 0.0;
                     try {
                         cpi = zcIndex->fixing(pillarDates[i]);
+                        unSeasonalizedCpi = zcIndex->fixing(pillarDates[i], false, false);
                     } catch (...) {
                     }
                     calInfo->forwardCpis.push_back(cpi);
+                    calInfo->unSeasonalizedForwardCpis.push_back(unSeasonalizedCpi);
                 }
                 calibrationInfo_ = calInfo;
             }

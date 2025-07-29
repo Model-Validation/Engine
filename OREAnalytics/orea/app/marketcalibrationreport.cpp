@@ -261,6 +261,7 @@ void MarketCalibrationReport::addInflationCurveImpl(
             addRowReport(type, id, "time", key1, "", "", z->times.at(i));
             addRowReport(type, id, "zeroRate", key1, "", "", z->zeroRates.at(i));
             addRowReport(type, id, "cpi", key1, "", "", z->forwardCpis.at(i));
+            addRowReport(type, id, "unSeasonalizedCpi", key1, "", "", z->unSeasonalizedForwardCpis.at(i));
         }
     }
 
