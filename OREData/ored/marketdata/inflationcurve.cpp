@@ -213,7 +213,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
 
 
 
-                auto baseFixing = index->fixing(baseDate, true);
+                auto baseFixing = index->fixing(baseDate);
                 if (config->interpolationMethod().empty() || config->interpolationMethod() == "Linear"){
                 
                     curve_ = QuantLib::ext::make_shared<QuantExt::PiecewiseCPIInflationCurve<Linear>>(
