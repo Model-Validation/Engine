@@ -66,7 +66,7 @@ Real YoYInflationIndexWrapper::forecastFixing(const Date& fixingDate) const {
     return (f1 - f0) / f0;
 }
 
-Real YoYInflationIndexWrapper::forwardCpi(const Date& fixingDate, bool adjustForSeasonality) const {
+Real YoYInflationIndexWrapper::forwardCpi(const Date& fixingDate, bool removeSeasonality) const {
     Date fixingDateMinusOneYear = fixingDate - 1 * Years;
     Real pastFixing;
     if (needsForecast(fixingDateMinusOneYear)) {
@@ -79,7 +79,8 @@ Real YoYInflationIndexWrapper::forwardCpi(const Date& fixingDate, bool adjustFor
     }
 
     Rate yoyRate = fixing(fixingDate);
-    if (!adjustForSeasonality) {
+    if (!removeSeasonality) {
+        // check if date is after baseDate but before any helpers 
         return pastFixing * (1 + yoyRate);
     }
     Handle<YoYInflationTermStructure> ts = yoyInflationTermStructure();
