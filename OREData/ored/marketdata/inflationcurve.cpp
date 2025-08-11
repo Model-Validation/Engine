@@ -361,6 +361,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     calInfo->pillarDates.push_back(pillarDates[i]);
                     calInfo->zeroRates.push_back(zcCurve->zeroRate(pillarDates[i], 0 * Days));
                     calInfo->times.push_back(zcCurve->timeFromReference(pillarDates[i]));
+                    calInfo->unSeasonalizedZeroRates.push_back(zcCurve->zeroRate(pillarDates[i], 0 * Days, false, false, false));
                     Real cpi = 0.0;
                     Real unSeasonalizedCpi = 0.0;
                     try {

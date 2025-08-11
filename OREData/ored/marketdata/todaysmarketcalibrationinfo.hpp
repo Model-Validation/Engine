@@ -84,6 +84,7 @@ struct InflationCurveCalibrationInfo {
 struct ZeroInflationCurveCalibrationInfo : public InflationCurveCalibrationInfo {
     double baseCpi = 0.0;
     std::vector<double> zeroRates;
+    std::vector<double> unSeasonalizedZeroRates;
     std::vector<double> forwardCpis;
     std::vector<double> unSeasonalizedForwardCpis;
 };
