@@ -73,6 +73,7 @@ public:
     /*! \warning the forecastTodaysFixing parameter (required by the Index interface) is currently ignored. */
     Rate fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
     const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex() const { return zeroIndex_; }
+    Real forwardCpi(const Date& fixingDate, bool adjustForSeasonality) const;
 
 private:
     Rate forecastFixing(const Date& fixingDate) const;

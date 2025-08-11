@@ -66,4 +66,25 @@ Real YoYInflationIndexWrapper::forecastFixing(const Date& fixingDate) const {
     return (f1 - f0) / f0;
 }
 
+Real YoYInflationIndexWrapper::forwardCpi(const Date& fixingDate, bool adjustForSeasonality) const {
+    Date fixingDateMinusOneYear = fixingDate - 1 * Years;
+    Real pastFixing;
+    if (needsForecast(fixingDateMinusOneYear)) {
+        // recursive call if the fixingDateMinusOneYear is a point on the curve
+        // do not adjust for seasonality when retrieving fixings from the curve
+        pastFixing = forwardCpi(fixingDateMinusOneYear, false);
+    }
+    else {
+        pastFixing = CPI::laggedFixing(zeroIndex_, fixingDateMinusOneYear, 0 * Days, CPI::Flat);
+    }
+
+    Rate yoyRate = fixing(fixingDate);
+    if (!adjustForSeasonality) {
+        return pastFixing * (1 + yoyRate);
+    }
+    Handle<YoYInflationTermStructure> ts = yoyInflationTermStructure();
+    Rate yoyRateDeseasonalized = ts->seasonality()->deseasonalisedYoYRate(fixingDate, yoyRate, *ts.currentLink());
+    return pastFixing * (1 + yoyRateDeseasonalized);
+}
+
 } // namespace QuantExt
