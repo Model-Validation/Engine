@@ -87,4 +87,13 @@ Real YoYInflationIndexWrapper::forwardCpi(const Date& fixingDate, bool adjustFor
     return pastFixing * (1 + yoyRateDeseasonalized);
 }
 
+Rate YoYInflationIndexWrapper::impliedZeroRate(const Date& to, const DayCounter& dc) const {
+    Date baseDate = yoyInflationTermStructure()->baseDate();
+    Real baseFixing = CPI::laggedFixing(zeroIndex_, baseDate, 0 * Days, CPI::Flat);
+    Real toCpi = forwardCpi(to, false);
+    Time t = dc.yearFraction(baseDate, to);
+    t = t == 0 ? 1 : t;
+    return std::pow(toCpi / baseFixing, 1.0 / t) - 1;
+}
+
 } // namespace QuantExt

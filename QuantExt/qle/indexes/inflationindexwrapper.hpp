@@ -74,6 +74,7 @@ public:
     Rate fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
     const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex() const { return zeroIndex_; }
     Real forwardCpi(const Date& fixingDate, bool adjustForSeasonality) const;
+    Rate impliedZeroRate(const Date& to, const DayCounter& dc) const;
 
 private:
     Rate forecastFixing(const Date& fixingDate) const;
