@@ -64,7 +64,8 @@ private:
 class YoYInflationIndexWrapper : public YoYInflationIndex {
 public:
     YoYInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex,
-                             const Handle<YoYInflationTermStructure>& ts = Handle<YoYInflationTermStructure>());
+                             const Handle<YoYInflationTermStructure>& ts = Handle<YoYInflationTermStructure>(),
+                             const Date& firstPillarDate = Date());
 
     [[deprecated]]
     YoYInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex, const bool interpolated,
@@ -79,6 +80,7 @@ public:
 private:
     Rate forecastFixing(const Date& fixingDate) const;
     const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex_;
+    const Date& firstPillarDate_;
 };
 
 } // namespace QuantExt

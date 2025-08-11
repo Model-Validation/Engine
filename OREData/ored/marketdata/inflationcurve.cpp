@@ -218,7 +218,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     seasonality);
                 auto yoyCurve = QuantLib::ext::dynamic_pointer_cast<YoYInflationTermStructure>(curve_);
                 Handle<YoYInflationTermStructure> yoyHandle(yoyCurve);
-                auto yoyIndex = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(index, yoyHandle);
+                auto yoyIndex = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(index, yoyHandle, yoyInstruments.front()->earliestDate());
                 for (Size i = 0; i < yoyPillarDates.size(); i++) {
                     WLOG("Date: " << yoyPillarDates[i]
                                   << ", forwardCpi: " << yoyIndex->forwardCpi(yoyPillarDates[i], true) << " ("
