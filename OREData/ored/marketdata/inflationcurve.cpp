@@ -209,7 +209,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     tmp->unregisterWith(Settings::instance().evaluationDate());
                     yoyInstruments.push_back(tmp);
                     yoyPillarDates.push_back(tmp->pillarDate());
-                    WLOG("YoY Pillar " << i << " - Start: " << yoyStart << ", Maturity: " << yoyMaturity
+                    DLOG("Building YoY Pillar " << terms[i] << " - Start: " << yoyStart << ", Maturity: " << yoyMaturity
                                        << ", YearOnYearRate: " << quotes[i]->value());
                 }
                 Real baseRate = yoyInstruments.front()->quote()->value();
@@ -219,15 +219,13 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 auto yoyCurve = QuantLib::ext::dynamic_pointer_cast<YoYInflationTermStructure>(curve_);
                 Handle<YoYInflationTermStructure> yoyHandle(yoyCurve);
                 auto yoyIndex = QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(index, yoyHandle, yoyInstruments.front()->earliestDate());
-                for (Size i = 0; i < yoyPillarDates.size(); i++) {
-                    WLOG("Date: " << yoyPillarDates[i]
-                                  << ", forwardCpi: " << yoyIndex->forwardCpi(yoyPillarDates[i], true) << " (Seasonalized "
-                                  << yoyIndex->forwardCpi(yoyPillarDates[i], false) << ")");
-                }
                 for (Size i = 0; i < yoyInstruments.size(); i++) {
+                    DLOG("YoY Pillar " << terms[i] << " (CPI: " << yoyIndex->forwardCpi(yoyPillarDates[i], true)
+                                       << ", Seasonalized: " << yoyIndex->forwardCpi(yoyPillarDates[i], false)
+                                       << ") --> Converted to ZC benchmark using implied zero rate "
+                                       << yoyIndex->impliedZeroRate(yoyPillarDates[i], conv->dayCounter()));
                     Date maturity = swapStart + terms[i];
                     Rate converted_yoy_to_zc = yoyIndex->impliedZeroRate(yoyPillarDates[i], conv->dayCounter());
-                    WLOG(maturity << " -- " << converted_yoy_to_zc);
                     QuantLib::ext::shared_ptr<QuantExt::ZeroInflationTraits::helper> instrument =
                         QuantLib::ext::make_shared<ZeroCouponInflationSwapHelper>(
                             Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(converted_yoy_to_zc)),
