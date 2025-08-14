@@ -33,6 +33,7 @@
 #include <ored/utilities/to_string.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
+#include <ql/pricingengines/vanilla/juquadraticengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 #include <ql/utilities/dataparsers.hpp>
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
@@ -317,6 +318,27 @@ protected:
                                                         const bool useFxSpot) override {
         QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(assetName, ccy, assetClass);
         return QuantLib::ext::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
+    }
+};
+//! Abstract Engine Builder for American Vanilla Options using Ju Quadratic Approximation
+/*! Pricing engines are cached by asset/currency
+
+    \ingroup builders
+ */
+class AmericanOptionJuQuadraticEngineBuilder : public AmericanOptionEngineBuilder {
+public:
+    AmericanOptionJuQuadraticEngineBuilder(const string& model, const set<string>& tradeTypes,
+                                           const AssetClass& assetClass)
+        : AmericanOptionEngineBuilder(model, "JuQuadraticApproximationEngine", tradeTypes, assetClass, Date()) {}
+
+protected:
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+                                                                const string& discountCurveName,
+                                                                const AssetClass& assetClass, const Date& expiryDate,
+                                                                const bool useFxSpot) override {
+        QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
+            getBlackScholesProcess(assetName, ccy, assetClass);
+        return QuantLib::ext::make_shared<QuantLib::JuQuadraticApproximationEngine>(gbsp);
     }
 };
 

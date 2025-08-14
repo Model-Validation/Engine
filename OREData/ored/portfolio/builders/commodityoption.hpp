@@ -73,5 +73,14 @@ public:
         : AmericanOptionBAWEngineBuilder("BlackScholes", {"CommodityOptionAmerican"}, AssetClass::COM) {}
 };
 
+/*! Engine builder for American commodity options using Ju Quadratic Approximation.
+    \ingroup builders
+ */
+class CommodityAmericanOptionJuQuadraticEngineBuilder : public AmericanOptionJuQuadraticEngineBuilder {
+public:
+    CommodityAmericanOptionJuQuadraticEngineBuilder()
+        : AmericanOptionJuQuadraticEngineBuilder("BlackScholes", {"CommodityOptionAmerican"}, AssetClass::COM) {}
+};
+
 } // namespace data
 } // namespace ore
