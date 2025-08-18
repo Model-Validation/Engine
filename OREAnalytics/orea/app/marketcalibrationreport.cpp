@@ -300,7 +300,7 @@ void MarketCalibrationReport::addCommodityCurveImpl(
     const std::string& id, const std::string& label, const std::string& type) {
 
     addRowReport(type, id, "calendar", "", "", "", info->calendar);
-    addRowReport(type, id, "currenct", "", "", "", info->currency);
+    addRowReport(type, id, "currency", "", "", "", info->currency);
     addRowReport(type, id, "interpolationMethod", "", "", "", info->interpolationMethod);
 
     for (Size i = 0; i < info->pillarDates.size(); ++i) {
