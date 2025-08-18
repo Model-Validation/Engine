@@ -145,6 +145,10 @@ void MarketCalibrationReportBase::populateReport(const QuantLib::ext::shared_ptr
             addCpiVol(calibrationInfo->asof, c.second, getCurveName(c.first), label);
         }
     }
+
+    for (auto const& pair : t->fxTriangulation()->getInputPairs()) {
+        addFxRate(market->asofDate(), market, pair, label);
+    }
 }
 
 MarketCalibrationReport::MarketCalibrationReport(const std::string& calibrationFilter, 
@@ -547,5 +551,21 @@ void MarketCalibrationReportBase::addCpiVol(const QuantLib::Date& refdate,
 
     calibrations_[label][type].insert(id);
 }
+
+void MarketCalibrationReportBase::addFxRate(const QuantLib::Date& refdate,
+                                            const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                                            const std::string& name, const std::string& label) {
+    string type = "FX";
+    addFxRateImpl(refdate, market, name, type);
+    calibrations_[label][type].insert(name);
+}
+
+void MarketCalibrationReport::addFxRateImpl(const QuantLib::Date& refdate,
+                                                const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                                                const std::string& name, const std::string& type) {
+    addRowReport(type, name, "todaysRate", "", "", "", market->fxRate(name)->value());
+    addRowReport(type, name, "spotRate", "", "", "", market->fxSpot(name)->value());
+}
+
 } // namespace analytics
 } // namespace ore
