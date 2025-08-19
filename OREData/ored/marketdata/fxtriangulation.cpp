@@ -367,5 +367,12 @@ std::string FXTriangulation::getAllQuotes() const {
     return result;
 }
 
+std::vector<std::string> FXTriangulation::getInputPairs() const {
+    std::vector<std::string> result;
+    for (auto const& d : quotes_) {
+        result.emplace_back(d.first);
+    }
+    return result;
+}
 } // namespace data
 } // namespace ore

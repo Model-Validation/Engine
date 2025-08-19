@@ -1414,8 +1414,6 @@ void YieldCurve::buildInterpolatedFxForwardCurve(const std::size_t index) {
     QL_REQUIRE(curveSegments_[index][0]->type() == YieldCurveSegment::Type::FXForward,
                "The curve segment is not of type 'FXForward'.");
 
-    DLOG("Building instrument set for yield curve FX forward segment.");
-
     std::vector<boost::shared_ptr<RateHelper>> instruments;
     addFXForwards(index, curveSegments_[index][0], instruments);
 

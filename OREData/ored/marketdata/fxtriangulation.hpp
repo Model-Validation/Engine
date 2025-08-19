@@ -58,6 +58,7 @@ public:
     QuantLib::Handle<QuantExt::FxIndex> getIndex(const std::string& indexOrPair, const Market* market,
                                                  const std::string& configuration) const;
 
+    std::vector<std::string> getInputPairs() const;
 private:
     /* get path for conversion forCcy => domCcy, throws if such a path does not exist     */
     std::vector<std::string> getPath(const std::string& forCcy, const std::string& domCcy) const;
