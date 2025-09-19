@@ -209,7 +209,8 @@ QuantLib::ext::shared_ptr<FxSmileSection> BlackVolatilitySurfaceDelta::blackVolS
         return QuantLib::ext::make_shared<ConstantSmileSection>(vols.front());
     } else {
         // we have at least two strikes
-        return QuantLib::ext::make_shared<InterpolatedSmileSection>(spot, dDiscount, fDiscount, t, strikes, vols,
+        return QuantLib::ext::make_shared<InterpolatedSmileSection>(spot, -std::log(dDiscount) / t,
+                                                                    -std::log(fDiscount) / t, t, strikes, vols,
                                                                     interpolationMethod_, flatStrikeExtrapolation_);
     }
 }
