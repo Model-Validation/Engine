@@ -72,7 +72,7 @@ DayCounter PriceTermStructureAdapter::dayCounter() const { return priceCurve_->d
 
 const QuantLib::ext::shared_ptr<PriceTermStructure>& PriceTermStructureAdapter::priceCurve() const { return priceCurve_; }
 
-const QuantLib::ext::shared_ptr<YieldTermStructure>& PriceTermStructureAdapter::discount() const { return discount_; }
+const QuantLib::ext::shared_ptr<YieldTermStructure>& PriceTermStructureAdapter::discountCurve() const { return discount_; }
 
 Natural PriceTermStructureAdapter::spotDays() const { return spotDays_; }
 

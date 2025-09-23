@@ -78,7 +78,7 @@ public:
     //! \name Inspectors
     //@{
     const QuantLib::ext::shared_ptr<PriceTermStructure>& priceCurve() const;
-    const QuantLib::ext::shared_ptr<QuantLib::YieldTermStructure>& discount() const;
+    const QuantLib::ext::shared_ptr<QuantLib::YieldTermStructure>& discountCurve() const;
     QuantLib::Natural spotDays() const;
     const QuantLib::Calendar& spotCalendar() const;
     bool invertedQuotation() const;
