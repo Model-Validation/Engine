@@ -242,7 +242,7 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
 
     // the exchange rate is interpreted as the spot rate w.r.t. the index's
     // settlement date
-    Date refValueDate = valueDate(fixingCalendar().adjust(sourceYts_->referenceDate()));
+    Date refValueDate = valueDate(sourceYts_->referenceDate());
 
     // the fixing is obeying the settlement delay as well
     Date fixingValueDate = valueDate(fixingDate);
@@ -282,7 +282,7 @@ void FxIndex::update() {
 }
 
 Date FxIndex::fixingDate(const Date& valueDate) const {
-    Date fixingDate = fixingCalendar().advance(valueDate, -static_cast<Integer>(fixingDays_), Days);
+    Date fixingDate = fixingCalendar().advance(valueDate, -static_cast<Integer>(fixingDays_), Days, Preceding);
     return fixingDate;
 }
 
@@ -290,7 +290,8 @@ Date FxIndex::valueDate(const Date& fixingDate) const {
     QL_REQUIRE(isValidFixingDate(fixingDate),
                "FxIndex::valueDate(): " << fixingDate << " is not a valid fixing date for " << name()
                                         << " (calendar is " << fixingCalendar().name() << ")");
-    return fixingCalendar().advance(fixingDate, fixingDays_, Days);
+    Calendar cal = JointCalendar(fixingCalendar_, tradingCalendar_);
+    return cal.adjust(fixingCalendar().advance(fixingDate, fixingDays_, Days));
 }
 
 Real FxIndex::pastFixing(const Date& fixingDate) const {
