@@ -1473,6 +1473,7 @@ void YieldCurve::buildInterpolatedFxForwardCurve(const std::size_t index) {
     std::vector<Date> dates;
     std::vector<Handle<Quote>> quotes;
     bool spotAdded = false;
+    Date spotDate = Date();
     for (auto helper : instruments) {
         auto fxForwardHelper = boost::dynamic_pointer_cast<FxSwapRateHelper>(helper);
         if (fxConvention->spotDays() == 2 && fxForwardHelper->tenor() == Period(1, Days) &&
@@ -1488,6 +1489,7 @@ void YieldCurve::buildInterpolatedFxForwardCurve(const std::size_t index) {
 
                 // Also add the actual spot quote
                 dates.push_back(fxForwardHelper->maturityDate());
+                spotDate = fxForwardHelper->maturityDate();
                 Handle<Quote> fxQuote2(boost::make_shared<SimpleQuote>(fxSpotQuote->value()));
                 quotes.push_back(fxQuote2); // Should be fxSpotQuote inverted, gotta preserve linkage somehow?
                 spotAdded = true;
@@ -1502,15 +1504,25 @@ void YieldCurve::buildInterpolatedFxForwardCurve(const std::size_t index) {
 
             // Also add the actual spot quote
             dates.push_back(fxForwardHelper->maturityDate());
+            spotDate = fxForwardHelper->maturityDate();
             Handle<Quote> fxQuote2(boost::make_shared<SimpleQuote>(fxSpotQuote->value()));
             quotes.push_back(fxQuote2); // Should be fxSpotQuote inverted, gotta preserve linkage somehow?
             spotAdded = true;
         } else {
             // Add spot if not already handled:
             if (!spotAdded) {
+                // Probably, if we get here, no shorter points than the spot have been added. This means
+                // that the "today's" rate (or 'cash' rate) would be determined by linear extrapolation
+                // backward from the spot and the next available quote. This is not too desirable, so we
+                // instead determine synthetic short-end points via extrapolation of the zero rate between
+                // spot and the first point.
+                spotDate = fxForwardHelper->earliestDate();
+
+                /*
                 dates.push_back(fxForwardHelper->earliestDate());
                 quotes.push_back(fxSpotQuote);
                 spotAdded = true;
+                */
             }
             dates.push_back(fxForwardHelper->maturityDate());
             Handle<Quote> fxQuote(boost::make_shared<SimpleQuote>(fxForwardHelper->spot()));
@@ -1526,8 +1538,14 @@ void YieldCurve::buildInterpolatedFxForwardCurve(const std::size_t index) {
 
     boost::shared_ptr<PriceTermStructure> interpolatedCurve(boost::make_shared<InterpolatedPriceCurve<Linear>>(
         asofDate_, dates, quotes, zeroDayCounter_[index], currency_[index]));
-    p_[index] = boost::make_shared<PriceTermStructureAdapter>(interpolatedCurve, knownDiscountCurve.currentLink(), 0,
-                                                       NullCalendar(), invertPrices, true); // Spot or cash rate?
+    if (spotAdded) {
+        p_[index] =
+            boost::make_shared<PriceTermStructureAdapter>(interpolatedCurve, knownDiscountCurve.currentLink(), 0,
+                                                          NullCalendar(), invertPrices, false);
+    } else {
+        p_[index] = boost::make_shared<PriceTermStructureAdapter>(interpolatedCurve, knownDiscountCurve.currentLink(),
+                                                                  fxSpotQuote, invertPrices, true, spotDate);
+    }
     p_[index]->setAdjustReferenceDate(false);
 
     if (buildCalibrationInfo_) {

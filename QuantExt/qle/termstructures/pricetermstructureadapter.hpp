@@ -60,13 +60,14 @@ public:
                               const QuantLib::ext::shared_ptr<QuantLib::YieldTermStructure>& discount,
                               QuantLib::Natural spotDays = 0,
                               const QuantLib::Calendar& spotCalendar = QuantLib::NullCalendar(),
-                              bool invertedQuotation = false, bool flatZeroExtrapolation = false);
+                              bool invertedQuotation = false, bool flatZeroExtrapolation = false,
+                              const QuantLib::Date& spotDate = QuantLib::Date());
 
     // Alternative ctor where the spot quote handle is explicitly set
     PriceTermStructureAdapter(const QuantLib::ext::shared_ptr<PriceTermStructure>& priceCurve,
                               const QuantLib::ext::shared_ptr<QuantLib::YieldTermStructure>& discount,
                               const QuantLib::Handle<QuantLib::Quote>& spotQuote, bool invertedQuotation = false,
-                              bool flatZeroExtrapolation = false);
+                              bool flatZeroExtrapolation = false, const QuantLib::Date& spotDate = QuantLib::Date());
 
     //! \name TermStructure interface
     //@{
@@ -99,6 +100,7 @@ private:
     QuantLib::Handle<QuantLib::Quote> spotQuote_;
     bool invertedQuotation_;
     bool flatZeroExtrapolation_;
+    QuantLib::Date spotDate_;
 };
 
 } // namespace QuantExt
