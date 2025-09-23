@@ -413,7 +413,7 @@ void CommodityCurve::buildBasisPriceCurve(const Date& asof, const CommodityCurve
         Date calcExpiry = basisFec->nextExpiry(true, q->expiryDate());
         if (calcExpiry != q->expiryDate()) {
             WLOG("Calculated expiry date, " << io::iso_date(calcExpiry) << ", does not equal quote's expiry date "
-                                            << io::iso_date(q->expiryDate()) << ".");
+                                            << io::iso_date(q->expiryDate()) << " for quote " << q->name() << ".");
         }
     }
 
