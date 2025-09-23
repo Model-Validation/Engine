@@ -349,6 +349,8 @@ void CalendarParser::reset() {
         {"OMR", AmendedCalendar(WeekendsOnly(), "OMR")},
         {"PKR", AmendedCalendar(WeekendsOnly(), "PKR")},
         {"QAR", AmendedCalendar(WeekendsOnly(), "QAR")},
+        {"SCR", AmendedCalendar(WeekendsOnly(), "SCR")},
+        {"SZL", AmendedCalendar(WeekendsOnly(), "SZL")},
         {"UYU", AmendedCalendar(WeekendsOnly(), "UYU")},
         {"TND", AmendedCalendar(WeekendsOnly(), "TND")},
         {"VND", AmendedCalendar(WeekendsOnly(), "VND")},
