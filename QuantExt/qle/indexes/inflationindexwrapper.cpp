@@ -34,15 +34,15 @@ Rate ZeroInflationIndexWrapper::fixing(const Date& fixingDate, bool /*forecastTo
 }
 
 YoYInflationIndexWrapper::YoYInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex,
-                                                   const Handle<YoYInflationTermStructure>& ts)
-    : YoYInflationIndex(zeroIndex, ts), zeroIndex_(zeroIndex) {
+                                                   const Handle<YoYInflationTermStructure>& ts, const Date& firstPillarDate)
+    : YoYInflationIndex(zeroIndex, ts), zeroIndex_(zeroIndex), firstPillarDate_(firstPillarDate) {
     registerWith(zeroIndex_);
 }
 
 YoYInflationIndexWrapper::YoYInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex,
                                                    const bool interpolated, const Handle<YoYInflationTermStructure>& ts)
     : YoYInflationIndex(zeroIndex, interpolated, ts),
-      zeroIndex_(zeroIndex) {
+      zeroIndex_(zeroIndex), firstPillarDate_(Date()) {
     registerWith(zeroIndex_);
 }
 
@@ -64,6 +64,47 @@ Real YoYInflationIndexWrapper::forecastFixing(const Date& fixingDate) const {
     Real f1 = CPI::laggedFixing(zeroIndex_, fixingDate, 0 * Days, interpolation);
     Real f0 = CPI::laggedFixing(zeroIndex_, fixingDate - 1 * Years, 0 * Days, interpolation);
     return (f1 - f0) / f0;
+}
+
+Real YoYInflationIndexWrapper::forwardCpi(const Date& fixingDate, bool removeSeasonality) const {
+    Handle<YoYInflationTermStructure> ts = yoyInflationTermStructure();
+    if (ts->baseDate() < fixingDate && firstPillarDate_ > fixingDate) {
+        //need to mimic flat extrapolation in zero rate here
+        Real firstPillarCpi = forwardCpi(firstPillarDate_, true);
+        Real baseCpi = CPI::laggedFixing(zeroIndex_, ts->baseDate(), 0 * Days, CPI::Flat);
+        Time timeBaseToFirstPillar = ts->dayCounter().yearFraction(ts->baseDate(), firstPillarDate_);
+        Rate zr = std::pow(firstPillarCpi / baseCpi, 1.0 / timeBaseToFirstPillar) - 1;
+        Rate zrDeseasonalized = ts->seasonality()->correctZeroRate(fixingDate, zr, *ts.currentLink());
+        Time timeBaseToFixingDate = ts->dayCounter().yearFraction(ts->baseDate(), fixingDate);
+        return baseCpi * std::pow(1 + zrDeseasonalized, timeBaseToFixingDate);
+    }
+    Date fixingDateMinusOneYear = fixingDate - 1 * Years;
+    Real pastFixing;
+    if (needsForecast(fixingDateMinusOneYear)) {
+        // recursive call if the fixingDateMinusOneYear is a point on the curve
+        // do not adjust for seasonality when retrieving fixings from the curve
+        pastFixing = forwardCpi(fixingDateMinusOneYear, false);
+    }
+    else {
+        pastFixing = CPI::laggedFixing(zeroIndex_, fixingDateMinusOneYear, 0 * Days, CPI::Flat);
+    }
+
+    Rate yoyRate = fixing(fixingDate);
+    if (!removeSeasonality) {
+        // check if date is after baseDate but before any helpers 
+        return pastFixing * (1 + yoyRate);
+    }
+    Rate yoyRateDeseasonalized = ts->seasonality()->deseasonalisedYoYRate(fixingDate, yoyRate, *ts.currentLink());
+    return pastFixing * (1 + yoyRateDeseasonalized);
+}
+
+Rate YoYInflationIndexWrapper::impliedZeroRate(const Date& to, const DayCounter& dc) const {
+    Date baseDate = yoyInflationTermStructure()->baseDate();
+    Real baseFixing = CPI::laggedFixing(zeroIndex_, baseDate, 0 * Days, CPI::Flat);
+    Real toCpi = forwardCpi(to, false);
+    Time t = dc.yearFraction(baseDate, to);
+    t = t == 0 ? 1 : t;
+    return std::pow(toCpi / baseFixing, 1.0 / t) - 1;
 }
 
 } // namespace QuantExt

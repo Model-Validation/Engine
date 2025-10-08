@@ -64,7 +64,8 @@ private:
 class YoYInflationIndexWrapper : public YoYInflationIndex {
 public:
     YoYInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex,
-                             const Handle<YoYInflationTermStructure>& ts = Handle<YoYInflationTermStructure>());
+                             const Handle<YoYInflationTermStructure>& ts = Handle<YoYInflationTermStructure>(),
+                             const Date& firstPillarDate = Date());
 
     [[deprecated]]
     YoYInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex, const bool interpolated,
@@ -73,10 +74,13 @@ public:
     /*! \warning the forecastTodaysFixing parameter (required by the Index interface) is currently ignored. */
     Rate fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
     const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex() const { return zeroIndex_; }
+    Real forwardCpi(const Date& fixingDate, bool removeSeasonality) const;
+    Rate impliedZeroRate(const Date& to, const DayCounter& dc) const;
 
 private:
     Rate forecastFixing(const Date& fixingDate) const;
     const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex_;
+    const Date& firstPillarDate_;
 };
 
 } // namespace QuantExt
