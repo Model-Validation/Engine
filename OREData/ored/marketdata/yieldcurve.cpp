@@ -2082,7 +2082,7 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                 }
 
                 QuantLib::ext::shared_ptr<RateHelper> futureHelper = QuantLib::ext::make_shared<FuturesRateHelper>(
-                    futureQuote->quote(), immDate, futureConvention->index());
+                    futureQuote->quote(), immDate, Date(), futureConvention->index()->dayCounter());
 
                 instruments.push_back(futureHelper);
             }
