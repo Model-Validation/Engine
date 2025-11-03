@@ -28,6 +28,7 @@
 #include <ql/instruments/partialtimebarrieroption.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 #include <qle/indexes/fxindex.hpp>
+#include <ql/experimental/barrieroption/vannavolgapartialtimebarrierengine.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -168,9 +169,15 @@ void FxPartialTimeBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFac
 
         ptBarrierBuilder = engineFactory->builder("FxPartialTimeBarrierOption");
         QL_REQUIRE(ptBarrierBuilder, "No builder found for FxPartialTimeBarrierOption");
-        auto fxPtBarrierOptBuilder =
-            QuantLib::ext::dynamic_pointer_cast<FxPartialTimeBarrierOptionAnalyticEngineBuilder>(ptBarrierBuilder);
-        ptBarrier->setPricingEngine(fxPtBarrierOptBuilder->engine(boughtCcy, soldCcy));
+        if (ptBarrierBuilder->engine() == "AnalyticPartialTimeBarrierOptionEngine") {
+            auto fxPtBarrierOptBuilder =
+                QuantLib::ext::dynamic_pointer_cast<FxPartialTimeBarrierOptionAnalyticEngineBuilder>(ptBarrierBuilder);
+            ptBarrier->setPricingEngine(fxPtBarrierOptBuilder->engine(boughtCcy, soldCcy));
+        } else if (ptBarrierBuilder->engine() == "VannaVolgaPartialTimeBarrierEngine") {
+            auto fxPtBarrierOptBuilder =
+                QuantLib::ext::dynamic_pointer_cast<FxPartialTimeBarrierOptionVVEngineBuilder>(ptBarrierBuilder);
+            ptBarrier->setPricingEngine(fxPtBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate, paymentDate));
+        }
         // rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, flipResults));
     }
 
