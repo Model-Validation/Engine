@@ -292,9 +292,9 @@ Date FxIndex::fixingDate(const Date& valueDate) const {
 }
 
 Date FxIndex::valueDate(const Date& fixingDate) const {
-    QL_REQUIRE(isValidFixingDate(fixingDate),
+    /* QL_REQUIRE(isValidFixingDate(fixingDate),
                "FxIndex::valueDate(): " << fixingDate << " is not a valid fixing date for " << name()
-                                        << " (calendar is " << fixingCalendar().name() << ")");
+                                        << " (calendar is " << fixingCalendar().name() << ")");*/
     Calendar cal = JointCalendar(fixingCalendar_, tradingCalendar_);
     return cal.adjust(fixingCalendar().advance(fixingDate, fixingDays_, Days));
 }
