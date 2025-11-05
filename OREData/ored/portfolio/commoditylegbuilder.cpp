@@ -530,7 +530,7 @@ Leg CommodityFloatingLegBuilder::buildLeg(
             paymentDates[i] = paymentDatesCalendar.adjust(paymentDates[i], paymentDatesConvention);
     }
 
-    // May need to poulate hours per day
+    // May need to populate hours per day
     auto hoursPerDay = floatingLegData->hoursPerDay();
     if ((floatingLegData->commodityQuantityFrequency() == CommodityQuantityFrequency::PerHour ||
          floatingLegData->commodityQuantityFrequency() == CommodityQuantityFrequency::PerHourAndCalendarDay) &&

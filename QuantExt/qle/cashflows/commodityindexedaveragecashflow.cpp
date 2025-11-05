@@ -137,7 +137,7 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
 
     // If we are going to reference a future settlement price, check that we have a valid expiry calculator
     if (useFuturePrice_) {
-        QL_REQUIRE(calc, "CommodityIndexedCashFlow needs a valid future expiry calculator when using first future");
+        QL_REQUIRE(calc, "CommodityIndexedAverageCashFlow needs a valid future expiry calculator when using first future");
     }
 
     // Store the relevant index for each pricing date taking account of the flags and the pricing calendar
@@ -450,7 +450,7 @@ CommodityIndexedAverageLeg::operator Leg() const {
     QL_REQUIRE(quantities_.size() <= numberCashflows,
                "Too many quantities (" << quantities_.size() << "), only " << numberCashflows << " required");
     if (useFuturePrice_) {
-        QL_REQUIRE(calc_, "CommodityIndexedCashFlow needs a valid future expiry calculator when using first future");
+        QL_REQUIRE(calc_, "CommodityIndexedAverageCashFlow needs a valid future expiry calculator when using first future");
     }
 
     if (!paymentDates_.empty()) {
