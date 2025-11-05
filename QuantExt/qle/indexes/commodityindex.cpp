@@ -71,8 +71,6 @@ void CommodityIndex::init() {
 
 Real CommodityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
 
-    QL_REQUIRE(isValidFixingDate(fixingDate), "Commodity index " << name() << ": fixing date " <<
-                                                                 io::iso_date(fixingDate) << " is not valid");
     Date today = Settings::instance().evaluationDate();
     QL_REQUIRE(expiryDate_ == Date() || fixingDate <= expiryDate_,
                "Commodity index " << name() << ": fixing requested on fixing date (" << io::iso_date(fixingDate)
@@ -85,6 +83,8 @@ Real CommodityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) c
     Real result = Null<Decimal>();
 
     if (fixingDate < today || Settings::instance().enforcesTodaysHistoricFixings()) {
+        QL_REQUIRE(isValidFixingDate(fixingDate),
+                   "Commodity index " << name() << ": fixing date " << io::iso_date(fixingDate) << " is not valid");
         // must have been fixed
         // do not catch exceptions
         result = pastFixing(fixingDate);
