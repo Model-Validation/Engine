@@ -51,6 +51,7 @@ using QuantExt::LogLinearFlat;
 using QuantExt::PriceTermStructure;
 using QuantExt::PiecewisePriceCurve;
 using QuantLib::BootstrapHelper;
+using QuantLib::ForwardFlat;
 using std::make_pair;
 using std::map;
 using std::string;
@@ -67,6 +68,7 @@ template class QuantExt::PiecewisePriceCurve<QuantExt::LinearFlat, QuantExt::Ite
 template class QuantExt::PiecewisePriceCurve<QuantExt::LogLinearFlat, QuantExt::IterativeBootstrap>;
 template class QuantExt::PiecewisePriceCurve<QuantExt::CubicFlat, QuantExt::IterativeBootstrap>;
 template class QuantExt::PiecewisePriceCurve<QuantLib::BackwardFlat, QuantExt::IterativeBootstrap>;
+template class QuantExt::PiecewisePriceCurve<QuantLib::ForwardFlat, QuantExt::IterativeBootstrap>;
 
 namespace {
 
@@ -498,6 +500,9 @@ void CommodityCurve::buildPiecewiseCurve(const Date& asof, const CommodityCurveC
         BS<Crv<QuantLib::Cubic>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
         commodityPriceCurve_ = QuantLib::ext::make_shared<Crv<QuantLib::Cubic>>(asof, instruments,
             dayCounter_, ccy, QuantLib::Cubic(), bs);
+    } else if (interpolationMethod_ == "Hermite") {
+        BS<Crv<QuantLib::Cubic>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
+        commodityPriceCurve_ = QuantLib::ext::make_shared<Crv<QuantLib::Cubic>>(asof, instruments, dayCounter_, ccy, QuantLib::Cubic(CubicInterpolation::Parabolic), bs);
     } else if (interpolationMethod_ == "LinearFlat") {
         BS<Crv<QuantExt::LinearFlat>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
         commodityPriceCurve_ = QuantLib::ext::make_shared<Crv<QuantExt::LinearFlat>>(asof, instruments,
@@ -510,10 +515,18 @@ void CommodityCurve::buildPiecewiseCurve(const Date& asof, const CommodityCurveC
         BS<Crv<QuantExt::CubicFlat>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
         commodityPriceCurve_ = QuantLib::ext::make_shared<Crv<QuantExt::CubicFlat>>(asof, instruments,
             dayCounter_, ccy, QuantExt::CubicFlat(), bs);
+    } else if (interpolationMethod_ == "HermiteFlat") {
+        BS<Crv<QuantExt::CubicFlat>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
+        commodityPriceCurve_ = QuantLib::ext::make_shared<Crv<QuantExt::CubicFlat>>(asof, instruments,
+            dayCounter_, ccy, QuantExt::CubicFlat(CubicInterpolation::Parabolic), bs);
     } else if (interpolationMethod_ == "BackwardFlat") {
         BS<Crv<BackwardFlat>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
         commodityPriceCurve_ = QuantLib::ext::make_shared<Crv<BackwardFlat>>(asof, instruments,
             dayCounter_, ccy, BackwardFlat(), bs);
+    } else if (interpolationMethod_ == "ForwardFlat") {
+        BS<Crv<ForwardFlat>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
+        commodityPriceCurve_ = QuantLib::ext::make_shared<Crv<ForwardFlat>>(asof, instruments,
+            dayCounter_, ccy, ForwardFlat(), bs);
     } else {
         QL_FAIL("The interpolation method, " << interpolationMethod_ << ", is not supported.");
     }

@@ -106,9 +106,10 @@ void DiscountingFxForwardEngine::calculate() const {
                                    << "), an FX Index must be given for a cash-settled FX Forward.");
         if (!arguments_.isPhysicallySettled && arguments_.payDate >= arguments_.fixingDate &&
             arguments_.fxIndex != nullptr) {
-            fx1 = settleCcy1 ? 1.0 : arguments_.fxIndex->fixing(arguments_.fixingDate);
-            fx2 = settleCcy1 ? arguments_.fxIndex->fixing(arguments_.fixingDate) : 1.0;
-            fxfwd = arguments_.fxIndex->fixing(arguments_.fixingDate);
+            auto fixing = arguments_.fxIndex->fixing(arguments_.fxIndex->fixingDate(arguments_.payDate));
+            fx1 = settleCcy1 ? 1.0 : fixing;
+            fx2 = settleCcy1 ? fixing : 1.0;
+            fxfwd = fixing;
         }
 
         // populate cashflow results
