@@ -389,7 +389,8 @@ protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                                 const string& discountCurveName,
                                                                 const AssetClass& assetClass, const Date& expiryDate,
-                                                                const bool useFxSpot) override {
+                                                                const bool useFxSpot,
+                                                                const std::optional<Currency>&) override {
         QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, ccy, assetClass);
         return QuantLib::ext::make_shared<QuantLib::JuQuadraticApproximationEngine>(gbsp);
