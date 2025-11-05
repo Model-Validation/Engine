@@ -242,6 +242,11 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
 
     // the exchange rate is interpreted as the spot rate w.r.t. the index's
     // settlement date
+    // Undoing the fixingCalendar().adjust(...) call below as of 2025-09-17 because it breaks pricing for e.g.
+    // USD-EGP on the study date 2025-09-12 (a Friday). Because Friday's are weekends in Islamic calendars,
+    // this adjust-call means it's first shifted to Monday, then bumped by the two spot days. This results in
+    // incorrect spot discounting.
+    // Date refValueDate = valueDate(fixingCalendar().adjust(sourceYts_->referenceDate()));
     Date refValueDate = valueDate(sourceYts_->referenceDate());
 
     // the fixing is obeying the settlement delay as well
