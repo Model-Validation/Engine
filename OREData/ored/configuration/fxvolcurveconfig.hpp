@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfig.hpp>
 #include <ored/configuration/reportconfig.hpp>
 
@@ -31,6 +32,8 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
+
+#include <optional>
 
 namespace ore {
 namespace data {
@@ -105,6 +108,7 @@ public:
     const std::string& smileExtrapolation() const { return smileExtrapolation_; }
     const TimeInterpolation& timeInterpolation() const { return timeInterpolation_; }
     const string& timeWeighting() const { return timeWeighting_; }
+    const std::optional<FxOptionTimeWeightingConvention>& explicitTimeWeighting() const { return explicitTimeWeighting_; }
     const string& conventionsID() const { return conventionsID_; }
     const std::vector<Size>& smileDelta() const { return smileDelta_; }
     const vector<string>& quotes() override;
@@ -122,6 +126,7 @@ public:
     string& smileExtrapolation() { return smileExtrapolation_; }
     TimeInterpolation& timeInterpolation() { return timeInterpolation_; }
     string& timeWeighting() { return timeWeighting_; }
+    std::optional<FxOptionTimeWeightingConvention>& explicitTimeWeighting() { return explicitTimeWeighting_; }
     vector<string>& deltas() { return deltas_; }
     DayCounter& dayCounter() { return dayCounter_; }
     Calendar& calendar() { return calendar_; }
@@ -155,6 +160,7 @@ private:
     string smileExtrapolation_;
     TimeInterpolation timeInterpolation_;
     string timeWeighting_;
+    std::optional<FxOptionTimeWeightingConvention> explicitTimeWeighting_;
     string baseVolatility1_;
     string baseVolatility2_;
     string fxIndexTag_;

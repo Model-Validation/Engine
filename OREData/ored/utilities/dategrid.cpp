@@ -89,6 +89,7 @@ DateGrid::DateGrid(const string& grid, const QuantLib::Calendar& gridCalendar, c
                 // we have a daily grid. Period and Calendar are not consistent with
                 // working & actual days, so we set the tenor grid
                 Date d = today_;
+                tenors_.push_back(Period(0, Days));
                 for (Size i = 0; i < gridSize; i++) {
                     d = gridCalendar.advance(d, Period(1, Days), Following); // next working day
                     Size n = d - today_;

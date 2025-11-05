@@ -381,6 +381,8 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     mp["forwards"] = matchedMoments.forwards;
     mp["beta"] = beta_;
     mp["cashFlowResults"] = cfResults;
+    mp["pricing_dates"] = matchedMoments.pricingDates;
+    mp["index_expiries"] = matchedMoments.indexExpiries;
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::calculate() const {

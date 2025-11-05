@@ -319,10 +319,10 @@ QuantLib::Handle<QuantExt::FxIndex> DependencyMarket::fxIndexImpl(const string& 
     auto tarTS = discountCurve(ccy2, config);
 
     // use correct conventions so correct fixings are picked up
-    auto [spotDays, calendar, bdc] = getFxIndexConventions(adjpair);
+    auto [spotDays, calendar, bdc, tradingCalendar] = getFxIndexConventions(adjpair);
 
-    return Handle<FxIndex>(QuantLib::ext::make_shared<FxIndex>(famName, spotDays, parseCurrency(ccy1), parseCurrency(ccy2),
-        calendar, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0)), sorTS, tarTS));
+    return Handle<FxIndex>(QuantLib::ext::make_shared<FxIndex>(famName, spotDays, parseCurrency(ccy1), parseCurrency(ccy2), calendar,
+                                            Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0)), sorTS, tarTS, true, tradingCalendar));
 }
 
 Handle<Quote> DependencyMarket::fxRateImpl(const string& ccypair, const string& config) const {

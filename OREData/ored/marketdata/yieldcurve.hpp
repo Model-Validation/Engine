@@ -63,7 +63,7 @@ class ReferenceDataManager;
 class YieldCurve {
 public:
     //! Supported interpolation variables
-    enum class InterpolationVariable { Zero, Discount, Forward };
+    enum class InterpolationVariable { Zero, Discount, Forward, SwapPoints };
 
     //! Supported interpolation methods
     enum class InterpolationMethod {
@@ -168,6 +168,8 @@ private:
     void buildIborFallbackCurve(const std::size_t index);
     //! Build a yield curve that uses QuantExt::bondYieldShiftedCurve
     void buildBondYieldShiftedCurve(const std::size_t index);
+    //! Build an implied curve from a price curve of interpolated FX forwards
+    void buildInterpolatedFxForwardCurve(const std::size_t index);
 
     //! Return the yield curve with the given \p id from the requiredYieldCurves_ map
     QuantLib::Handle<YieldTermStructure> getYieldCurve(const std::size_t index, const std::string& ccy,

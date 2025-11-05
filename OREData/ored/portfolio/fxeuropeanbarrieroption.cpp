@@ -131,6 +131,7 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
 
     Real strike = this->strike();
     Option::Type type = parseOptionType(option_.callPut());
+    Real epsilon = type == Option::Type::Call ? 0.0001 : -0.0001;
 
     // Exercise
     Date expiryDate = parseDate(option_.exerciseDates().front());
@@ -159,6 +160,8 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
     QuantLib::ext::shared_ptr<Instrument> digital;
     QuantLib::ext::shared_ptr<Instrument> vanillaK;
     QuantLib::ext::shared_ptr<Instrument> vanillaB;
+    QuantLib::ext::shared_ptr<Instrument> spreadVanilla1;
+    QuantLib::ext::shared_ptr<Instrument> spreadVanilla2;
     QuantLib::ext::shared_ptr<Instrument> rebateInstrument;
 
     bool exercised = false;
@@ -212,6 +215,12 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
             vanillaB = QuantLib::ext::make_shared<CashSettledEuropeanOption>(type, level, expiryDate, paymentDate, 
                                                                             option_.isAutomaticExercise(), fxIndex, 
                                                                             exercised, exercisePrice);
+            spreadVanilla1 = QuantLib::ext::make_shared<CashSettledEuropeanOption>(type, level, expiryDate, paymentDate,
+                                                                                  option_.isAutomaticExercise(), fxIndex,
+                                                                                  exercised, exercisePrice);
+            spreadVanilla2 = QuantLib::ext::make_shared<CashSettledEuropeanOption>(type, level * (1 + epsilon), expiryDate,
+                                                                                  paymentDate, option_.isAutomaticExercise(),
+                                                                                  fxIndex, exercised, exercisePrice);
 
             QuantLib::ext::shared_ptr<StrikedTypePayoff> payoffDigital(new CashOrNothingPayoff(type, level, fabs(level - strike)));
             QuantLib::ext::shared_ptr<StrikedTypePayoff> rebatePayoff(new CashOrNothingPayoff(rebateType, level, rebate));
@@ -228,6 +237,10 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
                 boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
             vanillaB->setPricingEngine(fxOptBuilder->engine(
                 boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+            spreadVanilla1->setPricingEngine(fxOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+            spreadVanilla2->setPricingEngine(fxOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
             setSensitivityTemplate(*fxOptBuilder);
             addProductModelEngine(*fxOptBuilder);
             digital->setPricingEngine(fxDigitalOptBuilder->engine(
@@ -242,12 +255,20 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
             QuantLib::ext::shared_ptr<StrikedTypePayoff> payoffVanillaK(new PlainVanillaPayoff(type, strike));
             // Payoff - European Option with strike B
             QuantLib::ext::shared_ptr<StrikedTypePayoff> payoffVanillaB(new PlainVanillaPayoff(type, level));
+            // Payoff - European Option with strike B
+            QuantLib::ext::shared_ptr<StrikedTypePayoff> payoffSpreadVanilla1(new PlainVanillaPayoff(type, level));
+            // Payoff - European Option with strike B * (1+eps)
+            QuantLib::ext::shared_ptr<StrikedTypePayoff> payoffSpreadVanilla2(new PlainVanillaPayoff(type, level * (1 + epsilon)));
             // Payoff - Digital Option with barrier B payoff abs(B - K)
             QuantLib::ext::shared_ptr<StrikedTypePayoff> payoffDigital(new CashOrNothingPayoff(type, level, fabs(level - strike)));
             QuantLib::ext::shared_ptr<StrikedTypePayoff> rebatePayoff(new CashOrNothingPayoff(rebateType, level, rebate));
 
             vanillaK = QuantLib::ext::make_shared<VanillaForwardOption>(payoffVanillaK, exercise, paymentDate, paymentDate);
             vanillaB = QuantLib::ext::make_shared<VanillaForwardOption>(payoffVanillaB, exercise, paymentDate, paymentDate);
+            spreadVanilla1 = QuantLib::ext::make_shared<VanillaForwardOption>(payoffSpreadVanilla1, exercise,
+                                                                              paymentDate, paymentDate);
+            spreadVanilla2 = QuantLib::ext::make_shared<VanillaForwardOption>(payoffSpreadVanilla2, exercise,
+                                                                              paymentDate, paymentDate);
             digital = QuantLib::ext::make_shared<VanillaForwardOption>(payoffDigital, exercise, paymentDate, paymentDate);
             rebateInstrument = QuantLib::ext::make_shared<VanillaForwardOption>(rebatePayoff, exercise, paymentDate, paymentDate);
 
@@ -260,6 +281,10 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
             vanillaK->setPricingEngine(fxOptBuilder->engine(
                 boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
             vanillaB->setPricingEngine(fxOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+            spreadVanilla1->setPricingEngine(fxOptBuilder->engine(
+                boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+            spreadVanilla2->setPricingEngine(fxOptBuilder->engine(
                 boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
             setSensitivityTemplate(*fxOptBuilder);
             addProductModelEngine(*fxOptBuilder);
@@ -278,11 +303,18 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
         // Payoff - Digital Option with barrier B payoff abs(B - K)
         QuantLib::ext::shared_ptr<StrikedTypePayoff> payoffDigital(new CashOrNothingPayoff(type, level, fabs(level - strike)));
         QuantLib::ext::shared_ptr<StrikedTypePayoff> rebatePayoff(new CashOrNothingPayoff(rebateType, level, rebate));
+        // Alternative payoffs for call/put spread replication:
+        QuantLib::ext::shared_ptr<StrikedTypePayoff> payoffSpreadVanilla1(new PlainVanillaPayoff(type, level));
+        QuantLib::ext::shared_ptr<StrikedTypePayoff> payoffSpreadVanilla2(new PlainVanillaPayoff(type, level * (1 + epsilon)));
+
+
 
         vanillaK = QuantLib::ext::make_shared<VanillaOption>(payoffVanillaK, exercise);
         vanillaB = QuantLib::ext::make_shared<VanillaOption>(payoffVanillaB, exercise);
         digital = QuantLib::ext::make_shared<VanillaOption>(payoffDigital, exercise);
         rebateInstrument = QuantLib::ext::make_shared<VanillaOption>(rebatePayoff, exercise);
+        spreadVanilla1 = QuantLib::ext::make_shared<VanillaOption>(payoffSpreadVanilla1, exercise);
+        spreadVanilla2 = QuantLib::ext::make_shared<VanillaOption>(payoffSpreadVanilla2, exercise);
 
         builder = engineFactory->builder("FxOption");
         QL_REQUIRE(builder, "No builder found for FxOption");
@@ -294,6 +326,8 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
             boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
         vanillaB->setPricingEngine(fxOptBuilder->engine(
             boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+        spreadVanilla1->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
+        spreadVanilla2->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, envelope().additionalField("discount_curve", false, std::string()), paymentDate));
         setSensitivityTemplate(*fxOptBuilder);
         addProductModelEngine(*fxOptBuilder);
         digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, flipResults));
@@ -309,9 +343,12 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
         if (barrierType == Barrier::Type::UpIn || barrierType == Barrier::Type::DownOut) {
             if (level > strike) {
                 qlInstrument->add(vanillaB);
-                qlInstrument->add(digital);
-                additionalData_["2_type"] = string("Call(B)");
-                additionalData_["3_type"] = string("DigiCall(B, B-K)");
+                // qlInstrument->add(digital);
+                // additionalData_["2_type"] = string("Call(B)");
+                // additionalData_["3_type"] = string("DigiCall(B, B-K)");
+                qlInstrument->add(spreadVanilla1, (level - strike) / (level * epsilon));
+                qlInstrument->add(spreadVanilla2, -(level - strike) / (level * epsilon));
+
             } else {
                 qlInstrument->add(vanillaK);
                 additionalData_["2_type"] = string("Call(K)");
@@ -320,10 +357,12 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
             if (level > strike) {
                 qlInstrument->add(vanillaK);
                 qlInstrument->add(vanillaB, -1);
-                qlInstrument->add(digital, -1);
-                additionalData_["2_type"] = string("Call(K)");
-                additionalData_["3_type"] = string("Call(B)");
-                additionalData_["4_type"] = string("DigiCall(B, B-K)");
+                // qlInstrument->add(digital, -1);
+                // additionalData_["2_type"] = string("Call(K)");
+                // additionalData_["3_type"] = string("Call(B)");
+                // additionalData_["4_type"] = string("DigiCall(B, B-K)");
+                qlInstrument->add(spreadVanilla1, -(level - strike) / (level * epsilon));
+                qlInstrument->add(spreadVanilla2, (level - strike) / (level * epsilon));
             } else {
                 // empty
             }
@@ -337,10 +376,12 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
             } else {
                 qlInstrument->add(vanillaK);
                 qlInstrument->add(vanillaB, -1);
-                qlInstrument->add(digital, -1);
-                additionalData_["2_type"] = string("Put(K)");
-                additionalData_["3_type"] = string("Put(B)");
-                additionalData_["4_type"] = string("DigiPut(B, K-B)");
+                // qlInstrument->add(digital, -1);
+                // additionalData_["2_type"] = string("Put(K)");
+                // additionalData_["3_type"] = string("Put(B)");
+                // additionalData_["4_type"] = string("DigiPut(B, K-B)");
+                qlInstrument->add(spreadVanilla1, (strike - level) / (level * epsilon));
+                qlInstrument->add(spreadVanilla2, -(strike - level) / (level * epsilon));
             }
         } else if (barrierType == Barrier::Type::UpOut || barrierType == Barrier::Type::DownIn) {
             if (level > strike) {
@@ -348,9 +389,11 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
                 additionalData_["2_type"] = string("Put(K)");
             } else {
                 qlInstrument->add(vanillaB);
-                qlInstrument->add(digital);
-                additionalData_["2_type"] = string("Put(B)");
-                additionalData_["3_type"] = string("DigiPut(B, K-B)");
+                // qlInstrument->add(digital);
+                // additionalData_["2_type"] = string("Put(B)");
+                // additionalData_["3_type"] = string("DigiPut(B, K-B)");
+                qlInstrument->add(spreadVanilla1, -(strike - level) / (level * epsilon));
+                qlInstrument->add(spreadVanilla2, (strike - level) / (level * epsilon));
             }
         } else {
             QL_FAIL("Unknown Barrier Type: " << barrierType);

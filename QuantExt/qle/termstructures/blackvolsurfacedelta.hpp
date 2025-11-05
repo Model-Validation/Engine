@@ -41,7 +41,7 @@ using namespace QuantLib;
 class InterpolatedSmileSection : public FxSmileSection {
 public:
     //! Supported interpolation methods
-    enum class InterpolationMethod { Linear, NaturalCubic, FinancialCubic, CubicSpline };
+    enum class InterpolationMethod { Linear, NaturalCubic, FinancialCubic, CubicSpline, Lagrange };
 
     //! ctor
     InterpolatedSmileSection(Real spot, Real rd, Real rf, Time t, const std::vector<Real>& strikes,

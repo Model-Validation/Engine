@@ -20,6 +20,7 @@
 #include <ql/errors.hpp>
 #include <ql/pricingengines/blackdeltacalculator.hpp>
 #include <ql/math/interpolations/cubicinterpolation.hpp>
+#include <ql/math/interpolations/lagrangeinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 
@@ -45,6 +46,8 @@ InterpolatedSmileSection::InterpolatedSmileSection(Real spot, Real rd, Real rf, 
                             .interpolate(strikes_.begin(), strikes_.end(), vols_.begin());
     else if (method == InterpolationMethod::CubicSpline)
         interpolator_ = CubicNaturalSpline(strikes_.begin(), strikes_.end(), vols_.begin());
+    else if (method == InterpolationMethod::Lagrange)
+        interpolator_ = LagrangeInterpolation(strikes_.begin(), strikes_.end(), vols_.begin());
     else {
         QL_FAIL("Invalid method " << (int)method);
     }
@@ -206,7 +209,8 @@ QuantLib::ext::shared_ptr<FxSmileSection> BlackVolatilitySurfaceDelta::blackVolS
         return QuantLib::ext::make_shared<ConstantSmileSection>(vols.front());
     } else {
         // we have at least two strikes
-        return QuantLib::ext::make_shared<InterpolatedSmileSection>(spot, dDiscount, fDiscount, t, strikes, vols,
+        return QuantLib::ext::make_shared<InterpolatedSmileSection>(spot, -std::log(dDiscount) / t,
+                                                                    -std::log(fDiscount) / t, t, strikes, vols,
                                                                     interpolationMethod_, flatStrikeExtrapolation_);
     }
 }

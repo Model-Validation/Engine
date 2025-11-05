@@ -1230,6 +1230,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         im = InterpolatedSmileSection::InterpolationMethod::FinancialCubic;
     } else if (vdsc.strikeInterpolation() == "CubicSpline") {
         im = InterpolatedSmileSection::InterpolationMethod::CubicSpline;
+    } else if (vdsc.strikeInterpolation() == "Lagrange") {
+        im = InterpolatedSmileSection::InterpolationMethod::Lagrange;
     } else {
         im = InterpolatedSmileSection::InterpolationMethod::Linear;
         DLOG("BlackVolatilitySurfaceDelta does not support strike interpolation '" << vdsc.strikeInterpolation()
@@ -1605,12 +1607,13 @@ void CommodityVolCurve::buildVolatility(
 
     auto proxy = pvc.proxyVolatilityCurve();
     auto comConfig = *curveConfigs.commodityCurveConfig(spec.curveConfigID());
-    auto proxyConfig = *curveConfigs.commodityCurveConfig(proxy);
     auto proxyVolConfig = *curveConfigs.commodityVolatilityConfig(proxy);
+    auto priceCurveId = proxyVolConfig.priceCurveId();
+    auto proxyConfig = *curveConfigs.commodityCurveConfig(priceCurveId.substr(priceCurveId.find_last_of("/") + 1));
 
     // create dummy specs to look up the required curves
     CommodityCurveSpec comSpec(comConfig.currency(), spec.curveConfigID());
-    CommodityCurveSpec proxySpec(proxyConfig.currency(), proxy);
+    CommodityCurveSpec proxySpec(proxyConfig.currency(), proxyConfig.curveID());
     CommodityVolatilityCurveSpec proxyVolSpec(proxyVolConfig.currency(), proxy);
 
     // Get all necessary curves

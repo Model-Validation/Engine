@@ -48,6 +48,10 @@ Date ConventionsBasedFutureExpiry::nextExpiry(bool includeExpiry, const Date& re
     // Get the next expiry date relative to referenceDate
     Date expiryDate = nextExpiry(today, forOption);
 
+    if (convention_.contractFrequency() == Daily) { // Special handling for e.g. LME-COPPER-3M futures
+        return convention_.expiryCalendar().advance(expiryDate, offset * Months, Nearest, false);
+    }
+
     // If expiry date equals today and we have asked not to include expiry, return next contract's expiry
     if (expiryDate == today && !includeExpiry && offset == 0) {
         expiryDate = nextExpiry(expiryDate + 1 * Days, forOption);
@@ -55,7 +59,15 @@ Date ConventionsBasedFutureExpiry::nextExpiry(bool includeExpiry, const Date& re
 
     // If offset is greater than 0, keep getting next expiry out
     while (offset > 0) {
-        expiryDate = nextExpiry(expiryDate + 1 * Days, forOption);
+        expiryDate = nextExpiry(NullCalendar().advance(expiryDate, 1 * Months, Following, true), forOption);
+        // Hade nedanstående till 2025-10-22 innan jag bytte tillbaka till det tidigare, pga att detta
+        // förstörde för t.ex. LME-ALU-3M som då bara skiftade med tre dagar...
+        // expiryDate = nextExpiry(expiryDate + 1 * Days, forOption);
+        // 
+        // Hade nedanstående till 2025-08-11 men får då fel på t.ex. TTF där den skiftar med 2 hela månader
+        // trots att FutureExpiryOffset enbart är "1". Testar nu att återgå till originalkoden där man skiftar med en
+        // enda dag i stället.
+        // expiryDate = nextExpiry(NullCalendar().advance(expiryDate, 1 * Months, Following, true), forOption);
         offset--;
     }
 

@@ -361,7 +361,11 @@ Leg CommodityFixedLegBuilder::buildLeg(
     }
     // Get explicit payment dates which in most cases should be empty
     vector<Date> paymentDates;
-    if (!data.paymentDates().empty()) {
+    Schedule paymentSchedule = makeSchedule(data.paymentSchedule(), openEndDateReplacement);
+
+    if (!paymentSchedule.empty()) {
+        paymentDates = paymentSchedule.dates();
+    } else if (!data.paymentDates().empty()) {
         paymentDates = parseVectorOfValues<Date>(data.paymentDates(), &parseDate);
         if (fixedLegData->commodityPayRelativeTo() == CommodityPayRelativeTo::FutureExpiryDate) {
             QL_REQUIRE(paymentDates.size() == fixedRateLeg.size(),
@@ -387,14 +391,8 @@ Leg CommodityFixedLegBuilder::buildLeg(
         // Get payment date
         Date pmtDate;
         if (!paymentDates.empty()) {
-            // Explicit payment dates were provided
-            Calendar paymentCalendar =
-                data.paymentCalendar().empty() ? NullCalendar() : parseCalendar(data.paymentCalendar());
-            PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
-            Period paymentLagPeriod = boost::apply_visitor(PaymentLagPeriod(), paymentLag);
-            BusinessDayConvention paymentConvention =
-                data.paymentConvention().empty() ? Unadjusted : parseBusinessDayConvention(data.paymentConvention());
-            pmtDate = paymentCalendar.advance(paymentDates[i], paymentLagPeriod, paymentConvention);
+            // Explicit payment dates were provided - don't adjust it
+            pmtDate = paymentDates[i];
         } else {
             // Gather the payment conventions.
             BusinessDayConvention bdc =
@@ -556,7 +554,7 @@ Leg CommodityFloatingLegBuilder::buildLeg(
             paymentDates[i] = paymentDatesCalendar.adjust(paymentDates[i], paymentDatesConvention);
     }
 
-    // May need to poulate hours per day
+    // May need to populate hours per day
     auto hoursPerDay = floatingLegData->hoursPerDay();
     if ((floatingLegData->commodityQuantityFrequency() == CommodityQuantityFrequency::PerHour ||
          floatingLegData->commodityQuantityFrequency() == CommodityQuantityFrequency::PerHourAndCalendarDay) &&
@@ -651,7 +649,8 @@ Leg CommodityFloatingLegBuilder::buildLeg(
                   .unrealisedQuantity(floatingLegData->unrealisedQuantity())
                   .withOffPeakPowerData(offPeakPowerData)
                   .withFxIndex(fxIndex)
-                  .withAvgPricePrecision(floatingLegData->avgPricePrecision());
+                  .withAvgPricePrecision(floatingLegData->avgPricePrecision())
+                  .withSpotLag(floatingLegData->spotLag());
     } else {
         CommodityIndexedCashFlow::PaymentTiming paymentTiming = CommodityIndexedCashFlow::PaymentTiming::InArrears;
         if (floatingLegData->commodityPayRelativeTo() == CommodityPayRelativeTo::CalculationPeriodStartDate) {
