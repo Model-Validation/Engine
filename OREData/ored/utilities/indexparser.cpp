@@ -810,6 +810,13 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const st
         }
     }
 
+    // Moved this out of the below if-statement because CommodityIndexedAverageCashFlow:s also want
+    // a given pricing calendar, not the default NullCalendar otherwise given.
+    Calendar cdr = cal;
+    if (convention && cdr == NullCalendar()) {
+        cdr = convention->calendar();
+    }
+
     // Create and return the required future index
     QuantLib::ext::shared_ptr<CommodityIndex> index;
     if (expiry != Date() || (convention && enforceFutureIndex)) {
@@ -821,11 +828,6 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const st
         }
 
         bool keepDays = convention && convention->contractFrequency() == Daily;
-
-        Calendar cdr = cal;
-        if (convention && cdr == NullCalendar()) {
-            cdr = convention->calendar();
-        }
 
         auto basisCurve = ts.empty() ? nullptr :
             QuantLib::ext::dynamic_pointer_cast<CommodityBasisPriceTermStructure>(*ts);
@@ -839,7 +841,7 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const st
         
 
     } else {
-        index = QuantLib::ext::make_shared<CommoditySpotIndex>(commName, cal, ts);
+        index = QuantLib::ext::make_shared<CommoditySpotIndex>(commName, cdr, ts);
     }
     IndexNameTranslator::instance().add(index->name(), index->name());
     DLOG("parseCommodityIndex(" << name << ") -> " << index->name() << " with expiry " << index->expiryDate());
