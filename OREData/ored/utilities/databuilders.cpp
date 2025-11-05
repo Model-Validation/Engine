@@ -463,6 +463,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(VarSwapEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxDoubleTouchOptionAnalyticEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxDoubleBarrierOptionAnalyticEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(FxDoubleBarrierOptionVVEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityBarrierOptionAnalyticEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityBarrierOptionFDEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityTouchOptionEngineBuilder, false)
