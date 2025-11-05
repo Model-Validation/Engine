@@ -620,7 +620,8 @@ Leg CommodityFloatingLegBuilder::buildLeg(
                   .unrealisedQuantity(floatingLegData->unrealisedQuantity())
                   .withOffPeakPowerData(offPeakPowerData)
                   .withFxIndex(fxIndex)
-                  .withAvgPricePrecision(floatingLegData->avgPricePrecision());
+                  .withAvgPricePrecision(floatingLegData->avgPricePrecision())
+                  .withSpotLag(floatingLegData->spotLag());
     } else {
         CommodityIndexedCashFlow::PaymentTiming paymentTiming = CommodityIndexedCashFlow::PaymentTiming::InArrears;
         if (floatingLegData->commodityPayRelativeTo() == CommodityPayRelativeTo::CalculationPeriodStartDate) {

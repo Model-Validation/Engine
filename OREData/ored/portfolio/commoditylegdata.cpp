@@ -188,7 +188,7 @@ CommodityFloatingLegData::CommodityFloatingLegData(
     bool isInArrears, Natural futureMonthOffset, Natural deliveryRollDays, bool includePeriodEnd,
     bool excludePeriodStart, Natural hoursPerDay, bool useBusinessDays, const string& tag,
     Natural dailyExpiryOffset, bool unrealisedQuantity, QuantLib::Natural lastNDays, std::string fxIndex, 
-    QuantLib::Natural avgPricePrecision)
+    QuantLib::Natural avgPricePrecision, QuantLib::Natural spotLag)
     : LegAdditionalData(LegType::CommodityFloating, false), name_(name), priceType_(priceType), quantities_(quantities),
       quantityDates_(quantityDates), commodityQuantityFrequency_(commodityQuantityFrequency),
       commodityPayRelativeTo_(commodityPayRelativeTo), spreads_(spreads), spreadDates_(spreadDates),
@@ -198,7 +198,7 @@ CommodityFloatingLegData::CommodityFloatingLegData(
       includePeriodEnd_(includePeriodEnd), excludePeriodStart_(excludePeriodStart), hoursPerDay_(hoursPerDay),
       useBusinessDays_(useBusinessDays), tag_(tag), dailyExpiryOffset_(dailyExpiryOffset),
       unrealisedQuantity_(unrealisedQuantity), lastNDays_(lastNDays), fxIndex_(fxIndex),
-      avgPricePrecision_(avgPricePrecision) {
+      avgPricePrecision_(avgPricePrecision), spotLag_(spotLag) {
     indices_.insert("COMM-" + name_);
 }
 
@@ -294,7 +294,12 @@ void CommodityFloatingLegData::fromXML(XMLNode* node) {
         int precision = parseInteger(XMLUtils::getNodeValue(n));
         QL_REQUIRE(precision >= 0, "CommodityFloatingLegData: avgPricePrecision must be non-negative, got " << precision);
         avgPricePrecision_ = static_cast<QuantLib::Natural>(precision);
-    } 
+    }
+
+    spotLag_ = Null<Natural>();
+    if (XMLNode* n = XMLUtils::getChildNode(node, "SpotLag")) {
+        spotLag_ = parseInteger(XMLUtils::getNodeValue(n));
+    }
 }
 
 XMLNode* CommodityFloatingLegData::toXML(XMLDocument& doc) const {
@@ -348,6 +353,9 @@ XMLNode* CommodityFloatingLegData::toXML(XMLDocument& doc) const {
     if (avgPricePrecision_ != Null<Natural>()) {
         XMLUtils::addChild(doc, node, "AvgPricePrecision", static_cast<int>(avgPricePrecision_));
     }
+    if (spotLag_ != Null<Natural>())
+        XMLUtils::addChild(doc, node, "SpotLag", static_cast<int>(spotLag_));
+
     return node;
 }
 

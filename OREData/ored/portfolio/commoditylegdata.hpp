@@ -116,7 +116,8 @@ public:
         bool useBusinessDays = true, const std::string& tag = "", QuantLib::Natural dailyExpiryOffset =
         QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
         QuantLib::Natural lastNDays = QuantLib::Null<QuantLib::Natural>(), std::string fxIndex = "",
-        QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>());
+        QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>(),
+        QuantLib::Natural spotLag = QuantLib::Null<QuantLib::Natural>());
 
     //! \name Inspectors
     //@{
@@ -148,6 +149,7 @@ public:
     QuantLib::Natural lastNDays() const { return lastNDays_; }
     std::string const& fxIndex() const { return fxIndex_; }
     QuantLib::Natural avgPricePrecision() const { return avgPricePrecision_; }
+    QuantLib::Natural spotLag() const { return spotLag_; }
     //@}
 
     //! \name Serialisation
@@ -185,6 +187,7 @@ private:
     QuantLib::Natural lastNDays_;
     std::string fxIndex_;
     QuantLib::Natural avgPricePrecision_;
+    QuantLib::Natural spotLag_;
 };
 
 } // namespace data
