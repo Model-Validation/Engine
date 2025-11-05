@@ -121,7 +121,8 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
             QL_REQUIRE(tokens.size() >= 3 || tokens.size() <= 5,
                        "Invalid CSVLoader line, between 3 and 5 tokens expected " << line);
             if (tokens.size() == 4)
-                QL_REQUIRE(dataType == DataType::Dividend, "CSVLoader, dataType must be of type Dividend");
+                QL_REQUIRE(dataType == DataType::Dividend,
+                           "CSVLoader, dataType must be of type Dividend when four tokens: " << line);
             Date date = parseDate(tokens[0]);
             const string& key = tokens[1];
             Real value = parseReal(tokens[2]);
