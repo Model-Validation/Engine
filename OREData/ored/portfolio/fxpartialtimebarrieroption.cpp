@@ -181,8 +181,10 @@ void FxPartialTimeBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFac
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), bsInd,
-                                       soldCcy, engineFactory, ptBarrierBuilder->configuration(MarketContext::pricing));
+    string discountCurve = envelope().additionalField("discount_curve", false, std::string());
+    Date lastPremiumDate =
+        addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), bsInd, soldCcy,
+                    discountCurve, engineFactory, ptBarrierBuilder->configuration(MarketContext::pricing));
 
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(ptBarrier, mult, additionalInstruments, additionalMultipliers));
