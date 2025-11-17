@@ -2809,14 +2809,24 @@ Leg makeEquityLeg(const LegData& data, const QuantLib::ext::shared_ptr<EquityInd
 
 Real currentNotional(const Leg& leg) {
     Date today = Settings::instance().evaluationDate();
+    QuantLib::ext::shared_ptr<Coupon> fallback;
     // assume the leg is sorted
-    // We just take the first coupon::nominal we find, otherwise return 0
+    // We just take the first coupon::nominal we find, otherwise first coupon with paymentDate > today, 
+    // else return 0
     
     for (auto cf : leg) {
         QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(cf);
-        if ((coupon) && coupon->accrualEndDate() > today) {
-            return coupon->nominal();
+        if (!coupon) {
+            continue;
         }
+        if (coupon->accrualEndDate() > today) {
+            return coupon->nominal();
+        } else if (coupon->date() > today) {
+            fallback = coupon;
+        }
+    }
+    if (fallback) {
+        return fallback->nominal();
     }
     return 0;
 }
