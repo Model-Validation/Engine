@@ -23,10 +23,8 @@
 #include <ored/utilities/parsers.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <ql/time/calendars/all.hpp>
-// #include <qle/calendars/austria.hpp>
 #include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/belgium.hpp>
-//#include <qle/calendars/chile.hpp>
 #include <qle/calendars/cme.hpp>
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/france.hpp>
