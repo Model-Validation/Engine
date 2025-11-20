@@ -173,7 +173,7 @@ OREData/test/main.cpp
 OREAnalytics/test/orea-test-suite
 OREAnalytics/test/main.cpp
 OREAnalytics/test/[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]
-OREAnalytics/test/crossgammReport
+OREAnalytics/test/crossgammaReport.csv
 OREAnalytics/test/cube*.csv
 OREAnalytics/test/defaultReturnConfig.xml
 OREAnalytics/test/scenario
