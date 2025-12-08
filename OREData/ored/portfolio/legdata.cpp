@@ -2814,7 +2814,7 @@ Real currentNotional(const Leg& leg) {
     
     for (auto cf : leg) {
         QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(cf);
-        if ((coupon) && coupon->accrualEndDate() > today) {
+        if ((coupon) && (coupon->accrualEndDate() > today || coupon->date() > today)) {
             return coupon->nominal();
         }
     }
