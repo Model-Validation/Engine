@@ -1007,7 +1007,8 @@ public:
                                    const std::string& strFloatIndexIsResettable = "",
                                    const string& strIncludeSpread = "", const string& strLookback = "",
                                    const string& strFixingDays = "", const string& strRateCutoff = "",
-                                   const string& strIsAveraged = "");
+                                   const string& strIsAveraged = "", const string& strFixedPaymentLag = "", 
+                                   const string& strFloatPaymentLag = "");
     //@}
 
     //! \name Inspectors
@@ -1023,6 +1024,8 @@ public:
     bool eom() const { return eom_; }
     bool isResettable() const { return isResettable_; }
     bool floatIndexIsResettable() const { return floatIndexIsResettable_; }
+    QuantLib::Natural fixedPaymentLag() const { return fixedPaymentLag_; }
+    QuantLib::Natural floatPaymentLag() const { return floatPaymentLag_; }
 
     // only OIS
     QuantLib::ext::optional<bool> includeSpread() const { return includeSpread_; }
@@ -1054,6 +1057,8 @@ private:
     bool eom_;
     bool isResettable_;
     bool floatIndexIsResettable_;
+    QuantLib::Natural fixedPaymentLag_;
+    QuantLib::Natural floatPaymentLag_;
 
     // Strings to store the inputs
     std::string strSettlementDays_;
@@ -1074,6 +1079,8 @@ private:
     std::string strFixingDays_;
     std::string strRateCutoff_;
     std::string strIsAveraged_;
+    std::string strFixedPaymentLag_;
+    std::string strFloatPaymentLag_;
 
     // OIS Only
     QuantLib::ext::optional<bool> includeSpread_;
