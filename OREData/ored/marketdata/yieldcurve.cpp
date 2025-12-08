@@ -2853,13 +2853,15 @@ void YieldCurve::addFXForwards(const std::size_t index, const QuantLib::ext::sha
                         // Therefore, the ON is t+0 to t+2. As such, you only need ON to calculate the spot rate.
                         if (fxConvention->tradingCalendar() == UnitedStates(UnitedStates::FederalReserve) &&
                             fxConvention->tradingCalendar().isHoliday(onDate)) {
-                            DLOG(curveSpec_.name() <<": TN spread is included in the ON quote because T+1 is a holiday according to US-FED.");
+                            DLOG(curveSpec_[index]->name() << ": TN spread is included in the ON quote because T+1 is a "
+                                                        "holiday according to US-FED.");
                             auto m = [f = qlFXForwardQuote->value()](Real x) { return x - f; };
                             spotFx = Handle<Quote>(
                                 QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(fxSpotQuote->quote(), m));
                             break;
                         }
-                        WLOG(curveSpec_.name() << ": YieldCurve::AddFxForwards cannot use ON rate, when SpotDays are 2 we also require the TN "
+                        WLOG(curveSpec_[index]->name() << ": YieldCurve::AddFxForwards cannot use ON rate, when "
+                                                         "SpotDays are 2 we also require the TN "
                              "rate");
                         continue;
                     }
