@@ -2909,9 +2909,13 @@ void YieldCurve::addFXForwards(const std::size_t index, const QuantLib::ext::sha
             } else {
                 Period fxForwardTenor = fxFwdQuoteTenor(fxForwardQuote->term());
                 Period fxStartTenor = fxFwdQuoteStartTenor(fxForwardQuote->term(), fxConvention);
+                // Daily/Weekly tenors use F, Monthly/Yearly use MF according to market convention.
+                // We opt to not read the field from the FX convention itself because it only support
+                // specifying a single value.
+                BusinessDayConvention bdc = fxForwardTenor.units() < Months ? Following : ModifiedFollowing;
                 fxForwardHelper = QuantLib::ext::make_shared<FxSwapRateHelper>(
                     qlFXForwardQuote, spotFx, fxForwardTenor, fxStartTenor.length(), fxConvention->advanceCalendar(),
-                    fxConvention->convention(), fxConvention->endOfMonth(), isFxBaseCurrencyCollateralCurrency,
+                    bdc, fxConvention->endOfMonth(), isFxBaseCurrencyCollateralCurrency,
                     knownDiscountCurve, fxConvention->tradingCalendar());
             }
 
