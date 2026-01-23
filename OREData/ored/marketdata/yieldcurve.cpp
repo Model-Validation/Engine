@@ -1647,7 +1647,7 @@ void YieldCurve::buildInterpolatedFxForwardCurve(const std::size_t index) {
     QL_REQUIRE(curveSegments_[index][0]->type() == YieldCurveSegment::Type::FXForward,
                "The curve segment is not of type 'FXForward'.");
 
-    std::vector<ext::shared_ptr<RateHelper>> instruments;
+    std::vector<RateHelperData> instruments;
     addFXForwards(index, curveSegments_[index][0], instruments);
 
     // A bit of duplication below, snipped from addFXForwards for curve and spot handling
@@ -1696,7 +1696,7 @@ void YieldCurve::buildInterpolatedFxForwardCurve(const std::size_t index) {
         knownDiscountCurve = market_->discountCurve(knownCurrency.code(), Market::inCcyConfiguration);
     }
 
-    Real fxRate = boost::dynamic_pointer_cast<FxSwapRateHelper>(instruments[0])->spot();
+    Real fxRate = boost::dynamic_pointer_cast<FxSwapRateHelper>(instruments[0].rateHelper)->spot();
     Handle<Quote> fxRateQuote(boost::make_shared<SimpleQuote>(fxRate));
     /* Need to retrieve the market FX spot rate */
     string spotRateID = fxForwardSegment->spotRateID();
@@ -1707,8 +1707,8 @@ void YieldCurve::buildInterpolatedFxForwardCurve(const std::size_t index) {
     std::vector<Handle<Quote>> quotes;
     bool spotAdded = false;
     Date spotDate = Date();
-    for (auto helper : instruments) {
-        auto fxForwardHelper = boost::dynamic_pointer_cast<FxSwapRateHelper>(helper);
+    for (auto helperData : instruments) {
+        auto fxForwardHelper = boost::dynamic_pointer_cast<FxSwapRateHelper>(helperData.rateHelper);
         if (fxConvention->spotDays() == 2 && fxForwardHelper->tenor() == Period(1, Days) &&
             fxForwardHelper->fixingDays() != 2) {
             if (fxForwardHelper->fixingDays() == 0) {
