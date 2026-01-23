@@ -3299,8 +3299,8 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
     Currency fxSpotTargetCcy = parseCurrency(fxSpotQuote->ccy());
 
     /* Determine FX spot date */
-    auto [fxSettlDays, fxCal, fxBdc] = getFxIndexConventions(fxSpotSourceCcy.code() + fxSpotTargetCcy.code());
-    Date fxSpotSettlementDate = fxCal.advance(fxCal.adjust(asofDate_), fxSettlDays * Days, fxBdc);
+    auto [fxSettlDays, fxCal, fxBdc, _] = getFxIndexConventions(fxSpotSourceCcy.code() + fxSpotTargetCcy.code());
+    Date fxSpotSettlementDate = fxCal.advance(fxCal.adjust(asofDate_), fxSettlDays * Days, fxBdc);  // TODO incorrect logic
 
     QuantLib::ext::shared_ptr<FXConvention> fxConvention = QuantLib::ext::dynamic_pointer_cast<FXConvention>(
         conventions->getFxConvention(fxSpotSourceCcy.code(), fxSpotTargetCcy.code()));
@@ -3609,8 +3609,8 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
     }
 
     /* Determine FX spot date */
-    auto [fxSettlDays, fxCal, fxBdc] = getFxIndexConventions(fxSpotSourceCcy.code() + fxSpotTargetCcy.code());
-    Date fxSpotSettlementDate = fxCal.advance(fxCal.adjust(asofDate_), fxSettlDays * Days, fxBdc);
+    auto [fxSettlDays, fxCal, fxBdc, _] = getFxIndexConventions(fxSpotSourceCcy.code() + fxSpotTargetCcy.code());
+    Date fxSpotSettlementDate = fxCal.advance(fxCal.adjust(asofDate_), fxSettlDays * Days, fxBdc);  // TODO incorrect logic
 
     // Create the helpers
     auto quoteIds = swapSegment->quotes();
