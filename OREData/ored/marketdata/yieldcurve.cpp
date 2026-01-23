@@ -49,7 +49,6 @@
 #include <qle/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/pillaronlyyieldcurve.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
-#include <qle/termstructures/overnightfallbackcurve.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
