@@ -592,7 +592,7 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
                     // generate rate helper cashflows (lazily, since we might build multi-curves)
 
                     for (Size i = 0; i < calibrationInfo_[index]->pillarDates.size(); ++i) {
-                        if(rateHelperCashflowGenerator_[index][i]) {
+                        if (rateHelperCashflowGenerator_[index].size() && rateHelperCashflowGenerator_[index][i]) {
                             calibrationInfo_[index]->rateHelperCashflows.push_back(
                                 rateHelperCashflowGenerator_[index][i]());
                         } else{
