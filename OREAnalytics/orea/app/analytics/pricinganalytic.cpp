@@ -60,9 +60,14 @@ void PricingAnalyticImpl::runAnalytic(
     analytic()->buildMarket(loader);
     CONSOLE("OK");
 
-    CONSOLEW("Pricing: Build Portfolio");
-    analytic()->buildPortfolio();
-    CONSOLE("OK");
+    // Do not build portfolio if only curve analytic is requested
+    if (!(runTypes.size() == 1 && inputs_->outputCurves())) {
+        CONSOLEW("Pricing: Build Portfolio");
+        analytic()->buildPortfolio();
+        CONSOLE("OK");
+    } else {
+        TLOG("Skip building portfolio");
+    }
 
     // Check coverage
     for (const auto& rt : runTypes) {
@@ -102,19 +107,19 @@ void PricingAnalyticImpl::runAnalytic(
                 analytic()->addReport(type, "additional_results", addReport);
                 CONSOLE("OK");
             }
-            if (inputs_->outputCurves()) {
-                CONSOLEW("Pricing: Curves Report");
-                LOG("Write curves report");
-                QuantLib::ext::shared_ptr<InMemoryReport> curvesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-                Calendar gridCalendar = parseCalendar(inputs_->curvesGridCalendar());
-                DateGrid grid(inputs_->curvesGrid(), gridCalendar);
-                std::string config = inputs_->curvesMarketConfig();
-                ReportWriter(inputs_->reportNaString())
-                    .writeCurves(*curvesReport, config, grid, *analytic()->configurations().todaysMarketParams,
-                                 analytic()->market(), inputs_->continueOnError());
-                analytic()->addReport(type, "curves", curvesReport);
-                CONSOLE("OK");
-            }
+        } 
+        else if (type == "CURVES") {
+            CONSOLEW("Pricing: Curves Report");
+            LOG("Write curves report");
+            QuantLib::ext::shared_ptr<InMemoryReport> curvesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+            Calendar gridCalendar = parseCalendar(inputs_->curvesGridCalendar());
+            DateGrid grid(inputs_->curvesGrid(), gridCalendar);
+            std::string config = inputs_->curvesMarketConfig();
+            ReportWriter(inputs_->reportNaString())
+                .writeCurves(*curvesReport, config, grid, *analytic()->configurations().todaysMarketParams,
+                             analytic()->market(), inputs_->continueOnError());
+            analytic()->addReport(type, "curves", curvesReport);
+            CONSOLE("OK");
         }
         else if (type == "CASHFLOW") {
             CONSOLEW("Pricing: Cashflow Report");

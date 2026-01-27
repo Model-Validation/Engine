@@ -61,7 +61,7 @@ protected:
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> offsetSimMarketParams_;
 };
 
-static const std::set<std::string> pricingAnalyticSubAnalytics {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY"};
+static const std::set<std::string> pricingAnalyticSubAnalytics{"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY", "CURVES"};
 
 class PricingAnalytic : public Analytic {
 public:
