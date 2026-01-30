@@ -122,7 +122,8 @@ DiscountFactor PriceTermStructureAdapter::discountImpl(Time t) const {
     else
         resultDf = discount * forwardPrice / spotPrice;
 
-    if (flatZeroExtrapolation_ && (t < priceCurve_->minTime() || t > priceCurve_->maxTime())) {
+    if (flatZeroExtrapolation_ && spotDate_ != Date() && (t < priceCurve_->minTime() || t > priceCurve_->maxTime())) {
+        // TODO flat zero extr. not set when spot is added - what to do?
         Time spotTime = dayCounter().yearFraction(referenceDate(), spotDate_);
         Real flatZeroRate = -std::log(resultDf / discount_->discount(spotDate_, true)) / (time - spotTime);
         resultDf = std::exp(-flatZeroRate * t);
