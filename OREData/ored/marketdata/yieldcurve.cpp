@@ -76,6 +76,7 @@
 #include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
 #include <ql/termstructures/yield/piecewisezerospreadedtermstructure.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
+#include <ql/time/calendars/jointcalendar.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/time/imm.hpp>
@@ -3087,15 +3088,16 @@ void YieldCurve::addFXForwards(const std::size_t index, const QuantLib::ext::sha
     /* Determine the absolute maturity dates associated to on, tn and sn quotes */
 
     Calendar cal = fxConvention->advanceCalendar();
-    Date adjustedAsof = cal.adjust(asofDate_);
+    Calendar tradingCal = fxConvention->tradingCalendar();
+    Calendar jointFxCal = JointCalendar(cal, tradingCal);
 
-    Date onEarliestDate = cal.advance(adjustedAsof, 0 * Days);
-    Date tnEarliestDate = cal.advance(adjustedAsof, 1 * Days);
-    Date snEarliestDate = cal.advance(adjustedAsof, fxConvention->spotDays() * Days);
+    Date onEarliestDate = asofDate_;
+    Date tnEarliestDate = cal.advance(asofDate_, 1 * Days); // Not jointFxCal adjusted, no TN is executable if TOM is US holiday
+    Date snEarliestDate = jointFxCal.adjust(cal.advance(asofDate_, fxConvention->spotDays() * Days));
 
-    Date onDate = cal.advance(onEarliestDate, 1 * Days);
-    Date tnDate = cal.advance(tnEarliestDate, 1 * Days);
-    Date snDate = cal.advance(snEarliestDate, 1 * Days);
+    Date onDate = jointFxCal.adjust(cal.advance(onEarliestDate, 1 * Days));
+    Date tnDate = jointFxCal.adjust(cal.advance(tnEarliestDate, 1 * Days));
+    Date snDate = jointFxCal.adjust(cal.advance(snEarliestDate, 1 * Days));
 
     /* identify on, tn, sn quotes, if present in the curve config */
 
@@ -3169,10 +3171,11 @@ void YieldCurve::addFXForwards(const std::size_t index, const QuantLib::ext::sha
                 case 2: {
                     // find the TN quote
                     if(tnIndex == Null<Size>()) {
-                        // Usually the spot moves to t+3 if t+1 is a holiday, except for USD where the spot remains t+2.
-                        // Therefore, the ON is t+0 to t+2. As such, you only need ON to calculate the spot rate.
+                        // If t+1 (TOM) is a holiday in the US market, a TN quote will not be possible. In such cases,
+                        // the ON quote is effectively the spread from TOD to Spot. This is checked against the Fed calendar
+                        // below, with 'tnEarliestDate' corresponding to TOM.
                         if (fxConvention->tradingCalendar() == UnitedStates(UnitedStates::FederalReserve) &&
-                            fxConvention->tradingCalendar().isHoliday(onDate)) {
+                            fxConvention->tradingCalendar().isHoliday(tnEarliestDate)) {
                             DLOG(curveSpec_[index]->name() << ": TN spread is included in the ON quote because T+1 is a "
                                                         "holiday according to US-FED.");
                             auto m = [f = qlFXForwardQuote->value()](Real x) { return x - f; };
@@ -3181,8 +3184,7 @@ void YieldCurve::addFXForwards(const std::size_t index, const QuantLib::ext::sha
                             break;
                         }
                         WLOG(curveSpec_[index]->name() << ": YieldCurve::AddFxForwards cannot use ON rate, when "
-                                                         "SpotDays are 2 we also require the TN "
-                             "rate");
+                                                          "SpotDays are 2 we also require the TN rate");
                         continue;
                     }
                     QuantLib::ext::shared_ptr<MarketDatum> fxq = loader_.get(fxForwardQuoteIDs[tnIndex], asofDate_);
@@ -3220,8 +3222,7 @@ void YieldCurve::addFXForwards(const std::size_t index, const QuantLib::ext::sha
                 } else if (i == snIndex) {
                     earliestDate = snEarliestDate;
                 } else {
-                    earliestDate =
-                        cal.advance(adjustedAsof, (fxConvention->spotRelative() ? fxConvention->spotDays() : 0) * Days);
+                    earliestDate = fxConvention->spotRelative() ? snEarliestDate : asofDate_;
                 }
                 fxForwardHelper = QuantLib::ext::make_shared<FxSwapRateHelper>(
                     qlFXForwardQuote, spotFx, earliestDate, fxFwdQuoteDate(fxForwardQuote->term()),
@@ -3230,7 +3231,7 @@ void YieldCurve::addFXForwards(const std::size_t index, const QuantLib::ext::sha
                 Period fxForwardTenor = fxFwdQuoteTenor(fxForwardQuote->term());
                 Period fxStartTenor = fxFwdQuoteStartTenor(fxForwardQuote->term(), fxConvention);
                 // Daily/Weekly tenors use F, Monthly/Yearly use MF according to market convention.
-                // We opt to not read the field from the FX convention itself because it only support
+                // We opt to not read the field from the FX convention itself because it only supports
                 // specifying a single value.
                 BusinessDayConvention bdc = fxForwardTenor.units() < Months ? Following : ModifiedFollowing;
                 fxForwardHelper = QuantLib::ext::make_shared<FxSwapRateHelper>(
