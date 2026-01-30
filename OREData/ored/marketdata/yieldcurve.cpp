@@ -1707,6 +1707,8 @@ void YieldCurve::buildInterpolatedFxForwardCurve(const std::size_t index) {
     std::vector<Date> dates;
     std::vector<Handle<Quote>> quotes;
     bool spotAdded = false;
+    bool onAdded = false;
+    bool tnAdded = false;
     Date spotDate = Date();
     for (auto helperData : instruments) {
         auto fxForwardHelper = boost::dynamic_pointer_cast<FxSwapRateHelper>(helperData.rateHelper);
@@ -1716,10 +1718,12 @@ void YieldCurve::buildInterpolatedFxForwardCurve(const std::size_t index) {
                 dates.push_back(fxForwardHelper->earliestDate());
                 Handle<Quote> fxQuote(boost::make_shared<SimpleQuote>(fxForwardHelper->spot()));
                 quotes.push_back(fxQuote);
+                onAdded = true;
             } else if (fxForwardHelper->fixingDays() == 1) { // Todo join these ifs ?
                 dates.push_back(fxForwardHelper->earliestDate());
                 Handle<Quote> fxQuote(boost::make_shared<SimpleQuote>(fxForwardHelper->spot()));
                 quotes.push_back(fxQuote);
+                tnAdded = true;
 
                 // Also add the actual spot quote
                 dates.push_back(fxForwardHelper->maturityDate());
@@ -1752,11 +1756,11 @@ void YieldCurve::buildInterpolatedFxForwardCurve(const std::size_t index) {
                 // spot and the first point.
                 spotDate = fxForwardHelper->earliestDate();
 
-                /*
-                dates.push_back(fxForwardHelper->earliestDate());
-                quotes.push_back(fxSpotQuote);
-                spotAdded = true;
-                */
+                if (onAdded && !tnAdded) {
+                    dates.push_back(fxForwardHelper->earliestDate());
+                    quotes.push_back(fxSpotQuote);
+                    spotAdded = true;
+                }
             }
             dates.push_back(fxForwardHelper->maturityDate());
             Handle<Quote> fxQuote(boost::make_shared<SimpleQuote>(fxForwardHelper->spot()));
