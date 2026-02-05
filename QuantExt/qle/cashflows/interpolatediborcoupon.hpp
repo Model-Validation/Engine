@@ -40,6 +40,14 @@ public:
                            const Date& exCouponDate = Date(),
                            const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& iborIndex = nullptr);
 
+    InterpolatedIborCoupon(const Date& paymentDate, const Real nominal, const Date& accrualStart,
+                           const Date& accrualEnd, const Date& fixingDate,
+                           const QuantLib::ext::shared_ptr<InterpolatedIborIndex>& index, Real gearing = 1.0,
+                           Real spread = 0.0, const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
+                           const QuantLib::DayCounter& dayCounter = QuantLib::DayCounter(), bool isInArrears = false,
+                           const Date& exCouponDate = Date(),
+                           const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& iborIndex = nullptr);
+
     QuantLib::ext::shared_ptr<InterpolatedIborIndex> interpolatedIborIndex() const { return interpolatedIborIndex_; }
     const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& iborIndex() const { return iborIndex_; }
 
