@@ -47,7 +47,7 @@ InterpolatedIborCoupon::InterpolatedIborCoupon(const Date& paymentDate, const Re
     : FloatingRateCoupon(paymentDate, nominal, accrualStart, accrualEnd, fixingDate, index, gearing, spread,
                          refPeriodStart, refPeriodEnd, dayCounter, isInArrears, exCouponDate),
       interpolatedIborIndex_(index), iborIndex_(iborIndex) {
-    fixingDate_ = FloatingRateCoupon::fixingDate();
+    fixingDays_ = index->fixingDays();
 }
 
 void InterpolatedIborCoupon::initializeCachedData() const {
