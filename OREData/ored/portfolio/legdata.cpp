@@ -1222,6 +1222,12 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
         double currentRate = i < rates.size() ? rates[i] : rates.back();
         cpnDates.push_back(dates[i + 1]);
         Date paymentDate = paymentCalendar.advance(dates[i + 1], paymentLagDays, Days, payConvention);
+
+        if (numDates == 2) {
+            Schedule compoundingSchedule =
+                MakeSchedule().from(dates.front()).to(dates.back()).withTenor(schedule.tenor()).backwards();
+            cpnDates = compoundingSchedule.dates();
+        }
         leg.push_back(QuantLib::ext::make_shared<ZeroFixedCoupon>(paymentDate, currentNotional, currentRate, dc, cpnDates, comp,
                                                           zcFixedLegData->subtractNotional()));
     }
@@ -1269,7 +1275,7 @@ void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, c
         // actually no interpolation, only one index is given effectively, so we can use an Ibor Coupon
         tmp = QuantLib::ext::make_shared<IborCoupon>(
             iborCpn->date(), iborCpn->nominal(), iborCpn->accrualStartDate(), iborCpn->accrualEndDate(),
-            iborCpn->fixingDays(),
+            iborCpn->fixingDate(),
             useOriginalIndexCurve ? idx1->clone(iborCpn->iborIndex()->forwardingTermStructure()) : idx1,
             iborCpn->gearing(), iborCpn->spread(), iborCpn->referencePeriodStart(), iborCpn->referencePeriodEnd(),
             iborCpn->dayCounter(), iborCpn->isInArrears(), iborCpn->exCouponDate());
@@ -1287,7 +1293,7 @@ void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, c
             useOriginalIndexCurve ? iborCpn->iborIndex()->forwardingTermStructure() : Handle<YieldTermStructure>());
         tmp = QuantLib::ext::make_shared<InterpolatedIborCoupon>(
             iborCpn->date(), iborCpn->nominal(), iborCpn->accrualStartDate(), iborCpn->accrualEndDate(),
-            iborCpn->fixingDays(), interpolatedIndex, iborCpn->gearing(), iborCpn->spread(),
+            iborCpn->fixingDate(), interpolatedIndex, iborCpn->gearing(), iborCpn->spread(),
             iborCpn->referencePeriodStart(), iborCpn->referencePeriodEnd(), iborCpn->dayCounter(),
             iborCpn->isInArrears(), iborCpn->exCouponDate(), iborCpn->iborIndex());
         DLOG("created InterpolatedIborIndex for accrual period "
@@ -2954,7 +2960,7 @@ Real currentNotional(const Leg& leg) {
     
     for (auto cf : leg) {
         QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(cf);
-        if ((coupon) && coupon->accrualEndDate() > today) {
+        if ((coupon) && (coupon->accrualEndDate() > today || coupon->date() > today)) {
             return coupon->nominal();
         }
     }

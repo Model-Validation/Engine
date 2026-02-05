@@ -274,6 +274,7 @@ portfolio/fxeuropeanbarrieroption.cpp
 portfolio/fxforward.cpp
 portfolio/fxkikobarrieroption.cpp
 portfolio/fxoption.cpp
+portfolio/fxpartialtimebarrieroption.cpp
 portfolio/fxswap.cpp
 portfolio/fxtouchoption.cpp
 portfolio/genericbarrieroption.cpp
@@ -605,6 +606,7 @@ portfolio/builders/fxdoubletouchoption.hpp
 portfolio/builders/fxeuropeanbarrieroption.hpp
 portfolio/builders/fxforward.hpp
 portfolio/builders/fxoption.hpp
+portfolio/builders/fxpartialtimebarrieroption.hpp
 portfolio/builders/fxtouchoption.hpp
 portfolio/builders/indexcreditdefaultswap.hpp
 portfolio/builders/indexcreditdefaultswapoption.hpp
@@ -696,6 +698,7 @@ portfolio/fxeuropeanbarrieroption.hpp
 portfolio/fxforward.hpp
 portfolio/fxkikobarrieroption.hpp
 portfolio/fxoption.hpp
+portfolio/fxpartialtimebarrieroption.hpp
 portfolio/fxswap.hpp
 portfolio/fxtouchoption.hpp
 portfolio/genericbarrieroption.hpp

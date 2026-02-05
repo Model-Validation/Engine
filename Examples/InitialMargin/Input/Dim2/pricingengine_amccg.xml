@@ -23,7 +23,6 @@
       <Parameter name="Interactive">false</Parameter>
       <Parameter name="BootstrapTolerance">1.0</Parameter>
       <Parameter name="ZeroVolatility">false</Parameter>
-      <Parameter name="Interactive">false</Parameter>
       <Parameter name="UseCG">true</Parameter>
     </EngineParameters>
   </Product>

@@ -37,6 +37,19 @@ InterpolatedIborCoupon::InterpolatedIborCoupon(const Date& paymentDate, const Re
     fixingDate_ = FloatingRateCoupon::fixingDate();
 }
 
+InterpolatedIborCoupon::InterpolatedIborCoupon(const Date& paymentDate, const Real nominal, const Date& accrualStart,
+                                               const Date& accrualEnd, const Date& fixingDate,
+                                               const QuantLib::ext::shared_ptr<InterpolatedIborIndex>& index,
+                                               Real gearing, Spread spread, const Date& refPeriodStart,
+                                               const Date& refPeriodEnd, const DayCounter& dayCounter, bool isInArrears,
+                                               const Date& exCouponDate,
+                                               const QuantLib::ext::shared_ptr<IborIndex>& iborIndex)
+    : FloatingRateCoupon(paymentDate, nominal, accrualStart, accrualEnd, fixingDate, index, gearing, spread,
+                         refPeriodStart, refPeriodEnd, dayCounter, isInArrears, exCouponDate),
+      interpolatedIborIndex_(index), iborIndex_(iborIndex) {
+    fixingDate_ = FloatingRateCoupon::fixingDate();
+}
+
 void InterpolatedIborCoupon::initializeCachedData() const {
     auto p = ext::dynamic_pointer_cast<InterpolatedIborCouponPricer>(pricer_);
     QL_REQUIRE(p, "InterpolatedIborCoupon: pricer not set or not derived from InterpolatedIborCouponPricer");

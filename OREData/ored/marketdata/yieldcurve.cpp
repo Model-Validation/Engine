@@ -49,6 +49,8 @@
 #include <qle/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/pillaronlyyieldcurve.hpp>
+#include <qle/termstructures/pricecurve.hpp>
+#include <qle/termstructures/pricetermstructureadapter.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 #include <qle/termstructures/weightedyieldtermstructure.hpp>
@@ -74,6 +76,7 @@
 #include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
 #include <ql/termstructures/yield/piecewisezerospreadedtermstructure.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
+#include <ql/time/calendars/jointcalendar.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/time/imm.hpp>
@@ -376,6 +379,8 @@ YieldCurve::InterpolationVariable parseYieldCurveInterpolationVariable(const str
         return YieldCurve::InterpolationVariable::Discount;
     else if (s == "Forward")
         return YieldCurve::InterpolationVariable::Forward;
+    else if (s == "SwapPoints")
+        return YieldCurve::InterpolationVariable::SwapPoints;
     else
         QL_FAIL("Yield curve interpolation variable " << s << " not recognized");
 };
@@ -563,6 +568,10 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
             } else if (type == YieldCurveSegment::Type::BondYieldShifted) {
                 DLOG("Building BondYieldShiftedCurve " << curveSpec_[index]);
                 buildBondYieldShiftedCurve(index);
+            } else if (type == YieldCurveSegment::Type::FXForward &&
+                       interpolationVariable_[index] == YieldCurve::InterpolationVariable::SwapPoints) {
+                DLOG("Building interpolated FX forward price curve " << curveSpec_[index]);
+                buildInterpolatedFxForwardCurve(index);
             } else {
                 bootstrappedCurveIndices.insert(index);
             }
@@ -1815,6 +1824,158 @@ void YieldCurve::buildBootstrappedCurve(const std::set<std::size_t>& indices) {
     }
 }
 
+void YieldCurve::buildInterpolatedFxForwardCurve(const std::size_t index) {
+    QL_REQUIRE(curveSegments_[index].size() == 1, "An interpolated FX forward curve must contain exactly one segment");
+    QL_REQUIRE(curveSegments_[index][0]->type() == YieldCurveSegment::Type::FXForward,
+               "The curve segment is not of type 'FXForward'.");
+
+    std::vector<RateHelperData> instruments;
+    addFXForwards(index, curveSegments_[index][0], instruments);
+
+    // A bit of duplication below, snipped from addFXForwards for curve and spot handling
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    boost::shared_ptr<Convention> convention = conventions->get(curveSegments_[index][0]->conventionsID());
+    QL_REQUIRE(convention, "No conventions found with ID: " << curveSegments_[index][0]->conventionsID());
+    QL_REQUIRE(convention->type() == Convention::Type::FX, "Conventions ID does not give FX forward conventions.");
+
+    boost::shared_ptr<FXConvention> fxConvention = boost::dynamic_pointer_cast<FXConvention>(convention);
+    boost::shared_ptr<CrossCcyYieldCurveSegment> fxForwardSegment =
+        boost::dynamic_pointer_cast<CrossCcyYieldCurveSegment>(curveSegments_[index][0]);
+
+    /* Need to retrieve the discount curve in the other currency. These are called the known discount
+       curve and known discount currency respectively. */
+    Currency knownCurrency;
+    bool invertPrices = false; // TODO Wrong when convention order != spot/quote order!!
+    if (currency_[index] == fxConvention->sourceCurrency()) {
+        knownCurrency = fxConvention->targetCurrency();
+    } else if (currency_[index] == fxConvention->targetCurrency()) {
+        invertPrices = true;
+        knownCurrency = fxConvention->sourceCurrency();
+    } else {
+        QL_FAIL("One of the currencies in the FX forward bootstrap "
+                "instruments needs to match the yield curve currency.");
+    }
+
+    string knownDiscountID = fxForwardSegment->foreignDiscountCurveID();
+    Handle<YieldTermStructure> knownDiscountCurve;
+
+    if (!knownDiscountID.empty()) {
+        knownDiscountID = yieldCurveKey(knownCurrency, knownDiscountID, asofDate_);
+        auto it = requiredYieldCurves_.find(knownDiscountID);
+        if (it != requiredYieldCurves_.end()) {
+            knownDiscountCurve = it->second->handle();
+        } else {
+            QL_FAIL("The foreign discount curve, " << knownDiscountID
+                                                   << ", required in the building "
+                                                      "of the curve, "
+                                                   << curveSpec_[index]->name() << ", was not found.");
+        }
+    } else {
+        // fall back on the foreign discount curve if no index given
+        // look up the inccy discount curve - falls back to default if no inccy
+        DLOG("YieldCurve::buildInterpolatedFxForwardCurve No discount curve provided for building curve "
+             << curveSpec_[index]->name() << ", looking up the inccy curve in the market.")
+        knownDiscountCurve = market_->discountCurve(knownCurrency.code(), Market::inCcyConfiguration);
+    }
+
+    Real fxRate = boost::dynamic_pointer_cast<FxSwapRateHelper>(instruments[0].rateHelper)->spot();
+    Handle<Quote> fxRateQuote(boost::make_shared<SimpleQuote>(fxRate));
+    /* Need to retrieve the market FX spot rate */
+    string spotRateID = fxForwardSegment->spotRateID();
+    auto fxSpotQuote = getFxSpotQuote(spotRateID)->quote();
+
+    // Ready the input data, the dated FX forward points
+    std::vector<Date> dates;
+    std::vector<Handle<Quote>> quotes;
+    bool spotAdded = false;
+    bool onAdded = false;
+    bool tnAdded = false;
+    Date spotDate = Date();
+    for (auto helperData : instruments) {
+        auto fxForwardHelper = boost::dynamic_pointer_cast<FxSwapRateHelper>(helperData.rateHelper);
+        if (fxConvention->spotDays() == 2 && fxForwardHelper->tenor() == Period(1, Days) &&
+            fxForwardHelper->fixingDays() != 2) {
+            if (fxForwardHelper->fixingDays() == 0) {
+                dates.push_back(fxForwardHelper->earliestDate());
+                Handle<Quote> fxQuote(boost::make_shared<SimpleQuote>(fxForwardHelper->spot()));
+                quotes.push_back(fxQuote);
+                onAdded = true;
+            } else if (fxForwardHelper->fixingDays() == 1) { // Todo join these ifs ?
+                dates.push_back(fxForwardHelper->earliestDate());
+                Handle<Quote> fxQuote(boost::make_shared<SimpleQuote>(fxForwardHelper->spot()));
+                quotes.push_back(fxQuote);
+                tnAdded = true;
+
+                // Also add the actual spot quote
+                dates.push_back(fxForwardHelper->maturityDate());
+                spotDate = fxForwardHelper->maturityDate();
+                Handle<Quote> fxQuote2(boost::make_shared<SimpleQuote>(fxSpotQuote->value()));
+                quotes.push_back(fxQuote2); // Should be fxSpotQuote inverted, gotta preserve linkage somehow?
+                spotAdded = true;
+            }
+        } else if (fxConvention->spotDays() == 1 && fxForwardHelper->tenor() == Period(1, Days) &&
+                   fxForwardHelper->fixingDays() == 0) {
+            // With spot days == 1, the O/N point needs special handling, as well as the spot value falling on the
+            // expiry of the O/N point
+            dates.push_back(fxForwardHelper->earliestDate());
+            Handle<Quote> fxQuote(boost::make_shared<SimpleQuote>(fxForwardHelper->spot()));
+            quotes.push_back(fxQuote);
+
+            // Also add the actual spot quote
+            dates.push_back(fxForwardHelper->maturityDate());
+            spotDate = fxForwardHelper->maturityDate();
+            Handle<Quote> fxQuote2(boost::make_shared<SimpleQuote>(fxSpotQuote->value()));
+            quotes.push_back(fxQuote2); // Should be fxSpotQuote inverted, gotta preserve linkage somehow?
+            spotAdded = true;
+        } else {
+            // Add spot if not already handled:
+            if (!spotAdded) {
+                // Probably, if we get here, no shorter points than the spot have been added. This means
+                // that the "today's" rate (or 'cash' rate) would be determined by linear extrapolation
+                // backward from the spot and the next available quote. This is not too desirable, so we
+                // instead determine synthetic short-end points via extrapolation of the zero rate between
+                // spot and the first point.
+                spotDate = fxForwardHelper->earliestDate();
+
+                if (onAdded && !tnAdded) {
+                    dates.push_back(fxForwardHelper->earliestDate());
+                    quotes.push_back(fxSpotQuote);
+                    spotAdded = true;
+                }
+            }
+            dates.push_back(fxForwardHelper->maturityDate());
+            Handle<Quote> fxQuote(boost::make_shared<SimpleQuote>(fxForwardHelper->spot()));
+            auto m = [f = fxForwardHelper->quote()->value()](Real x) { return x + f; };
+            auto forwardPrice =
+                Handle<Quote>(boost::make_shared<DerivedQuote<decltype(m)>>(fxQuote, m)); // Brukade vara fxSpotQuote
+            quotes.push_back(forwardPrice);
+        }
+        DLOG("Processed FX forward with date " << fxForwardHelper->maturityDate() << ", spread "
+                                               << fxForwardHelper->quote()->value() << " and spot "
+                                               << fxForwardHelper->spot() << " for curve spec " << curveSpec_[index]->name());
+    }
+
+    boost::shared_ptr<PriceTermStructure> interpolatedCurve(boost::make_shared<InterpolatedPriceCurve<Linear>>(
+        asofDate_, dates, quotes, zeroDayCounter_[index], currency_[index]));
+    if (spotAdded) {
+        p_[index] =
+            boost::make_shared<PriceTermStructureAdapter>(interpolatedCurve, knownDiscountCurve.currentLink(), 0,
+                                                          NullCalendar(), invertPrices, false);
+    } else {
+        p_[index] = boost::make_shared<PriceTermStructureAdapter>(interpolatedCurve, knownDiscountCurve.currentLink(),
+                                                                  fxSpotQuote, invertPrices, true, spotDate);
+    }
+    p_[index]->setAdjustReferenceDate(false);
+
+    if (buildCalibrationInfo_) {
+        if (calibrationInfo_[index] == nullptr)
+            calibrationInfo_[index] = boost::make_shared<PiecewiseYieldCurveCalibrationInfo>();
+        for (const auto date : dates) {
+            calibrationInfo_[index]->pillarDates.push_back(date);
+        }
+    }
+}
+
 void YieldCurve::buildDiscountRatioCurve(const std::size_t index, const CurveConfigurations& curveConfigs) {
     QL_REQUIRE(curveSegments_[index].size() == 1, "A discount ratio curve must contain exactly one segment");
     QL_REQUIRE(curveSegments_[index][0]->type() == YieldCurveSegment::Type::DiscountRatio,
@@ -2382,9 +2543,9 @@ void YieldCurve::addFutures(const std::size_t index, const QuantLib::ext::shared
                                             ? Futures::IMM
                                             : Futures::Custom;
 
-                auto helper = QuantLib::ext::make_shared<FuturesRateHelper>(futureQuote->quote(), immDate,
-                                                                            futureConvention->index(), 0.0, futuresType,
-                                                                            pillarChoice(segment->pillarChoice()));
+                auto helper = QuantLib::ext::make_shared<FuturesRateHelper>(futureQuote->quote(), immDate, Date(),
+                                                                            futureConvention->index()->dayCounter(), 0.0, 
+                                                                            futuresType, pillarChoice(segment->pillarChoice()));
 
                 instruments.push_back(
                     {helper, mainPillarDate(segment->pillarChoice(), helper->pillarDate()),
@@ -3105,15 +3266,16 @@ void YieldCurve::addFXForwards(const std::size_t index, const QuantLib::ext::sha
     /* Determine the absolute maturity dates associated to on, tn and sn quotes */
 
     Calendar cal = fxConvention->advanceCalendar();
-    Date adjustedAsof = cal.adjust(asofDate_);
+    Calendar tradingCal = fxConvention->tradingCalendar();
+    Calendar jointFxCal = JointCalendar(cal, tradingCal);
 
-    Date onEarliestDate = cal.advance(adjustedAsof, 0 * Days);
-    Date tnEarliestDate = cal.advance(adjustedAsof, 1 * Days);
-    Date snEarliestDate = cal.advance(adjustedAsof, fxConvention->spotDays() * Days);
+    Date onEarliestDate = asofDate_;
+    Date tnEarliestDate = cal.advance(asofDate_, 1 * Days); // Not jointFxCal adjusted, no TN is executable if TOM is US holiday
+    Date snEarliestDate = jointFxCal.adjust(cal.advance(asofDate_, fxConvention->spotDays() * Days));
 
-    Date onDate = cal.advance(onEarliestDate, 1 * Days);
-    Date tnDate = cal.advance(tnEarliestDate, 1 * Days);
-    Date snDate = cal.advance(snEarliestDate, 1 * Days);
+    Date onDate = jointFxCal.adjust(cal.advance(onEarliestDate, 1 * Days));
+    Date tnDate = jointFxCal.adjust(cal.advance(tnEarliestDate, 1 * Days));
+    Date snDate = jointFxCal.adjust(cal.advance(snEarliestDate, 1 * Days));
 
     /* identify on, tn, sn quotes, if present in the curve config */
 
@@ -3186,9 +3348,21 @@ void YieldCurve::addFXForwards(const std::size_t index, const QuantLib::ext::sha
                 }
                 case 2: {
                     // find the TN quote
-                    if (tnIndex == Null<Size>()) {
-                        WLOG("YieldCurve::AddFxForwards cannot use ON rate, when SpotDays are 2 we also require the TN "
-                             "rate");
+                    if(tnIndex == Null<Size>()) {
+                        // If t+1 (TOM) is a holiday in the US market, a TN quote will not be possible. In such cases,
+                        // the ON quote is effectively the spread from TOD to Spot. This is checked against the Fed calendar
+                        // below, with 'tnEarliestDate' corresponding to TOM.
+                        if (fxConvention->tradingCalendar() == UnitedStates(UnitedStates::FederalReserve) &&
+                            fxConvention->tradingCalendar().isHoliday(tnEarliestDate)) {
+                            DLOG(curveSpec_[index]->name() << ": TN spread is included in the ON quote because T+1 is a "
+                                                        "holiday according to US-FED.");
+                            auto m = [f = qlFXForwardQuote->value()](Real x) { return x - f; };
+                            spotFx = Handle<Quote>(
+                                QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(fxSpotQuote->quote(), m));
+                            break;
+                        }
+                        WLOG(curveSpec_[index]->name() << ": YieldCurve::AddFxForwards cannot use ON rate, when "
+                                                          "SpotDays are 2 we also require the TN rate");
                         continue;
                     }
                     QuantLib::ext::shared_ptr<MarketDatum> fxq = loader_.get(fxForwardQuoteIDs[tnIndex], asofDate_);
@@ -3226,8 +3400,7 @@ void YieldCurve::addFXForwards(const std::size_t index, const QuantLib::ext::sha
                 } else if (i == snIndex) {
                     earliestDate = snEarliestDate;
                 } else {
-                    earliestDate =
-                        cal.advance(adjustedAsof, (fxConvention->spotRelative() ? fxConvention->spotDays() : 0) * Days);
+                    earliestDate = fxConvention->spotRelative() ? snEarliestDate : asofDate_;
                 }
                 fxForwardHelper = QuantLib::ext::make_shared<FxSwapRateHelper>(
                     qlFXForwardQuote, spotFx, earliestDate, fxFwdQuoteDate(fxForwardQuote->term()),
@@ -3235,10 +3408,14 @@ void YieldCurve::addFXForwards(const std::size_t index, const QuantLib::ext::sha
             } else {
                 Period fxForwardTenor = fxFwdQuoteTenor(fxForwardQuote->term());
                 Period fxStartTenor = fxFwdQuoteStartTenor(fxForwardQuote->term(), fxConvention);
+                // Daily/Weekly tenors use F, Monthly/Yearly use MF according to market convention.
+                // We opt to not read the field from the FX convention itself because it only supports
+                // specifying a single value.
+                BusinessDayConvention bdc = fxForwardTenor.units() < Months ? Following : ModifiedFollowing;
                 fxForwardHelper = QuantLib::ext::make_shared<FxSwapRateHelper>(
                     qlFXForwardQuote, spotFx, fxForwardTenor, fxStartTenor.length(), fxConvention->advanceCalendar(),
-                    fxConvention->convention(), fxConvention->endOfMonth(), isFxBaseCurrencyCollateralCurrency,
-                    knownDiscountCurve, Calendar(), pillarChoice(segment->pillarChoice()));
+                    bdc, fxConvention->endOfMonth(), isFxBaseCurrencyCollateralCurrency,
+                    knownDiscountCurve, fxConvention->tradingCalendar(), pillarChoice(segment->pillarChoice()));
             }
 
             instruments.push_back(
@@ -3300,8 +3477,8 @@ void YieldCurve::addCrossCcyBasisSwaps(const std::size_t index,
     Currency fxSpotTargetCcy = parseCurrency(fxSpotQuote->ccy());
 
     /* Determine FX spot date */
-    auto [fxSettlDays, fxCal, fxBdc] = getFxIndexConventions(fxSpotSourceCcy.code() + fxSpotTargetCcy.code());
-    Date fxSpotSettlementDate = fxCal.advance(fxCal.adjust(asofDate_), fxSettlDays * Days, fxBdc);
+    auto [fxSettlDays, fxCal, fxBdc, _] = getFxIndexConventions(fxSpotSourceCcy.code() + fxSpotTargetCcy.code());
+    Date fxSpotSettlementDate = fxCal.advance(fxCal.adjust(asofDate_), fxSettlDays * Days, fxBdc);  // TODO incorrect logic
 
     QuantLib::ext::shared_ptr<FXConvention> fxConvention = QuantLib::ext::dynamic_pointer_cast<FXConvention>(
         conventions->getFxConvention(fxSpotSourceCcy.code(), fxSpotTargetCcy.code()));
@@ -3613,8 +3790,8 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const std::size_t index,
     }
 
     /* Determine FX spot date */
-    auto [fxSettlDays, fxCal, fxBdc] = getFxIndexConventions(fxSpotSourceCcy.code() + fxSpotTargetCcy.code());
-    Date fxSpotSettlementDate = fxCal.advance(fxCal.adjust(asofDate_), fxSettlDays * Days, fxBdc);
+    auto [fxSettlDays, fxCal, fxBdc, _] = getFxIndexConventions(fxSpotSourceCcy.code() + fxSpotTargetCcy.code());
+    Date fxSpotSettlementDate = fxCal.advance(fxCal.adjust(asofDate_), fxSettlDays * Days, fxBdc);  // TODO incorrect logic
 
     // Create the helpers
     auto quoteIds = swapSegment->quotes();

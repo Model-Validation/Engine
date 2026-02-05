@@ -838,7 +838,7 @@ public:
     //! Detailed constructor
     FXConvention(const string& id, const string& spotDays, const string& sourceCurrency, const string& targetCurrency,
                  const string& pointsFactor, const string& advanceCalendar = "", const string& spotRelative = "",
-                 const string& endOfMonth = "", const string& convention = "");
+                 const string& endOfMonth = "", const string& convention = "", const string& tradingCalendar = "");
     //@}
 
     //! \name Inspectors
@@ -851,6 +851,7 @@ public:
     bool spotRelative() const { return spotRelative_; }
     bool endOfMonth() const { return endOfMonth_; }
     BusinessDayConvention convention() const { return convention_; }
+    const Calendar& tradingCalendar() const { return tradingCalendar_; }
     //@}
 
     //! \name Serialisation
@@ -869,6 +870,7 @@ private:
     bool spotRelative_;
     bool endOfMonth_;
     BusinessDayConvention convention_;
+    Calendar tradingCalendar_;
 
     // Strings to store the inputs
     string strSpotDays_;
@@ -879,6 +881,7 @@ private:
     string strSpotRelative_;
     string strEndOfMonth_;
     string strConvention_;
+    string strTradingCalendar_;
 };
 
 //! Container for storing Cross Currency Basis Swap quote conventions
@@ -1011,7 +1014,8 @@ public:
                                    const std::string& strFloatIndexIsResettable = "",
                                    const string& strIncludeSpread = "", const string& strLookback = "",
                                    const string& strFixingDays = "", const string& strRateCutoff = "",
-                                   const string& strIsAveraged = "");
+                                   const string& strIsAveraged = "", const string& strFixedPaymentLag = "", 
+                                   const string& strFloatPaymentLag = "");
     //@}
 
     //! \name Inspectors
@@ -1027,6 +1031,8 @@ public:
     bool eom() const { return eom_; }
     bool isResettable() const { return isResettable_; }
     bool floatIndexIsResettable() const { return floatIndexIsResettable_; }
+    QuantLib::Natural fixedPaymentLag() const { return fixedPaymentLag_; }
+    QuantLib::Natural floatPaymentLag() const { return floatPaymentLag_; }
 
     // only OIS
     QuantLib::ext::optional<bool> includeSpread() const { return includeSpread_; }
@@ -1058,6 +1064,8 @@ private:
     bool eom_;
     bool isResettable_;
     bool floatIndexIsResettable_;
+    QuantLib::Natural fixedPaymentLag_;
+    QuantLib::Natural floatPaymentLag_;
 
     // Strings to store the inputs
     std::string strSettlementDays_;
@@ -1078,6 +1086,8 @@ private:
     std::string strFixingDays_;
     std::string strRateCutoff_;
     std::string strIsAveraged_;
+    std::string strFixedPaymentLag_;
+    std::string strFloatPaymentLag_;
 
     // OIS Only
     QuantLib::ext::optional<bool> includeSpread_;

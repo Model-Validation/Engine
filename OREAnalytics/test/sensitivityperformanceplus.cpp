@@ -839,7 +839,7 @@ void BT_Benchmark(bool crossGammas, ObservationMode::Mode om) {
 
     // TODO: do we really want to write a report in the unit tests?
     // Create a stream from the sensitivity cube
-    CSVFileReport cgReport("crossgammReport");
+    CSVFileReport cgReport("crossgammaReport.csv");
     auto baseCurrency = sa->simMarketData()->baseCcy();
     auto ss = QuantLib::ext::make_shared<SensitivityCubeStream>(sa->sensiCube(), baseCurrency);
     ReportWriter().writeSensitivityReport(cgReport, ss, 0.000001, initMarket, Market::defaultConfiguration);

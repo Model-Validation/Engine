@@ -192,7 +192,45 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
 
     timeInterpolation_ =
         parseFxVolatilityTimeInterpolation(XMLUtils::getChildValue(node, "TimeInterpolation", false, "V"));
+
+    // Allow specifying time weighting either by convention name or by an inline configuration
     timeWeighting_ = XMLUtils::getChildValue(node, "TimeWeighting", false);
+    if (auto etwNode = XMLUtils::getChildNode(node, "ExplicitTimeWeighting")) {
+        QL_REQUIRE(timeWeighting_.empty(), "Cannot set both 'TimeWeighting' and 'ExplicitTimeWeighting'.");
+        if (auto wdNode = XMLUtils::getChildNode(etwNode, "WeekdayWeights")) {
+            vector<double> weekdayWeights(7);
+            weekdayWeights[QuantLib::Weekday::Monday - 1] = parseReal(XMLUtils::getChildValue(wdNode, "Monday"));
+            weekdayWeights[QuantLib::Weekday::Tuesday - 1] = parseReal(XMLUtils::getChildValue(wdNode, "Tuesday"));
+            weekdayWeights[QuantLib::Weekday::Wednesday - 1] = parseReal(XMLUtils::getChildValue(wdNode, "Wednesday"));
+            weekdayWeights[QuantLib::Weekday::Thursday - 1] = parseReal(XMLUtils::getChildValue(wdNode, "Thursday"));
+            weekdayWeights[QuantLib::Weekday::Friday - 1] = parseReal(XMLUtils::getChildValue(wdNode, "Friday"));
+            weekdayWeights[QuantLib::Weekday::Saturday - 1] = parseReal(XMLUtils::getChildValue(wdNode, "Saturday"));
+            weekdayWeights[QuantLib::Weekday::Sunday - 1] = parseReal(XMLUtils::getChildValue(wdNode, "Sunday"));
+
+            std::vector<FxOptionTimeWeightingConvention::TradingCenter> tradingCenters;
+            std::vector<FxOptionTimeWeightingConvention::Event> events;
+            if (auto t = XMLUtils::getChildNode(etwNode, "TradingCenters")) {
+                for (XMLNode* child = XMLUtils::getChildNode(t, "TradingCenter"); child;
+                     child = XMLUtils::getNextSibling(child)) {
+                    tradingCenters.push_back(FxOptionTimeWeightingConvention::TradingCenter());
+                    tradingCenters.back().name = XMLUtils::getChildValue(child, "Name");
+                    tradingCenters.back().calendar = XMLUtils::getChildValue(child, "Calendar");
+                    tradingCenters.back().weight = parseReal(XMLUtils::getChildValue(child, "Weight"));
+                }
+            }
+            if (auto e = XMLUtils::getChildNode(etwNode, "Events")) {
+                for (XMLNode* child = XMLUtils::getChildNode(e, "Event"); child;
+                     child = XMLUtils::getNextSibling(child)) {
+                    events.push_back(FxOptionTimeWeightingConvention::Event());
+                    events.back().description = XMLUtils::getChildValue(child, "Description");
+                    events.back().date = parseDate(XMLUtils::getChildValue(child, "Date"));
+                    events.back().weight = parseReal(XMLUtils::getChildValue(child, "Weight"));
+                }
+            }
+            explicitTimeWeighting_ = std::move(
+                FxOptionTimeWeightingConvention("DummyInlineConfiguration", weekdayWeights, tradingCenters, events));
+        }
+    }
 
     butterflyErrorTolerance_ = parseReal(XMLUtils::getChildValue(node, "ButterflyErrorTolerance", false, "0.01"));
 
@@ -279,7 +317,36 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::addChild(doc, node, "TimeInterpolation", to_string(timeInterpolation_));
-    XMLUtils::addChild(doc, node, "TimeWeighting", timeWeighting_);
+    if (!timeWeighting_.empty()) {
+        XMLUtils::addChild(doc, node, "TimeWeighting", timeWeighting_);
+    } else if (explicitTimeWeighting_) {
+        auto etwNode = XMLUtils::addChild(doc, node, "ExplicitTimeWeighting");
+        auto w = XMLUtils::addChild(doc, etwNode, "WeekdayWeights");
+        auto weekdayWeights = explicitTimeWeighting_->weekdayWeights();
+        XMLUtils::addChild(doc, w, "Monday", weekdayWeights[QuantLib::Weekday::Monday - 1]);
+        XMLUtils::addChild(doc, w, "Tuesday", weekdayWeights[QuantLib::Weekday::Tuesday - 1]);
+        XMLUtils::addChild(doc, w, "Wednesday", weekdayWeights[QuantLib::Weekday::Wednesday - 1]);
+        XMLUtils::addChild(doc, w, "Thursday", weekdayWeights[QuantLib::Weekday::Thursday - 1]);
+        XMLUtils::addChild(doc, w, "Friday", weekdayWeights[QuantLib::Weekday::Friday - 1]);
+        XMLUtils::addChild(doc, w, "Saturday", weekdayWeights[QuantLib::Weekday::Saturday - 1]);
+        XMLUtils::addChild(doc, w, "Sunday", weekdayWeights[QuantLib::Weekday::Sunday - 1]);
+
+        auto t = XMLUtils::addChild(doc, etwNode, "TradingCenters");
+        for (auto const& d : explicitTimeWeighting_->tradingCenters()) {
+            auto tmp = XMLUtils::addChild(doc, t, "TradingCenter");
+            XMLUtils::addChild(doc, tmp, "Name", d.name);
+            XMLUtils::addChild(doc, tmp, "Calendar", d.calendar);
+            XMLUtils::addChild(doc, tmp, "Weight", d.weight);
+        }
+
+        auto e = XMLUtils::addChild(doc, etwNode, "Events");
+        for (auto const& d : explicitTimeWeighting_->events()) {
+            auto tmp = XMLUtils::addChild(doc, e, "Event");
+            XMLUtils::addChild(doc, tmp, "Description", d.description);
+            XMLUtils::addChild(doc, tmp, "Date", ore::data::to_string(d.date));
+            XMLUtils::addChild(doc, tmp, "Weight", d.weight);
+        }
+    }
     XMLUtils::addChild(doc, node, "ButterflyErrorTolerance", butterflyErrorTolerance_);
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
     

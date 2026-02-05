@@ -203,6 +203,7 @@
 #include <ored/portfolio/builders/fxeuropeanbarrieroption.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
+#include <ored/portfolio/builders/fxpartialtimebarrieroption.hpp>
 #include <ored/portfolio/builders/fxtouchoption.hpp>
 #include <ored/portfolio/builders/indexcreditdefaultswap.hpp>
 #include <ored/portfolio/builders/indexcreditdefaultswapoption.hpp>
@@ -294,6 +295,7 @@
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxkikobarrieroption.hpp>
 #include <ored/portfolio/fxoption.hpp>
+#include <ored/portfolio/fxpartialtimebarrieroption.hpp>
 #include <ored/portfolio/fxswap.hpp>
 #include <ored/portfolio/fxtouchoption.hpp>
 #include <ored/portfolio/genericbarrieroption.hpp>
