@@ -1275,7 +1275,7 @@ void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, c
         // actually no interpolation, only one index is given effectively, so we can use an Ibor Coupon
         tmp = QuantLib::ext::make_shared<IborCoupon>(
             iborCpn->date(), iborCpn->nominal(), iborCpn->accrualStartDate(), iborCpn->accrualEndDate(),
-            iborCpn->fixingDays(),
+            iborCpn->fixingDate(),
             useOriginalIndexCurve ? idx1->clone(iborCpn->iborIndex()->forwardingTermStructure()) : idx1,
             iborCpn->gearing(), iborCpn->spread(), iborCpn->referencePeriodStart(), iborCpn->referencePeriodEnd(),
             iborCpn->dayCounter(), iborCpn->isInArrears(), iborCpn->exCouponDate());
@@ -1293,7 +1293,7 @@ void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, c
             useOriginalIndexCurve ? iborCpn->iborIndex()->forwardingTermStructure() : Handle<YieldTermStructure>());
         tmp = QuantLib::ext::make_shared<InterpolatedIborCoupon>(
             iborCpn->date(), iborCpn->nominal(), iborCpn->accrualStartDate(), iborCpn->accrualEndDate(),
-            iborCpn->fixingDays(), interpolatedIndex, iborCpn->gearing(), iborCpn->spread(),
+            iborCpn->fixingDate(), interpolatedIndex, iborCpn->gearing(), iborCpn->spread(),
             iborCpn->referencePeriodStart(), iborCpn->referencePeriodEnd(), iborCpn->dayCounter(),
             iborCpn->isInArrears(), iborCpn->exCouponDate(), iborCpn->iborIndex());
         DLOG("created InterpolatedIborIndex for accrual period "
