@@ -1969,7 +1969,7 @@ void YieldCurve::buildInterpolatedFxForwardCurve(const std::size_t index) {
 
     if (buildCalibrationInfo_) {
         if (calibrationInfo_[index] == nullptr)
-            calibrationInfo_[index] = boost::make_shared<PiecewiseYieldCurveCalibrationInfo>();
+            calibrationInfo_[index] = QuantLib::ext::make_shared<YieldCurveCalibrationInfo>();
         for (const auto date : dates) {
             calibrationInfo_[index]->pillarDates.push_back(date);
         }
