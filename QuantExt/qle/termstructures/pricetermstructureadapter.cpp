@@ -96,8 +96,6 @@ DiscountFactor PriceTermStructureAdapter::discountImpl(Time t) const {
         spotPrice = spotQuote_->value();
     }
 
-    Real forwardPrice;
-    DiscountFactor discount;
     Time time;
     if (flatZeroExtrapolation_ && t < priceCurve_->minTime()) {
         time = priceCurve_->minTime();
@@ -107,9 +105,8 @@ DiscountFactor PriceTermStructureAdapter::discountImpl(Time t) const {
         time = t;
     }
 
-    forwardPrice = priceCurve_->price(time, true);
     // Reversing the conversion to year fraction below since the discount curve may have a different DC method
-    discount = discount_->discount(lowerDate(time, referenceDate(), dayCounter()), true);
+    DiscountFactor discount = discount_->discount(lowerDate(time, referenceDate(), dayCounter()), true);
 
     DiscountFactor resultDf;
     if (flatZeroExtrapolation_ && spotDate_ != Date() && t >= priceCurve_->minTime() && t <= priceCurve_->maxTime()) {
@@ -117,6 +114,8 @@ DiscountFactor PriceTermStructureAdapter::discountImpl(Time t) const {
         Real otherDisc = discount_->discount(lowerDate(spotTime, referenceDate(), dayCounter()), true);
         spotPrice = spotPrice * discountImpl(spotTime) / otherDisc;
     }
+
+    Real forwardPrice = priceCurve_->price(time, true);
     if (invertedQuotation_)
         resultDf = discount * spotPrice / forwardPrice;
     else
