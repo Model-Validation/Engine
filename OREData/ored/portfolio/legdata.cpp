@@ -1092,6 +1092,23 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
     // set day counter and bdc
 
     DayCounter dc = parseDayCounter(data.dayCounter());
+    if (dc == ActualActual(ActualActual::ISMA)) {
+        if (schedule.hasTenor() && schedule.hasRule()) {
+            Schedule ismaNotionalPeriods = MakeSchedule()
+                                               .from(schedule.startDate())
+                                               .to(schedule.endDate())
+                                               .withTenor(schedule.tenor())
+                                               .withRule(schedule.rule())
+                                               .endOfMonth(schedule.endOfMonth())
+                                               .withFirstDate(schedule.firstDate())
+                                               .withNextToLastDate(schedule.nextToLastDate());
+            dc = ActualActual(ActualActual::ISMA, ismaNotionalPeriods);
+        } else {
+             WLOG("Schedule for leg with ISMA day count does not have tenor, first date and next to last date. "
+                  "Falling back to using schedule dates for ISMA periods, which may lead to incorrect results.");
+            dc = ActualActual(ActualActual::ISMA, schedule);
+        }
+    }
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
 
     // build standard schedules (for non-strict notional dates)
