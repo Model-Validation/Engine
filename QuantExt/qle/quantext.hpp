@@ -549,6 +549,7 @@
 #include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
 #include <qle/termstructures/inflation/inflationtraits.hpp>
 #include <qle/termstructures/inflation/interpolatedcpiinflationcurve.hpp>
+#include <qle/termstructures/inflation/mixedinflationhelpers.hpp>
 #include <qle/termstructures/inflation/piecewisecpiinflationcurve.hpp>
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>

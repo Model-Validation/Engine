@@ -631,6 +631,12 @@ YieldCurve::YieldCurve(Date asof, const std::vector<QuantLib::ext::shared_ptr<Yi
 
             if (buildCalibrationInfo_) {
 
+                // don't override if already created
+
+                //if (!calibrationInfo_[index]) {
+                //    calibrationInfo_[index] = QuantLib::ext::make_shared<YieldCurveCalibrationInfo>();
+                //}
+
                 calibrationInfo_[index] = QuantLib::ext::make_shared<YieldCurveCalibrationInfo>();
 
                 // try to get the pillar dates from the report config

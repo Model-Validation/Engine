@@ -31,8 +31,10 @@
 #include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
 #include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <qle/termstructures/inflation/mixedinflationhelpers.hpp>
 #include <qle/termstructures/inflation/piecewisecpiinflationcurve.hpp>
 #include <qle/utilities/inflation.hpp>
+#include <ql/cashflows/fixedratecoupon.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -265,7 +267,7 @@ InflationCurve::CurveBuildResults
                             const Handle<YieldTermStructure>& nominalTs,
                             const QuantLib::ext::shared_ptr<Seasonality>& seasonality) const {
     CurveBuildResults results;
-    std::vector<QuantLib::ext::shared_ptr<QuantExt::ZeroInflationTraits::helper>> helpers;
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTraits::helper>> helpers;
     
     // Shall we allow different indices in the segments? 
     // For now we require all segments to use the same index.
@@ -293,36 +295,78 @@ InflationCurve::CurveBuildResults
                                               << " not found in market data for date " << asof);
                 QL_REQUIRE(md->asofDate() == asof,
                            "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
-                QL_REQUIRE(md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONSWAP,
+                QL_REQUIRE(md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONSWAP ||
+                               md->instrumentType() == MarketDatum::InstrumentType::YY_INFLATIONSWAP,
                            "MarketDatum " << md << " is not a valid inflation swap quote");
-                auto zcq = QuantLib::ext::dynamic_pointer_cast<ZcInflationSwapQuote>(md);
-                QL_REQUIRE(zcq, "Could not cast to ZcInflationSwapQuote, internal error.");
-                CPI::InterpolationType observationInterpolation = convention->interpolated() ? CPI::Linear : CPI::Flat;
-                Date maturity = swapStart + zcq->term();
-                results.latestMaturity =
-                    results.latestMaturity == Date() ? maturity : std::max(results.latestMaturity, maturity);
-                DLOG("Zero inflation swap " << zcq->name() << " maturity " << maturity << " term " << zcq->term()
-                                            << " quote " << zcq->quote()->value());
-                auto instrument = QuantLib::ext::make_shared<ZeroCouponInflationSwapHelper>(
-                    zcq->quote(), convention->observationLag(), swapStart, maturity, convention->fixCalendar(),
-                    convention->fixConvention(), convention->dayCounter(), index, observationInterpolation);
 
-                // Unregister with inflation index. See PR #326 on github for details.
-                instrument->unregisterWithAll();
-                instrument->registerWith(zcq->quote());
+                if (md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONSWAP) {
+                    auto zcq = QuantLib::ext::dynamic_pointer_cast<ZcInflationSwapQuote>(md);
+                    QL_REQUIRE(zcq, "Could not cast to ZcInflationSwapQuote, internal error.");
+                    CPI::InterpolationType observationInterpolation = convention->interpolated() ? CPI::Linear : CPI::Flat;
+                    Date maturity = swapStart + zcq->term();
+                    results.latestMaturity =
+                        results.latestMaturity == Date() ? maturity : std::max(results.latestMaturity, maturity);
+                    DLOG("Zero inflation swap " << zcq->name() << " maturity " << maturity << " term " << zcq->term()
+                                                << " quote " << zcq->quote()->value());
+                    auto instrument = QuantLib::ext::make_shared<ZeroCouponInflationSwapHelper>(
+                        zcq->quote(), convention->observationLag(), swapStart, maturity, convention->fixCalendar(),
+                        convention->fixConvention(), convention->dayCounter(), index, observationInterpolation);
 
-                helpers.push_back(instrument);
-                results.pillarDates.push_back(instrument->pillarDate());
-                results.mdQuoteLabels.push_back(md->name());
-                results.mdQuoteValues.push_back(md->quote()->value());
-                results.rateHelperTypes.push_back("ZeroCouponInflation");
-                results.cashflowGenerators.push_back(
-                    std::function<std::vector<TradeCashflowReportData>()>([instrument, index, asof, nominalTs]() {
-                        return getCashflowReportData(
-                            {instrument->swap()->leg(0), instrument->swap()->leg(1)}, {false, true}, {1.0, 1.0},
-                            index->currency().code(), {index->currency().code(), index->currency().code()}, asof,
-                            {*nominalTs, *nominalTs}, {1.0, 1.0}, {}, {}, {"Interest", ""}, {1.0E6, 1.0E6});
-                    }));
+                    // Unregister with inflation index. See PR #326 on github for details.
+                    instrument->unregisterWithAll();
+                    instrument->registerWith(zcq->quote());
+
+                    helpers.push_back(instrument);
+                    results.pillarDates.push_back(instrument->pillarDate());
+                    results.mdQuoteLabels.push_back(md->name());
+                    results.mdQuoteValues.push_back(md->quote()->value());
+                    results.rateHelperTypes.push_back("ZeroCouponInflation");
+                    results.cashflowGenerators.push_back(
+                        std::function<std::vector<TradeCashflowReportData>()>([instrument, index, asof, nominalTs]() {
+                            return getCashflowReportData(
+                                {instrument->swap()->leg(0), instrument->swap()->leg(1)}, {false, true}, {1.0, 1.0},
+                                index->currency().code(), {index->currency().code(), index->currency().code()}, asof,
+                                {*nominalTs, *nominalTs}, {1.0, 1.0}, {}, {}, {"Interest", ""}, {1.0E6, 1.0E6});
+                        }));
+                } else {
+                    auto yyq = QuantLib::ext::dynamic_pointer_cast<YoYInflationSwapQuote>(md);
+                    QL_REQUIRE(yyq, "Could not cast to YoYInflationSwapQuote, internal error.");
+                    Date maturity = swapStart + yyq->term();
+                    results.latestMaturity =
+                        results.latestMaturity == Date() ? maturity : std::max(results.latestMaturity, maturity);
+                    auto instrument = QuantLib::ext::make_shared<QuantExt::MixedYearOnYearInflationSwapHelper>(
+                        yyq->quote(), convention->observationLag(), maturity, convention->fixCalendar(),
+                        convention->fixConvention(), convention->dayCounter(), index,
+                        convention->interpolated() ? CPI::Linear : CPI::Flat);
+                    WLOG("YoY inflation swap " << yyq->name() << " pillarDate " << instrument->pillarDate() << " term "
+                                               << yyq->term() << " quote " << yyq->quote()->value());
+
+                    auto frc = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(instrument->swap()->leg(0)[0]);
+                    auto yic = QuantLib::ext::dynamic_pointer_cast<YoYInflationCoupon>(instrument->swap()->leg(1)[0]);
+                    WLOG("frc: " << QuantLib::io::iso_date(frc->accrualStartDate()) << " "
+                                 << QuantLib::io::iso_date(frc->accrualEndDate()) << " "
+                                 << QuantLib::io::iso_date(frc->date()));
+                    WLOG("yic: " << QuantLib::io::iso_date(yic->accrualStartDate()) << " "
+                                 << QuantLib::io::iso_date(yic->accrualEndDate()) << " "
+                                 << QuantLib::io::iso_date(yic->date()));
+
+                    // Unregister with inflation index (and evaluationDate). See PR #326 on github for details.
+                    instrument->unregisterWithAll();
+                    instrument->registerWith(yyq->quote());
+
+                    helpers.push_back(instrument);
+                    results.pillarDates.push_back(instrument->pillarDate());
+                    results.mdQuoteLabels.push_back(md->name());
+                    results.mdQuoteValues.push_back(md->quote()->value());
+                    results.rateHelperTypes.push_back("YYInflationOnZero");
+                    results.cashflowGenerators.push_back(
+                        std::function<std::vector<TradeCashflowReportData>()>([instrument, index, asof, nominalTs]() {
+                            return getCashflowReportData({instrument->swap()->leg(0), instrument->swap()->leg(1)},
+                                                         {false, true}, {1.0E6, 1.0E6}, index->currency().code(),
+                                                         {index->currency().code(), index->currency().code()}, asof,
+                                                         {*nominalTs, *nominalTs}, {1.0E6, 1.0E6}, {}, {});
+                        }));
+                }
             }
         }
     auto curveObsLag = obsLagFromSegment != 0 * Days ? obsLagFromSegment : config->lag();
@@ -362,7 +406,7 @@ InflationCurve::CurveBuildResults
                             const QuantLib::ext::shared_ptr<Seasonality>& seasonality, bool deriveFromZC,
                            const QuantLib::ext::shared_ptr<InflationTermStructure>& zcCurve) const {
     CurveBuildResults results;
-    std::vector<QuantLib::ext::shared_ptr<QuantExt::YoYInflationTraits::helper>> helpers;
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::YoYInflationTraits::helper>> helpers;
     
     // Shall we allow different indices in the segments? 
     // For now we require all segments to use the same index.

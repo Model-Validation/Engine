@@ -15,7 +15,8 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-
+#include <iostream>
+#include <iomanip>
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
@@ -63,6 +64,8 @@ Real YoYInflationIndexWrapper::forecastFixing(const Date& fixingDate) const {
     auto interpolation = YoYInflationIndex::interpolated() ? CPI::Linear : CPI::Flat;
     Real f1 = CPI::laggedFixing(zeroIndex_, fixingDate, 0 * Days, interpolation);
     Real f0 = CPI::laggedFixing(zeroIndex_, fixingDate - 1 * Years, 0 * Days, interpolation);
+    std::cout << "\nFixingDate: " << QuantLib::io::iso_date(fixingDate) << " ForwardCpi: " << std::fixed
+              << std::setprecision(10) << f1 << " PastCpi: " << f0 << " YoYRate: " << (f1 - f0) / f0 << std::endl;
     return (f1 - f0) / f0;
 }
 
