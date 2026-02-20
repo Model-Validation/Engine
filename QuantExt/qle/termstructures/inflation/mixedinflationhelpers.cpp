@@ -88,15 +88,18 @@ Real MixedYearOnYearInflationSwapHelper::impliedQuote() const {
 void MixedYearOnYearInflationSwapHelper::initializeDates() {
     //! The start date of the swap is calculated by advance back one year from maturity date.
     //! The latest date is then calculated by advancing one year from start.
-    earliestDate_ = calendar_.advance(maturity_, Period(-1, Years), paymentConvention_);
-    latestDate_ = calendar_.advance(earliestDate_, Period(1, Years), paymentConvention_);
+    Date startDate = calendar_.advance(maturity_, Period(-1, Years), paymentConvention_);
+    Date endDate = calendar_.advance(startDate, Period(1, Years), paymentConvention_);
     Schedule schedule =
-        Schedule({earliestDate_, latestDate_}); // the schedule is simple enough and they are the same for both legs
+        Schedule({startDate, endDate}); // the schedule is simple enough and they are the same for both legs
 
     yyiis_ = ext::make_shared<YearOnYearInflationSwap>(
-        Swap::Payer, 1.0, schedule, quote().empty() || !quote()->isValid() ? 0.0 : quote()->value(), dayCounter_,
+        Swap::Payer, 1000000.0, schedule, quote().empty() || !quote()->isValid() ? 0.0 : quote()->value(), dayCounter_,
         schedule, yii_, swapObsLag_, interpolation_, 0.0, dayCounter_, calendar_, paymentConvention_);
-
+    //! The swap schedule defines cashflow timing and payment dates. For bootstrapping, the dates need to take the 
+    //! observation lag into account to be inline with the logic of ZeroCouponInflationSwapHelper.
+    auto fixingPeriod = inflationPeriod(maturity_ - swapObsLag_, yii_->frequency());
+    earliestDate_ = latestDate_ = fixingPeriod.first;
     yyiis_->setPricingEngine(ext::make_shared<DiscountingSwapEngine>(nominalTermStructure_));
 }
 

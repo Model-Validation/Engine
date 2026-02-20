@@ -64,8 +64,6 @@ Real YoYInflationIndexWrapper::forecastFixing(const Date& fixingDate) const {
     auto interpolation = YoYInflationIndex::interpolated() ? CPI::Linear : CPI::Flat;
     Real f1 = CPI::laggedFixing(zeroIndex_, fixingDate, 0 * Days, interpolation);
     Real f0 = CPI::laggedFixing(zeroIndex_, fixingDate - 1 * Years, 0 * Days, interpolation);
-    std::cout << "\nFixingDate: " << QuantLib::io::iso_date(fixingDate) << " ForwardCpi: " << std::fixed
-              << std::setprecision(10) << f1 << " PastCpi: " << f0 << " YoYRate: " << (f1 - f0) / f0 << std::endl;
     return (f1 - f0) / f0;
 }
 

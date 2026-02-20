@@ -338,17 +338,8 @@ InflationCurve::CurveBuildResults
                         yyq->quote(), convention->observationLag(), maturity, convention->fixCalendar(),
                         convention->fixConvention(), convention->dayCounter(), index,
                         convention->interpolated() ? CPI::Linear : CPI::Flat);
-                    WLOG("YoY inflation swap " << yyq->name() << " pillarDate " << instrument->pillarDate() << " term "
-                                               << yyq->term() << " quote " << yyq->quote()->value());
-
-                    auto frc = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(instrument->swap()->leg(0)[0]);
-                    auto yic = QuantLib::ext::dynamic_pointer_cast<YoYInflationCoupon>(instrument->swap()->leg(1)[0]);
-                    WLOG("frc: " << QuantLib::io::iso_date(frc->accrualStartDate()) << " "
-                                 << QuantLib::io::iso_date(frc->accrualEndDate()) << " "
-                                 << QuantLib::io::iso_date(frc->date()));
-                    WLOG("yic: " << QuantLib::io::iso_date(yic->accrualStartDate()) << " "
-                                 << QuantLib::io::iso_date(yic->accrualEndDate()) << " "
-                                 << QuantLib::io::iso_date(yic->date()));
+                    DLOG("YoY inflation swap " << yyq->name() << " maturity " << maturity << " term " << yyq->term()
+                                               << " quote " << yyq->quote()->value());
 
                     // Unregister with inflation index (and evaluationDate). See PR #326 on github for details.
                     instrument->unregisterWithAll();
@@ -358,7 +349,7 @@ InflationCurve::CurveBuildResults
                     results.pillarDates.push_back(instrument->pillarDate());
                     results.mdQuoteLabels.push_back(md->name());
                     results.mdQuoteValues.push_back(md->quote()->value());
-                    results.rateHelperTypes.push_back("YYInflationOnZero");
+                    results.rateHelperTypes.push_back("MixedYearOnYearInflation");
                     results.cashflowGenerators.push_back(
                         std::function<std::vector<TradeCashflowReportData>()>([instrument, index, asof, nominalTs]() {
                             return getCashflowReportData({instrument->swap()->leg(0), instrument->swap()->leg(1)},
