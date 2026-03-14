@@ -44,13 +44,13 @@
 #include <qle/termstructures/crossccyfixfloatmtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
 #include <qle/termstructures/discountratiomodifiedcurve.hpp>
+#include <qle/termstructures/fxforwardyieldtermstructure.hpp>
 #include <qle/termstructures/iborfallbackcurve.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/pillaronlyyieldcurve.hpp>
 #include <qle/termstructures/pricecurve.hpp>
-#include <qle/termstructures/pricetermstructureadapter.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 #include <qle/termstructures/weightedyieldtermstructure.hpp>
@@ -1956,15 +1956,12 @@ void YieldCurve::buildInterpolatedFxForwardCurve(const std::size_t index) {
     }
 
     boost::shared_ptr<PriceTermStructure> interpolatedCurve(boost::make_shared<InterpolatedPriceCurve<Linear>>(
+    //boost::shared_ptr<PriceTermStructure> interpolatedCurve(boost::make_shared<InterpolatedPriceCurve<QuantExt::LinearFlat>>(
         asofDate_, dates, quotes, zeroDayCounter_[index], currency_[index]));
-    if (spotAdded) {
-        p_[index] =
-            boost::make_shared<PriceTermStructureAdapter>(interpolatedCurve, knownDiscountCurve.currentLink(), 0,
-                                                          NullCalendar(), invertPrices, false);
-    } else {
-        p_[index] = boost::make_shared<PriceTermStructureAdapter>(interpolatedCurve, knownDiscountCurve.currentLink(),
-                                                                  fxSpotQuote, invertPrices, true, spotDate);
-    }
+    p_[index] = boost::make_shared<FxForwardYieldTermStructure>(
+        interpolatedCurve, knownDiscountCurve.currentLink(), fxSpotQuote, invertPrices, fxConvention->advanceCalendar(),
+        fxConvention->tradingCalendar(), fxConvention->spotDays(), fxConvention->convention());
+
     p_[index]->setAdjustReferenceDate(false);
 
     if (buildCalibrationInfo_) {

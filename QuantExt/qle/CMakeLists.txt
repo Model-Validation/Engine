@@ -386,6 +386,7 @@ termstructures/flatcorrelation.cpp
 termstructures/flatforwarddividendcurve.cpp
 termstructures/futurepricehelper.cpp
 termstructures/fxblackvolsurface.cpp
+termstructures/fxforwardyieldtermstructure.cpp
 termstructures/fxvannavolgasmilesection.cpp
 termstructures/fxvoltimeweighting.cpp
 termstructures/generatordefaulttermstructure.cpp
@@ -981,6 +982,7 @@ termstructures/flatcorrelation.hpp
 termstructures/flatforwarddividendcurve.hpp
 termstructures/futurepricehelper.hpp
 termstructures/fxblackvolsurface.hpp
+termstructures/fxforwardyieldtermstructure.hpp
 termstructures/fxsmilesection.hpp
 termstructures/fxvannavolgasmilesection.hpp
 termstructures/fxvoltimeweighting.hpp

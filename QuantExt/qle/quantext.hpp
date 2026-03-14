@@ -535,6 +535,7 @@
 #include <qle/termstructures/flatforwarddividendcurve.hpp>
 #include <qle/termstructures/futurepricehelper.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
+#include <qle/termstructures/fxforwardyieldtermstructure.hpp>
 #include <qle/termstructures/fxsmilesection.hpp>
 #include <qle/termstructures/fxvannavolgasmilesection.hpp>
 #include <qle/termstructures/fxvoltimeweighting.hpp>
