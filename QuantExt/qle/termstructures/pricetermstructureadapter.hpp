@@ -48,10 +48,6 @@ namespace QuantExt {
     continuously compounded zero rate from the input yield curve. The spot price is
     determined from the price curve at time 0 by default. There are optional
     parameters that allow using a price at a time other than 0 for the spot price.
-
-    The boolean argument 'invertedQuotation' allows flipping the expression to instead imply
-    the equivalent of the domestic rate. This is relevant when deriving discount factors
-    from FX forward values given the other known discount curve.
 */
 class PriceTermStructureAdapter : public QuantLib::YieldTermStructure {
 
@@ -59,15 +55,12 @@ public:
     PriceTermStructureAdapter(const QuantLib::ext::shared_ptr<PriceTermStructure>& priceCurve,
                               const QuantLib::ext::shared_ptr<QuantLib::YieldTermStructure>& discount,
                               QuantLib::Natural spotDays = 0,
-                              const QuantLib::Calendar& spotCalendar = QuantLib::NullCalendar(),
-                              bool invertedQuotation = false, bool flatZeroExtrapolation = false,
-                              const QuantLib::Date& spotDate = QuantLib::Date());
+                              const QuantLib::Calendar& spotCalendar = QuantLib::NullCalendar());
 
     // Alternative ctor where the spot quote handle is explicitly set
     PriceTermStructureAdapter(const QuantLib::ext::shared_ptr<PriceTermStructure>& priceCurve,
                               const QuantLib::ext::shared_ptr<QuantLib::YieldTermStructure>& discount,
-                              const QuantLib::Handle<QuantLib::Quote>& spotQuote, bool invertedQuotation = false,
-                              bool flatZeroExtrapolation = false, const QuantLib::Date& spotDate = QuantLib::Date());
+                              const QuantLib::Handle<QuantLib::Quote>& spotQuote);
 
     //! \name TermStructure interface
     //@{
@@ -82,8 +75,6 @@ public:
     const QuantLib::ext::shared_ptr<QuantLib::YieldTermStructure>& discountCurve() const;
     QuantLib::Natural spotDays() const;
     const QuantLib::Calendar& spotCalendar() const;
-    bool invertedQuotation() const;
-    bool flatZeroExtrapolation() const;
     //@}
 
 protected:
@@ -98,9 +89,6 @@ private:
     QuantLib::Natural spotDays_;
     QuantLib::Calendar spotCalendar_;
     QuantLib::Handle<QuantLib::Quote> spotQuote_;
-    bool invertedQuotation_;
-    bool flatZeroExtrapolation_;
-    QuantLib::Date spotDate_;
 };
 
 } // namespace QuantExt
