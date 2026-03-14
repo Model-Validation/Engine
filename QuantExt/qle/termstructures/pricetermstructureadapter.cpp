@@ -87,7 +87,8 @@ DiscountFactor PriceTermStructureAdapter::discountImpl(Time t) const {
         spotPrice = spotQuote_->value();
     }
     Real forwardPrice = priceCurve_->price(t, true);
-    DiscountFactor discount = discount_->discount(t, true);
+    // Reversing the conversion to year fraction below since the discount curve may have a different DC method
+    DiscountFactor discount = discount_->discount(lowerDate(t, referenceDate(), dayCounter()), true);
     return discount * forwardPrice / spotPrice;
 }
 
