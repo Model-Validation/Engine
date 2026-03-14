@@ -1956,7 +1956,6 @@ void YieldCurve::buildInterpolatedFxForwardCurve(const std::size_t index) {
     }
 
     boost::shared_ptr<PriceTermStructure> interpolatedCurve(boost::make_shared<InterpolatedPriceCurve<Linear>>(
-    //boost::shared_ptr<PriceTermStructure> interpolatedCurve(boost::make_shared<InterpolatedPriceCurve<QuantExt::LinearFlat>>(
         asofDate_, dates, quotes, zeroDayCounter_[index], currency_[index]));
     p_[index] = boost::make_shared<FxForwardYieldTermStructure>(
         interpolatedCurve, knownDiscountCurve.currentLink(), fxSpotQuote, invertPrices, fxConvention->advanceCalendar(),
