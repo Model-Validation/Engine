@@ -1105,8 +1105,7 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
             dc = ActualActual(ActualActual::ISMA, ismaNotionalPeriods);
         } else {
              WLOG("Schedule for leg with ISMA day count does not have tenor, first date and next to last date. "
-                  "Falling back to using schedule dates for ISMA periods, which may lead to incorrect results.");
-            dc = ActualActual(ActualActual::ISMA, schedule);
+                  "Falling back to using simplified calculation for ISMA periods, which may lead to incorrect results.");
         }
     }
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
