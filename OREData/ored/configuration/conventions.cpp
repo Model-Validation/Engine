@@ -296,11 +296,11 @@ OisConvention::OisConvention(const string& id, const string& spotLag, const stri
                              const string& fixedDayCounter, const string& fixedCalendar, const string& paymentLag,
                              const string& eom, const string& fixedFrequency, const string& fixedConvention,
                              const string& fixedPaymentConvention, const string& rule, const string& paymentCal,
-                             const string& rateCutoff)
+                             const string& rateCutoff, const string& overnightCalendar)
     : Convention(id, Type::OIS), strSpotLag_(spotLag), strIndex_(index), strFixedDayCounter_(fixedDayCounter),
       strFixedCalendar_(fixedCalendar), strPaymentLag_(paymentLag), strEom_(eom), strFixedFrequency_(fixedFrequency),
       strFixedConvention_(fixedConvention), strFixedPaymentConvention_(fixedPaymentConvention), strRule_(rule),
-      strPaymentCal_(paymentCal), strRateCutoff_(rateCutoff) {
+      strPaymentCal_(paymentCal), strRateCutoff_(rateCutoff), strOvernightCalendar_(overnightCalendar) {
     build();
 }
 
@@ -318,6 +318,7 @@ void OisConvention::build() {
     rule_ = strRule_.empty() ? DateGeneration::Backward : parseDateGenerationRule(strRule_);
     paymentCal_ = strPaymentCal_.empty() ? Calendar() : parseCalendar(strPaymentCal_);
     rateCutoff_ = strRateCutoff_.empty() ? 0 : lexical_cast<Natural>(strRateCutoff_);
+    overnightCalendar_ = strOvernightCalendar_.empty() ? Calendar() : parseCalendar(strOvernightCalendar_);
 
 }
 
@@ -341,6 +342,7 @@ void OisConvention::fromXML(XMLNode* node) {
     strRule_ = XMLUtils::getChildValue(node, "Rule", false);
     strPaymentCal_ = XMLUtils::getChildValue(node, "PaymentCalendar", false);
     strRateCutoff_ = XMLUtils::getChildValue(node, "RateCutoff", false);
+    strOvernightCalendar_ = XMLUtils::getChildValue(node, "OvernightCalendar", false);
 
     build();
 }
@@ -370,6 +372,8 @@ XMLNode* OisConvention::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "PaymentCalendar", strPaymentCal_);
     if (!strRateCutoff_.empty())
         XMLUtils::addChild(doc, node, "RateCutoff", strRateCutoff_);
+    if (!strOvernightCalendar_.empty())
+        XMLUtils::addChild(doc, node, "OvernightCalendar", strOvernightCalendar_);
 
     return node;
 }
