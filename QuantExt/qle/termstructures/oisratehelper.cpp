@@ -58,6 +58,7 @@ OISRateHelper::OISRateHelper(Natural settlementDays, const Period& swapTenor, co
 void OISRateHelper::initializeDates() {
 
     Calendar paymentCalendar = paymentCalendar_.empty() ? overnightIndex_->fixingCalendar() : paymentCalendar_;
+    Calendar fixedCalendar = fixedCalendar_.empty() ? overnightIndex_->fixingCalendar() : fixedCalendar_;
 
     swap_ = MakeOIS(swapTenor_, overnightIndex_, quote().empty() || !quote()->isValid() ? 0.0 : quote()->value())
                 .withSettlementDays(settlementDays_)
@@ -69,10 +70,10 @@ void OISRateHelper::initializeDates() {
                 .withPaymentAdjustment(paymentAdjustment_)
                 .withPaymentLag(paymentLag_)
                 .withDiscountingTermStructure(discountRelinkableHandle_)
-                .withTelescopicValueDates(telescopicValueDates_);
+                .withTelescopicValueDates(telescopicValueDates_)
+                .withFixedLegCalendar(fixedCalendar);
     // TODO: patch QL?
     //.withFixedAccrualConvention(fixedConvention_)
-    //..withFixedCalendar(fixedCalendar_)
 
     earliestDate_ = swap_->startDate();
     maturityDate_ = swap_->maturityDate();
