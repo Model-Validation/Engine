@@ -394,7 +394,8 @@ public:
                   const string& fixedFrequency = "", const string& fixedConvention = "",
                   const string& fixedPaymentConvention = "", const string& rule = "",
                   const std::string& paymentCalendar = "",
-                  const std::string& rateCutoff = "");
+                  const std::string& rateCutoff = "",
+                  const std::string& overnightCalendar = "");
     //@}
 
     //! \name Inspectors
@@ -413,6 +414,7 @@ public:
     DateGeneration::Rule rule() const { return rule_; }
     QuantLib::Calendar paymentCalendar() const { return paymentCal_; }
     Natural rateCutoff() const { return rateCutoff_; }
+    const Calendar& overnightCalendar() const { return overnightCalendar_; }
     //@}
 
     //! \name Serialisation
@@ -434,6 +436,7 @@ private:
     DateGeneration::Rule rule_;
     QuantLib::Calendar paymentCal_;
     Natural rateCutoff_;
+    Calendar overnightCalendar_;
 
     // Strings to store the inputs
     string strSpotLag_;
@@ -448,6 +451,7 @@ private:
     string strRule_;
     std::string strPaymentCal_;
     string strRateCutoff_;
+    string strOvernightCalendar_;
 };
 
 //! Container for storing Ibor Index conventions

@@ -45,7 +45,7 @@ public:
                   const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
                   bool discountCurveGiven = false, bool telescopicValueDates = false,
                   Pillar::Choice pillar = Pillar::LastRelevantDate, Date customPillarDate = Date(),
-                  const Calendar& paymentCalendar = Calendar());
+                  const Calendar& paymentCalendar = Calendar(), const Calendar& overnightCalendar = Calendar());
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
@@ -75,6 +75,7 @@ protected:
     BusinessDayConvention paymentAdjustment_;
     DateGeneration::Rule rule_;
     Calendar paymentCalendar_;
+    Calendar overnightCalendar_;
 
     QuantLib::ext::shared_ptr<OvernightIndexedSwap> swap_;
     RelinkableHandle<YieldTermStructure> termStructureHandle_;

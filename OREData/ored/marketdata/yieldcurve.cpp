@@ -2724,7 +2724,7 @@ void YieldCurve::addOISs(const std::size_t index, const QuantLib::ext::shared_pt
                         oisConvention->eom(), oisConvention->fixedFrequency(), oisConvention->fixedConvention(),
                         oisConvention->fixedPaymentConvention(), oisConvention->rule(), discountCurve_[index],
                         discountCurveGiven_[index], true, pillarChoice(segment->pillarChoice()), Date(),
-                        oisConvention->paymentCalendar());
+                        oisConvention->paymentCalendar(), oisConvention->overnightCalendar());
                     instruments.push_back(
                         {oisHelper, mainPillarDate(segment->pillarChoice(), oisHelper->pillarDate()),
                          additionalPillarDates(segment->pillarChoice(), oisHelper->earliestDate()), "OIS",
