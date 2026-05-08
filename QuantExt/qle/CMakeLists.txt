@@ -144,7 +144,6 @@ instruments/makecds.cpp
 instruments/makeoiscapfloor.cpp
 instruments/multiccycompositeinstrument.cpp
 instruments/multilegoption.cpp
-instruments/oiccbasisswap.cpp
 instruments/outperformanceoption.cpp
 instruments/pairwisevarianceswap.cpp
 instruments/payment.cpp
@@ -311,6 +310,7 @@ pricingengines/indexcdstrancheengine.cpp
 pricingengines/inflationcapfloorengines.cpp
 pricingengines/intrinsicascotengine.cpp
 pricingengines/lgmconvolutionsolver.cpp
+pricingengines/mccamcallablebondengine.cpp
 pricingengines/mccamcurrencyswapengine.cpp
 pricingengines/mccamequityforwardengine.cpp
 pricingengines/mccamfxforwardengine.cpp
@@ -332,7 +332,6 @@ pricingengines/numericlgmbgsflexiswapengine.cpp
 pricingengines/numericlgmcallablebondengine.cpp
 pricingengines/numericlgmflexiswapengine.cpp
 pricingengines/numericlgmmultilegoptionengine.cpp
-pricingengines/oiccbasisswapengine.cpp
 pricingengines/pairwisevarianceswapengine.cpp
 pricingengines/paymentdiscountingengine.cpp
 pricingengines/varianceswapgeneralreplicationengine.cpp
@@ -387,6 +386,7 @@ termstructures/flatcorrelation.cpp
 termstructures/flatforwarddividendcurve.cpp
 termstructures/futurepricehelper.cpp
 termstructures/fxblackvolsurface.cpp
+termstructures/fxforwardyieldtermstructure.cpp
 termstructures/fxvannavolgasmilesection.cpp
 termstructures/fxvoltimeweighting.cpp
 termstructures/generatordefaulttermstructure.cpp
@@ -395,9 +395,9 @@ termstructures/iborfallbackcurve.cpp
 termstructures/immfraratehelper.cpp
 termstructures/inflation/constantcpivolatility.cpp
 termstructures/inflation/cpicurve.cpp
+termstructures/inflation/mixedinflationhelpers.cpp
 termstructures/inflation/cpivolatilitystructure.cpp
 termstructures/interpolateddiscountcurve2.cpp
-termstructures/oiccbasisswaphelper.cpp
 termstructures/oiscapfloorhelper.cpp
 termstructures/oisratehelper.cpp
 termstructures/optionletstripper.cpp
@@ -664,7 +664,6 @@ instruments/makeoiscapfloor.hpp
 instruments/multiccycompositeinstrument.hpp
 instruments/multilegoption.hpp
 instruments/nullinstrument.hpp
-instruments/oiccbasisswap.hpp
 instruments/outperformanceoption.hpp
 instruments/pairwisevarianceswap.hpp
 instruments/payment.hpp
@@ -735,6 +734,7 @@ models/cirppconstantfellerparametrization.hpp
 models/cirppconstantparametrization.hpp
 models/cirppimplieddefaulttermstructure.hpp
 models/cirppparametrization.hpp
+models/crlgmvectorised.hpp
 models/cmscaphelper.hpp
 models/commoditymodel.hpp
 models/commodityschwartzconstantparametrization.hpp
@@ -885,6 +885,7 @@ pricingengines/indexcdstrancheengine.hpp
 pricingengines/inflationcapfloorengines.hpp
 pricingengines/intrinsicascotengine.hpp
 pricingengines/lgmconvolutionsolver.hpp
+pricingengines/mccamcallablebondengine.hpp
 pricingengines/mccamcurrencyswapengine.hpp
 pricingengines/mccamequityforwardengine.hpp
 pricingengines/mccamfxforwardengine.hpp
@@ -906,7 +907,6 @@ pricingengines/numericlgmbgsflexiswapengine.hpp
 pricingengines/numericlgmcallablebondengine.hpp
 pricingengines/numericlgmflexiswapengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
-pricingengines/oiccbasisswapengine.hpp
 pricingengines/pairwisevarianceswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
 pricingengines/tflattice.hpp
@@ -982,6 +982,7 @@ termstructures/flatcorrelation.hpp
 termstructures/flatforwarddividendcurve.hpp
 termstructures/futurepricehelper.hpp
 termstructures/fxblackvolsurface.hpp
+termstructures/fxforwardyieldtermstructure.hpp
 termstructures/fxsmilesection.hpp
 termstructures/fxvannavolgasmilesection.hpp
 termstructures/fxvoltimeweighting.hpp
@@ -996,6 +997,7 @@ termstructures/inflation/cpipricevolatilitysurface.hpp
 termstructures/inflation/cpivolatilitystructure.hpp
 termstructures/inflation/inflationtraits.hpp
 termstructures/inflation/interpolatedcpiinflationcurve.hpp
+termstructures/inflation/mixedinflationhelpers.hpp
 termstructures/inflation/piecewisecpiinflationcurve.hpp
 termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolatedcpivolatilitysurface.hpp
@@ -1006,7 +1008,6 @@ termstructures/interpolatedyoycapfloortermpricesurface.hpp
 termstructures/iterativebootstrap.hpp
 termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/multisectiondefaultcurve.hpp
-termstructures/oiccbasisswaphelper.hpp
 termstructures/oiscapfloorhelper.hpp
 termstructures/oisratehelper.hpp
 termstructures/optionletcurve.hpp
@@ -1053,6 +1054,7 @@ termstructures/strippedoptionletadapter2.hpp
 termstructures/strippedyoyinflationoptionletvol.hpp
 termstructures/subperiodsswaphelper.hpp
 termstructures/survivalprobabilitycurve.hpp
+termstructures/survivalprobabilitycurvefromyield.hpp
 termstructures/swaptionsabrcube.hpp
 termstructures/swaptionvolatilityconverter.hpp
 termstructures/swaptionvolconstantspread.hpp
@@ -1074,12 +1076,14 @@ time/futureexpirycalculator.hpp
 time/monthcounter.hpp
 time/yearcounter.hpp
 utilities/barrier.hpp
+utilities/callablebond.hpp
 utilities/cashflows.hpp
 utilities/commodity.hpp
 utilities/creditcurves.hpp
 utilities/creditindexconstituentcurvecalibration.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
+utilities/localiborcouponsettings.hpp
 utilities/mcstats.hpp
 utilities/ratehelpers.hpp
 utilities/savedobservablesettings.hpp

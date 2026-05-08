@@ -15,8 +15,8 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-#ifndef ORE_MAURITIUS_HPP
-#define ORE_MAURITIUS_HPP
+#ifndef quantext_mauritius_hpp
+#define quantext_mauritius_hpp
 
 #include <ql/time/calendar.hpp>
 
@@ -42,4 +42,4 @@ public:
 };
 
 }
-#endif // ORE_MAURITIUS_HPP
+#endif // quantext_mauritius_hpp

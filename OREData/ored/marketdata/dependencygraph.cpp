@@ -28,7 +28,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ql/tuple.hpp>
+#include <tuple>
 
 namespace ore {
 namespace data {
@@ -224,7 +224,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
 
     // build the reduced graph
 
-    DLOG("Build the reduced dependency graph where cycles are replaced by a single reduced node containing the set of nodes in the cylce.");
+    DLOG("Build the reduced dependency graph where cycles are replaced by a single reduced node containing the set of nodes in the cycle.");
 
     std::map<Vertex, ReducedVertex> vertexMap;
 

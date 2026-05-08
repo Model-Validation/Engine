@@ -87,7 +87,8 @@ void FxForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
             Natural conventionalLag = 0;
             Calendar conventionalCalendar = NullCalendar();
             BusinessDayConvention conventionalBdc = Unadjusted;
-            std::tie(conventionalLag, conventionalCalendar, conventionalBdc) =
+            Calendar _; // Discard the final trading calendar arg // TODO Correct or not?
+            std::tie(conventionalLag, conventionalCalendar, conventionalBdc, _) =
                 getFxIndexConventions(fxIndex_.empty() ? boughtCurrency_ + soldCurrency_ : fxIndex_);
             PaymentLag paymentLag;
             if (payLag_.empty())
@@ -113,20 +114,17 @@ void FxForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
 
     Date fixingDate;
     if (settlement_ == "Cash") {
-        // We allow for an empty fxIndex if maturiytDate == payDate in order not to break trades that were previously
+        // We allow for an empty fxIndex if maturityDate == payDate in order not to break trades that were previously
         // pricing - we should really require fxIndex whenever cash settlement is specified. If the fxIndex is not
         // given in this case, we assume that the current FX Spot rate is used to determine the settlement amount.
         if (maturityDate <= payDate && !fxIndex_.empty()) {
             Currency nonPayCcy = payCcy == boughtCcy ? soldCcy : boughtCcy;
             fxIndex = buildFxIndex(fxIndex_, nonPayCcy.code(), payCcy.code(), engineFactory->market(),
                                    engineFactory->configuration(MarketContext::pricing));
-            // We also allow for an effective fixing date > payDate in order not to break trades that were preivously
-            // pricing - this should be an error as well. If this is the case we assume that the current FX Spot
-            // rate is used to determine the settlement amount as above.
+            // If the provided fixing date is a holiday, adjust to a prior date so as to retain the correct
+            // number of settlement days.
             fixingDate = fxIndex->fixingCalendar().adjust(maturityDate, Preceding);
-            if (fixingDate <= payDate) {
-                requiredFixings_.addFixingDate(fixingDate, fxIndex_, payDate);
-            }
+            requiredFixings_.addFixingDate(fixingDate, fxIndex_, payDate);
         } else {
             QL_REQUIRE(maturityDate >= payDate,
                        "FX settlement index must be specified for non-deliverable forward if value date ("

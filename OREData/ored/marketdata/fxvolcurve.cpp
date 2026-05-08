@@ -948,6 +948,8 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             QL_REQUIRE(tmp, "unable to cast convention '" << config->timeWeighting()
                                                           << "' to FxOptionTimeWeightingConvention");
             timeWeighting_ = *tmp;
+        } else if (auto inlineConvention = config->explicitTimeWeighting()) {
+            timeWeighting_ = inlineConvention;
         }
 
         auto spotSpec = QuantLib::ext::dynamic_pointer_cast<FXSpotSpec>(parseCurveSpec(config->fxSpotID()));

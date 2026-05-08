@@ -215,10 +215,11 @@ QuantLib::ext::shared_ptr<FxIndex> parseFxIndex(const string& s, const Handle<Qu
     Natural fixingDays = 0;
     Calendar fixingCalendar = NullCalendar();
     BusinessDayConvention bdc;
+    Calendar tradingCalendar = NullCalendar();
     if (useConventions)
-        std::tie(fixingDays, fixingCalendar, bdc) = getFxIndexConventions(s);
+        std::tie(fixingDays, fixingCalendar, bdc, tradingCalendar) = getFxIndexConventions(s);
     auto index = QuantLib::ext::make_shared<FxIndex>(tokens[1], fixingDays, parseCurrency(tokens[2]), parseCurrency(tokens[3]),
-                                             fixingCalendar, fxSpot, sourceYts, targetYts);
+                                            fixingCalendar, fxSpot, sourceYts, targetYts, true, tradingCalendar);
 
     IndexNameTranslator::instance().add(index->name(), s);
     return index;
@@ -332,7 +333,9 @@ QuantLib::ext::shared_ptr<IborIndex> parseIborIndex(const string& s, string& ten
         {"GBP-BoEBase", QuantLib::ext::make_shared<BOEBaseRateIndex>()},
         {"HKD-HONIA", QuantLib::ext::make_shared<HKDHonia>()},
         {"SEK-STINA", QuantLib::ext::make_shared<SEKStina>()},
+        {"SEK-SWESTR", QuantLib::ext::make_shared<Swestr>()},
         {"DKK-CITA", QuantLib::ext::make_shared<DKKCita>()},
+        {"DKK-DESTR", QuantLib::ext::make_shared<Destr>()},
         {"THB-THOR", QuantLib::ext::make_shared<THBThor>()}};
 
     // Map from our _unique internal name_ to an ibor index (the period does not matter here)
@@ -651,6 +654,8 @@ QuantLib::ext::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const stri
         {"FR CPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<FRCPI>>()},
         {"UKRPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<UKRPI>>()},
         {"UK RPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<UKRPI>>()},
+        {"UKHICP", QuantLib::ext::make_shared<ZeroInflationIndexParser<UKHICP>>()},
+        {"UK HICP", QuantLib::ext::make_shared<ZeroInflationIndexParser<UKHICP>>()},
         {"USCPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<USCPI>>()},
         {"US CPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<USCPI>>()},
         {"ZACPI", QuantLib::ext::make_shared<ZeroInflationIndexParser<ZACPI>>()},
@@ -834,6 +839,13 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const st
         }
     }
 
+    // Moved this out of the below if-statement because CommodityIndexedAverageCashFlow:s also want
+    // a given pricing calendar, not the default NullCalendar otherwise given.
+    Calendar cdr = cal;
+    if (convention && cdr == NullCalendar()) {
+        cdr = convention->calendar();
+    }
+
     // Create and return the required future index
     QuantLib::ext::shared_ptr<CommodityIndex> index;
     if (expiry != Date() || (convention && enforceFutureIndex)) {
@@ -845,11 +857,6 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const st
         }
 
         bool keepDays = convention && convention->contractFrequency() == Daily;
-
-        Calendar cdr = cal;
-        if (convention && cdr == NullCalendar()) {
-            cdr = convention->calendar();
-        }
 
         auto basisCurve = ts.empty() ? nullptr :
             QuantLib::ext::dynamic_pointer_cast<CommodityBasisPriceTermStructure>(*ts);
@@ -863,7 +870,7 @@ QuantLib::ext::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const st
         
 
     } else {
-        index = QuantLib::ext::make_shared<CommoditySpotIndex>(commName, cal, ts);
+        index = QuantLib::ext::make_shared<CommoditySpotIndex>(commName, cdr, ts);
     }
     IndexNameTranslator::instance().add(index->name(), index->name());
     DLOG("parseCommodityIndex(" << name << ") -> " << index->name() << " with expiry " << index->expiryDate());

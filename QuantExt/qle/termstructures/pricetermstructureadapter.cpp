@@ -17,6 +17,7 @@
 */
 
 #include <qle/termstructures/pricetermstructureadapter.hpp>
+#include <qle/utilities/time.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -67,7 +68,7 @@ DayCounter PriceTermStructureAdapter::dayCounter() const { return priceCurve_->d
 
 const QuantLib::ext::shared_ptr<PriceTermStructure>& PriceTermStructureAdapter::priceCurve() const { return priceCurve_; }
 
-const QuantLib::ext::shared_ptr<YieldTermStructure>& PriceTermStructureAdapter::discount() const { return discount_; }
+const QuantLib::ext::shared_ptr<YieldTermStructure>& PriceTermStructureAdapter::discountCurve() const { return discount_; }
 
 Natural PriceTermStructureAdapter::spotDays() const { return spotDays_; }
 
@@ -86,7 +87,8 @@ DiscountFactor PriceTermStructureAdapter::discountImpl(Time t) const {
         spotPrice = spotQuote_->value();
     }
     Real forwardPrice = priceCurve_->price(t, true);
-    DiscountFactor discount = discount_->discount(t, true);
+    // Reversing the conversion to year fraction below since the discount curve may have a different DC method
+    DiscountFactor discount = discount_->discount(lowerDate(t, referenceDate(), dayCounter()), true);
     return discount * forwardPrice / spotPrice;
 }
 

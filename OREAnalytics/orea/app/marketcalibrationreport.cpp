@@ -146,6 +146,10 @@ void MarketCalibrationReportBase::populateReport(const QuantLib::ext::shared_ptr
             addCpiVol(calibrationInfo->asof, c.second, getCurveName(c.first), label);
         }
     }
+
+    for (auto const& pair : t->fxTriangulation()->getInputPairs()) {
+        addFxRate(market->asofDate(), market, pair, label);
+    }
 }
 
 MarketCalibrationReport::MarketCalibrationReport(const std::string& calibrationFilter,
@@ -220,23 +224,65 @@ void MarketCalibrationReport::addYieldCurveImpl(const QuantLib::Date& refdate,
     QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo> info,
     const std::string& id, bool isDiscount, const std::string& label,
     const string& type, QuantLib::Handle<QuantLib::IborIndex> iborIndex) {
-    // common results
+
     addRowReport(type, id, "dayCounter", "", "", "", info->dayCounter);
     addRowReport(type, id, "currency", "", "", "", info->currency);
 
+    /* add info on report pillar dates */
+
     for (Size i = 0; i < info->pillarDates.size(); ++i) {
-        std::string key1 = to_string(info->pillarDates[i]);
-        addRowReport(type, id, "time", key1, !info->mdQuoteLabels.empty() ? info->mdQuoteLabels.at(i) : "", "",
-                     info->times.at(i));
-        addRowReport(type, id, "zeroRate", key1, !info->mdQuoteLabels.empty() ? info->mdQuoteLabels.at(i) : "", "",
-                     info->zeroRates.at(i));
-        addRowReport(type, id, "discountFactor", key1, !info->mdQuoteLabels.empty() ? info->mdQuoteLabels.at(i) : "",
-                     "", info->discountFactors.at(i));
+
+        Date pillarDate = info->pillarDates[i];
+        std::string key1 = to_string(pillarDate);
+
+        bool hasQuote = false;
+        std::string quoteLabel;
+        Real quoteValue;
+        Real calibrationError;
+
+        for (Size j = 0; j < info->rateHelperPillarDates.size(); ++j) {
+            if (auto it =
+                    std::find(info->rateHelperPillarDates[j].begin(), info->rateHelperPillarDates[j].end(), pillarDate);
+                it != info->rateHelperPillarDates[j].end()) {
+                quoteLabel = info->mdQuoteLabels.at(j);
+                quoteValue = info->mdQuoteValues.at(j);
+                calibrationError = info->rateHelperQuoteErrors.at(j);
+                hasQuote = true;
+                break;
+            }
+        }
+
+        addRowReport(type, id, "time", key1, quoteLabel, "", info->times.at(i));
+        addRowReport(type, id, "zeroRate", key1, quoteLabel, "", info->zeroRates.at(i));
+        addRowReport(type, id, "discountFactor", key1, quoteLabel, "", info->discountFactors.at(i));
+
+        if (hasQuote) {
+            addRowReport(type, id, "mdQuote", key1, quoteLabel, "", quoteValue);
+            addRowReport(type, id, "calibrationError", key1, quoteLabel, "", calibrationError);
+        }
+
         if (!iborIndex.empty())
             addRowReport(type, id, "forwardRate", key1, !info->mdQuoteLabels.empty() ? info->mdQuoteLabels.at(i) : "",
                          "", iborIndex->fixing(iborIndex->fixingCalendar().adjust(info->pillarDates[i], Preceding)));
-        if (!info->mdQuoteLabels.empty())
+    }
+
+    /* add md quote info and error for rate helpers that are not covered above, i.e. those without a pillar date or a pilar date not
+       matching one of the report pillar dates */
+
+    for (Size i = 0; i < info->rateHelperPillarDates.size(); ++i) {
+        if (auto it = std::find_if(info->pillarDates.begin(), info->pillarDates.end(),
+                                   [info, i](const Date& d) {
+                                       return info->rateHelperPillarDates[i].find(d) !=
+                                              info->rateHelperPillarDates[i].end();
+                                   });
+            it == info->pillarDates.end()) {
+            std::string key1 = info->rateHelperPillarDates[i].empty()
+                                   ? "no-pillar"
+                                   : to_string(*info->rateHelperPillarDates[i].rbegin());
             addRowReport(type, id, "mdQuote", key1, info->mdQuoteLabels.at(i), "", info->mdQuoteValues.at(i));
+            addRowReport(type, id, "calibrationError", key1, info->mdQuoteLabels.at(i), "",
+                         info->rateHelperQuoteErrors.at(i));
+        }
     }
 
     // fitted bond curve results
@@ -263,12 +309,12 @@ void MarketCalibrationReport::addYieldCurveImpl(const QuantLib::Date& refdate,
 
     // cashflow results
     if (!info->rateHelperCashflows.empty()) {
-        for (Size i = 0; i < info->pillarDates.size(); ++i) {
+        for (Size i = 0; i < info->rateHelperPillarDates.size(); ++i) {
             for (auto const& d : info->rateHelperCashflows[i]) {
                 report_cashflows_->next()
                     .add(type)
                     .add(id)
-                    .add(info->pillarDates[i])
+                    .add(info->rateHelperPillarDates[i].empty() ? Date() : *info->rateHelperPillarDates[i].rbegin())
                     .add(info->rateHelperTypes[i])
                     .add(info->mdQuoteLabels[i])
                     .add(d.cashflowNo)
@@ -414,7 +460,7 @@ void MarketCalibrationReport::addCommodityCurveImpl(
     const std::string& id, const std::string& label, const std::string& type) {
 
     addRowReport(type, id, "calendar", "", "", "", info->calendar);
-    addRowReport(type, id, "currenct", "", "", "", info->currency);
+    addRowReport(type, id, "currency", "", "", "", info->currency);
     addRowReport(type, id, "interpolationMethod", "", "", "", info->interpolationMethod);
 
     for (Size i = 0; i < info->pillarDates.size(); ++i) {
@@ -661,5 +707,21 @@ void MarketCalibrationReportBase::addCpiVol(const QuantLib::Date& refdate,
 
     calibrations_[label][type].insert(id);
 }
+
+void MarketCalibrationReportBase::addFxRate(const QuantLib::Date& refdate,
+                                            const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                                            const std::string& name, const std::string& label) {
+    string type = "FX";
+    addFxRateImpl(refdate, market, name, type);
+    calibrations_[label][type].insert(name);
+}
+
+void MarketCalibrationReport::addFxRateImpl(const QuantLib::Date& refdate,
+                                                const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                                                const std::string& name, const std::string& type) {
+    addRowReport(type, name, "todaysRate", "", "", "", market->fxRate(name)->value());
+    addRowReport(type, name, "spotRate", "", "", "", market->fxSpot(name)->value());
+}
+
 } // namespace analytics
 } // namespace ore

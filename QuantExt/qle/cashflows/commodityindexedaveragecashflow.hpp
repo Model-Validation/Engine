@@ -60,7 +60,8 @@ public:
         QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
         QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
         const QuantLib::ext::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData = QuantLib::ext::nullopt,
-        const ext::shared_ptr<FxIndex>& fxIndex = nullptr, QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>());
+        const ext::shared_ptr<FxIndex>& fxIndex = nullptr, QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>(),
+        QuantLib::Natural spotLag = QuantLib::Null<QuantLib::Natural>());
 
     //! Constructor that deduces payment date from \p endDate using payment conventions
     CommodityIndexedAverageCashFlow(
@@ -76,7 +77,8 @@ public:
         QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
         QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
         const QuantLib::ext::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData = QuantLib::ext::nullopt,
-        const ext::shared_ptr<FxIndex>& fxIndex = nullptr, QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>());
+        const ext::shared_ptr<FxIndex>& fxIndex = nullptr, QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>(),
+        QuantLib::Natural spotLag = QuantLib::Null<QuantLib::Natural>());
 
     //! \name Inspectors
     //@{
@@ -94,6 +96,7 @@ public:
     const QuantLib::ext::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData() const {
         return offPeakPowerData_;
     }
+    QuantLib::Natural spotLag() const { return spotLag_; }
 
     const std::map<QuantLib::Date, QuantLib::Real>& weights() const { return weights_; }
 
@@ -162,6 +165,8 @@ private:
     QuantLib::ext::optional<std::pair<QuantLib::Calendar, QuantLib::Real>> offPeakPowerData_;
     mutable QuantLib::Real averagePrice_;
     QuantLib::Natural avgPricePrecision_;
+    QuantLib::Natural spotLag_;
+
     // Populated only when offPeakPowerData_ is provided.
     std::map<QuantLib::Date, QuantLib::Real> weights_;
 
@@ -206,6 +211,8 @@ public:
     withOffPeakPowerData(const QuantLib::ext::optional<std::pair<QuantLib::Calendar, QuantLib::Real>>& offPeakPowerData);
     CommodityIndexedAverageLeg& withFxIndex(const ext::shared_ptr<FxIndex>& fxIndex);
     CommodityIndexedAverageLeg& withAvgPricePrecision(QuantLib::Natural precision =  QuantLib::Null<QuantLib::Natural>());
+    CommodityIndexedAverageLeg& withSpotLag(QuantLib::Natural spotLag);
+
     operator Leg() const;
 
 private:
@@ -235,6 +242,7 @@ private:
     QuantLib::ext::optional<std::pair<QuantLib::Calendar, QuantLib::Real>> offPeakPowerData_;
     ext::shared_ptr<FxIndex> fxIndex_;
     QuantLib::Natural avgPricePrecision_;
+    QuantLib::Natural spotLag_;
 };
 
 } // namespace QuantExt
