@@ -119,9 +119,9 @@ protected:
     QuantLib::ext::optional<Size> fixingDays_;
     QuantLib::ext::optional<Size> rateCutoff_;
     QuantLib::ext::optional<bool> isAveraged_;
+    QuantLib::ext::optional<bool> observationShift_;
     QuantLib::ext::optional<Natural> fixedPaymentLag_;
     QuantLib::ext::optional<Natural> floatPaymentLag_;
-    QuantLib::ext::optional<bool> observationShift_;
 
     QuantLib::ext::shared_ptr<CrossCcyFixFloatMtMResetSwap> swap_;
 
