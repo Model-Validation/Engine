@@ -24,6 +24,7 @@
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
@@ -128,8 +129,8 @@ void AsianOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
         QL_REQUIRE(fxIndex->targetCurrency() == payCcy,
                    "FX domestic ccy " << fxIndex->targetCurrency() << " must match pay ccy " << payCcy);
         assetName_ = fxIndex->sourceCurrency().code();
-        index = buildFxIndex(fxIndex->oreName(), currency_, assetName_, engineFactory->market(),
-                             engineFactory->configuration(MarketContext::pricing));
+        index = buildFxIndex(IndexNameTranslator::instance().oreName(fxIndex->name()), currency_, assetName_,
+                             engineFactory->market(), engineFactory->configuration(MarketContext::pricing));
     } else if (auto eqIndex = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityIndex2>(index)) {
         // FIXME for EQ and COMM indices check whether EQ, COMM ccy = payCcy (in the engine builders probably)
         assetName_ = eqIndex->name();
