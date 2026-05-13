@@ -43,7 +43,8 @@ CrossCcyFixFloatSwapHelper::CrossCcyFixFloatSwapHelper(
     const std::vector<Calendar>& spotFXSettleCalendarVec, QuantLib::ext::optional<bool> includeSpread, 
     QuantLib::ext::optional<Period> lookback, QuantLib::ext::optional<Size> fixingDays, 
     QuantLib::ext::optional<Size> rateCutoff, QuantLib::ext::optional<bool> isAveraged, 
-    QuantLib::ext::optional<Natural> fixedPaymentLag, QuantLib::ext::optional<Natural> floatPaymentLag)
+    QuantLib::ext::optional<Natural> fixedPaymentLag, QuantLib::ext::optional<Natural> floatPaymentLag, 
+    const QuantLib::ext::optional<bool> observationShift)
     : RelativeDateRateHelper(rate), spotFx_(spotFx), settlementDays_(settlementDays), paymentCalendar_(paymentCalendar),
       paymentConvention_(paymentConvention), tenor_(tenor), fixedCurrency_(fixedCurrency),
       fixedFrequency_(fixedFrequency), fixedConvention_(fixedConvention), fixedDayCount_(fixedDayCount), index_(index),
@@ -51,7 +52,8 @@ CrossCcyFixFloatSwapHelper::CrossCcyFixFloatSwapHelper(
       telescopicValueDates_(telescopicValueDates), pillarChoice_(pillarChoice),
       spotFXSettleDaysVec_(spotFXSettleDaysVec), spotFXSettleCalendarVec_(spotFXSettleCalendarVec),
       includeSpread_(includeSpread), lookback_(lookback), fixingDays_(fixingDays), rateCutoff_(rateCutoff),
-      isAveraged_(isAveraged), fixedPaymentLag_(fixedPaymentLag), floatPaymentLag_(floatPaymentLag) {
+      isAveraged_(isAveraged), fixedPaymentLag_(fixedPaymentLag), floatPaymentLag_(floatPaymentLag), 
+      observationShift_(observationShift) {
 
     QL_REQUIRE(!spotFx_.empty(), "Spot FX quote cannot be empty.");
     QL_REQUIRE(fixedCurrency_ != index_->currency(), "Fixed currency should not equal float leg currency.");
@@ -136,7 +138,7 @@ void CrossCcyFixFloatSwapHelper::initializeDates() {
                                          paymentConvention_, fixedPaymentLag, paymentCalendar_, floatNominal,
                                          index_->currency(), floatSchedule, index_, floatSpread, paymentConvention_,
                                          floatPaymentLag, paymentCalendar_, telescopicValueDates_, includeSpread_, lookback_,
-                                         fixingDays_, rateCutoff_, isAveraged_));
+                                         fixingDays_, rateCutoff_, isAveraged_, observationShift_));
 
     earliestDate_ = swap_->startDate();
     maturityDate_ = swap_->maturityDate();

@@ -66,7 +66,7 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     Natural hoursPerDay, Natural dailyExpiryOffset, bool unrealisedQuantity,
     const QuantLib::ext::optional<pair<Calendar, Real>>& offPeakPowerData, const ext::shared_ptr<FxIndex>& fxIndex,
     QuantLib::Natural avgPricePrecision, QuantLib::Natural spotLag)
-    : CommodityCashFlow(quantity, spread, gearing, useFuturePrice, index, fxIndex), startDate_(startDate), endDate_(endDate),
+    : CommodityCashFlow(quantity, spread, gearing, useFuturePrice, index, fxIndex, calc), startDate_(startDate), endDate_(endDate),
       paymentDate_(paymentDateOverride), pricingCalendar_(pricingCalendar),
       deliveryDateRoll_(deliveryDateRoll), futureMonthOffset_(futureMonthOffset), includeEndDate_(includeEndDate),
       excludeStartDate_(excludeStartDate), useBusinessDays_(useBusinessDays), quantityFrequency_(quantityFrequency),
@@ -79,7 +79,7 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
         paymentDate_ = paymentCalendar.advance(endDate, paymentLag, Days, paymentConvention);
     }
 
-    init(calc);
+    init(calc_);
 }
 
 void CommodityIndexedAverageCashFlow::performCalculations() const {

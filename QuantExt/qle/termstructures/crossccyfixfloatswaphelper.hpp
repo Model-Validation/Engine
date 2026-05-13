@@ -59,7 +59,8 @@ public:
                                QuantLib::ext::optional<Size> rateCutoff = QuantLib::ext::nullopt,
                                QuantLib::ext::optional<bool> isAveraged = QuantLib::ext::nullopt,
                                QuantLib::ext::optional<Natural> fixedPaymentLag = QuantLib::ext::nullopt,
-                               QuantLib::ext::optional<Natural> floatPaymentLag = QuantLib::ext::nullopt);
+                               QuantLib::ext::optional<Natural> floatPaymentLag = QuantLib::ext::nullopt,
+                               QuantLib::ext::optional<bool> observationShift = QuantLib::ext::nullopt);
 
     //! \name Observer interface
     //@{
@@ -112,6 +113,7 @@ private:
     QuantLib::ext::optional<bool> isAveraged_;
     QuantLib::ext::optional<Natural> fixedPaymentLag_;
     QuantLib::ext::optional<Natural> floatPaymentLag_;
+    QuantLib::ext::optional<bool> observationShift_;
 
     QuantLib::ext::shared_ptr<CrossCcyFixFloatSwap> swap_;
     QuantLib::RelinkableHandle<QuantLib::YieldTermStructure> termStructureHandle_;

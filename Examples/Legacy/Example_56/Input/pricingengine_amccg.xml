@@ -56,10 +56,4 @@
     <Engine>AMCCG</Engine>
     <EngineParameters/>
   </Product>
-  <Product type="MultiLegOption">
-    <Model>CrossAssetModel</Model>
-    <ModelParameters/>
-    <Engine>AMCCG</Engine>
-    <EngineParameters/>
-  </Product>
 </PricingEngines>
