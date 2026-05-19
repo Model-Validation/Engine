@@ -163,7 +163,7 @@ private:
     bool unrealisedQuantity_;
     QuantLib::Real periodQuantity_;
     QuantLib::ext::optional<std::pair<QuantLib::Calendar, QuantLib::Real>> offPeakPowerData_;
-    mutable QuantLib::Real averagePrice_;
+    mutable QuantLib::Real averagePrice_ = Null<Real>();
     QuantLib::Natural avgPricePrecision_;
     QuantLib::Natural spotLag_;
 
