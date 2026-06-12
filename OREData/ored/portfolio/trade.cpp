@@ -19,6 +19,7 @@
 #include <ored/portfolio/structuredtradewarning.hpp>
 #include <ored/portfolio/trade.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
+#include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/portfolio/cashflowutils.hpp>
@@ -449,6 +450,7 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
     // add cashflows from trade legs, if no cashflows were added so far or if a leg is marked as mandatory for cashflows
 
     bool haveEngineCashflows = !result.empty();
+    bool missingBaseDiscountCurveLogged = false;
     for (size_t i = 0; i < legs().size(); i++) {
         Trade::LegCashflowInclusion cashflowInclusion = Trade::LegCashflowInclusion::IfNoEngineCashflows;
         if (auto incl = legCashflowInclusion().find(i); incl != legCashflowInclusion().end()) {
@@ -465,10 +467,20 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
         string ccy = legCurrencies()[i];
 
         Handle<YieldTermStructure> discountCurve = specificDiscountCurve;
-        if (discountCurve.empty()) 
+        if (discountCurve.empty())
             discountCurve = market->discountCurve(ccy, configuration);
-            
-        Handle<YieldTermStructure> baseDiscountCurve = market->discountCurve(baseCurrency, configuration);
+
+        QuantLib::ext::shared_ptr<YieldTermStructure> baseDiscountCurve;
+        try {
+            baseDiscountCurve = *market->discountCurve(baseCurrency, configuration);
+        } catch (std::exception& e) {
+            if (!missingBaseDiscountCurveLogged) {
+                DLOG("Could not retrieve base discount curve for cashflow report (base currency "
+                     << baseCurrency << ", configuration " << configuration
+                     << "). Base discount factor column will be left null where required. Details: " << e.what());
+                missingBaseDiscountCurveLogged = true;
+            }
+        }
 
         auto fxRateCcyBase = market->fxRate(npvCurrency_ + baseCurrency, configuration)->value();
         auto fxRateLocalCcy = market->fxRate(ccy + npvCurrency_, configuration)->value();
@@ -487,7 +499,7 @@ std::vector<TradeCashflowReportData> Trade::cashflows(const std::string& baseCur
                     [&market, &configuration](const std::string qualifier) {
                         return *market->capFloorVol(qualifier, configuration);
                     },
-                    std::string(), Null<Real>(), *baseDiscountCurve));
+                    std::string(), Null<Real>(), baseDiscountCurve));
                 result.back().cashflowNo = j + 1;
                 result.back().legNo = i + legNoOffset;
             }

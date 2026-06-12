@@ -23,6 +23,7 @@
 
 #include <ored/portfolio/cashflowutils.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
+#include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
@@ -62,6 +63,7 @@ void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData
                                              const std::string& configuration, const bool includePastCashflows) {
 
     Date asof = Settings::instance().evaluationDate();
+    bool missingBaseDiscountCurveLogged = false;
 
     // ensures all cashFlowResults from composite trades are being accounted for
     auto lower = addResults.lower_bound("cashFlowResults");
@@ -107,10 +109,20 @@ void populateReportDataFromAdditionalResults(std::vector<TradeCashflowReportData
                     specificDiscountCurve.empty() ? market->discountCurve(ccy, configuration) : specificDiscountCurve;
                 discountFactor = cf.payDate < asof ? 0.0 : discountCurve->discount(cf.payDate);
             }
-            if (ccy != baseCurrency) {                
-                auto baseDiscountCurve = specificDiscountCurve.empty() ? market->discountCurve(baseCurrency, configuration) : specificDiscountCurve;
-                discountFactorBase = cf.payDate < asof ? 0.0 : baseDiscountCurve->discount(cf.payDate);
-            } 
+            if (ccy != baseCurrency && cf.payDate != Null<Date>()) {
+                try {
+                    auto baseDiscountCurve =
+                        specificDiscountCurve.empty() ? market->discountCurve(baseCurrency, configuration) : specificDiscountCurve;
+                    discountFactorBase = cf.payDate < asof ? 0.0 : baseDiscountCurve->discount(cf.payDate);
+                } catch (std::exception& e) {
+                    if (!missingBaseDiscountCurveLogged) {
+                        DLOG("Could not retrieve base discount curve for cashflow report (base currency "
+                             << baseCurrency << ", configuration " << configuration
+                             << "). DiscountFactor(Base) will be left null. Details: " << e.what());
+                        missingBaseDiscountCurveLogged = true;
+                    }
+                }
+            }
             if (cf.presentValue != Null<Real>()) {
                 presentValue = cf.presentValue * multiplier;
             } else if (effectiveAmount != Null<Real>() && discountFactor != Null<Real>()) {
