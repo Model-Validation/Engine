@@ -34,18 +34,19 @@ CrossCcyFixFloatMtMResetSwapHelper::CrossCcyFixFloatMtMResetSwapHelper(
     Frequency fixedFrequency, BusinessDayConvention fixedConvention, const DayCounter& fixedDayCount,
     const QuantLib::ext::shared_ptr<IborIndex>& index, const Handle<YieldTermStructure>& floatDiscount,
     const Handle<Quote>& spread, bool endOfMonth, bool resetsOnFloatLeg, bool telescopicValueDates,
-    const QuantLib::Pillar::Choice pillarChoice, const QuantLib::Date& customPillarDate,
-    const std::vector<Natural>& spotFXSettleDaysVec, const std::vector<Calendar>& spotFXSettleCalendarVec,
-    QuantLib::ext::optional<bool> includeSpread, QuantLib::ext::optional<Period> lookback,
-    QuantLib::ext::optional<Size> fixingDays, QuantLib::ext::optional<Size> rateCutoff,
-    QuantLib::ext::optional<bool> isAveraged, QuantLib::ext::optional<bool> observationShift)
+    const QuantLib::Pillar::Choice pillarChoice, const QuantLib::Date& customPillarDate, 
+    const std::vector<Natural>& spotFXSettleDaysVec, const std::vector<Calendar>& spotFXSettleCalendarVec, 
+    QuantLib::ext::optional<bool> includeSpread, QuantLib::ext::optional<Period> lookback, 
+    QuantLib::ext::optional<Size> fixingDays, QuantLib::ext::optional<Size> rateCutoff, 
+    QuantLib::ext::optional<bool> isAveraged, QuantLib::ext::optional<bool> observationShift,
+    QuantLib::ext::optional<Natural> fixedPaymentLag, QuantLib::ext::optional<Natural> floatPaymentLag)
     : RelativeDateRateHelper(rate), spotFx_(spotFx), settlementDays_(settlementDays), paymentCalendar_(paymentCalendar),
       paymentConvention_(paymentConvention), tenor_(tenor), fixedCurrency_(fixedCurrency),
       fixedFrequency_(fixedFrequency), fixedConvention_(fixedConvention), fixedDayCount_(fixedDayCount), index_(index),
       floatDiscount_(floatDiscount), spread_(spread), endOfMonth_(endOfMonth), resetsOnFloatLeg_(resetsOnFloatLeg),
       telescopicValueDates_(telescopicValueDates), pillarChoice_(pillarChoice), includeSpread_(includeSpread),
-      lookback_(lookback), fixingDays_(fixingDays), rateCutoff_(rateCutoff), isAveraged_(isAveraged),
-      observationShift_(observationShift) {
+      lookback_(lookback), fixingDays_(fixingDays), rateCutoff_(rateCutoff), isAveraged_(isAveraged), 
+      observationShift_(observationShift), fixedPaymentLag_(fixedPaymentLag), floatPaymentLag_(floatPaymentLag_) {
 
     QL_REQUIRE(!spotFx_.empty(), "Spot FX quote cannot be empty.");
     QL_REQUIRE(fixedCurrency_ != index_->currency(), "Fixed currency should not equal float leg currency.");
@@ -87,7 +88,8 @@ void CrossCcyFixFloatMtMResetSwapHelper::initializeDates() {
     Real nominal = 1.0;
 
     // build an FX index for forward rate projection (TODO - review settlement and calendar)
-    Natural paymentLag = 0;
+    Natural fixedPaymentLag = fixedPaymentLag_ ? *fixedPaymentLag_ : 0;
+    Natural floatPaymentLag = floatPaymentLag_ ? *floatPaymentLag_ : 0;
     Spread floatSpread = spread_.empty() ? 0.0 : spread_->value();
     QuantLib::ext::shared_ptr<FxIndex> fxIdx;
     if (resetsOnFloatLeg_) {
@@ -102,8 +104,8 @@ void CrossCcyFixFloatMtMResetSwapHelper::initializeDates() {
 
     swap_ = QuantLib::ext::make_shared<CrossCcyFixFloatMtMResetSwap>(
         nominal, fixedCurrency_, fixedSchedule, quote().empty() || !quote()->isValid() ? 0.0 : quote()->value(),
-        fixedDayCount_, paymentConvention_, paymentLag, paymentCalendar_, index_->currency(), floatSchedule, index_,
-        floatSpread, paymentConvention_, paymentLag, paymentCalendar_, fxIdx, resetsOnFloatLeg_, true, includeSpread_,
+        fixedDayCount_, paymentConvention_, fixedPaymentLag, paymentCalendar_, index_->currency(), floatSchedule, index_,
+        floatSpread, paymentConvention_, floatPaymentLag, paymentCalendar_, fxIdx, resetsOnFloatLeg_, true, includeSpread_,
         lookback_, fixingDays_, rateCutoff_, isAveraged_, observationShift_);
 
     // Attach engine

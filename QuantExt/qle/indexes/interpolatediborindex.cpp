@@ -38,8 +38,8 @@ InterpolatedIborIndex::InterpolatedIborIndex(const QuantLib::ext::shared_ptr<Ibo
 
     QL_REQUIRE(shortIndex_, "InterpolatedIborIndex(): shortIndex is null");
     QL_REQUIRE(longIndex_, "InterpolatedIborIndex(): longIndex is null");
-    QL_REQUIRE(shortIndex_->familyName() == longIndex_->familyName(), "InterpolatedIborIndex(): family name mismatch");
-    QL_REQUIRE(shortIndex_->fixingDays() == longIndex_->fixingDays(), "InterpolatedIborIndex(): fixing days mismatch");
+    // QL_REQUIRE(shortIndex_->familyName() == longIndex_->familyName(), "InterpolatedIborIndex(): family name mismatch");
+    //QL_REQUIRE(shortIndex_->fixingDays() == longIndex_->fixingDays(), "InterpolatedIborIndex(): fixing days mismatch");
     QL_REQUIRE(shortIndex_->currency() == longIndex_->currency(), "InterpolatedIborIndex(): currency mismatch");
     QL_REQUIRE(shortIndex_->fixingCalendar() == longIndex_->fixingCalendar(),
                "InterpolatedIborIndex(): calendar mismatch");

@@ -32,14 +32,14 @@ OISRateHelper::OISRateHelper(Natural settlementDays, const Period& swapTenor, co
                              BusinessDayConvention paymentAdjustment, DateGeneration::Rule rule,
                              const Handle<YieldTermStructure>& discountingCurve, const bool discountCurveGiven,
                              bool telescopicValueDates, Pillar::Choice pillar, Date customPillarDate,
-                             const Calendar& paymentCalendar, Natural rateCutoff)
+                             const Calendar& paymentCalendar, const Calendar& overnightCalendar, Natural rateCutoff)
     : RelativeDateRateHelper(fixedRate), settlementDays_(settlementDays), swapTenor_(swapTenor),
       overnightIndex_(overnightIndex), onIndexGiven_(onIndexGiven), fixedDayCounter_(fixedDayCounter),
       fixedCalendar_(fixedCalendar), paymentLag_(paymentLag), endOfMonth_(endOfMonth),
       paymentFrequency_(paymentFrequency), fixedConvention_(fixedConvention), paymentAdjustment_(paymentAdjustment),
-      rule_(rule), paymentCalendar_(paymentCalendar), discountHandle_(discountingCurve),
-      discountCurveGiven_(discountCurveGiven), telescopicValueDates_(telescopicValueDates), pillarChoice_(pillar),
-      rateCutoff_(rateCutoff) {
+      rule_(rule), paymentCalendar_(paymentCalendar), overnightCalendar_(overnightCalendar),
+      discountHandle_(discountingCurve), discountCurveGiven_(discountCurveGiven),
+      telescopicValueDates_(telescopicValueDates), pillarChoice_(pillar), rateCutoff_(rateCutoff) {
 
     pillarDate_ = customPillarDate;
 
@@ -59,6 +59,8 @@ OISRateHelper::OISRateHelper(Natural settlementDays, const Period& swapTenor, co
 void OISRateHelper::initializeDates() {
 
     Calendar paymentCalendar = paymentCalendar_.empty() ? overnightIndex_->fixingCalendar() : paymentCalendar_;
+    Calendar fixedCalendar = fixedCalendar_.empty() ? overnightIndex_->fixingCalendar() : fixedCalendar_;
+    Calendar overnightCalendar = overnightCalendar_.empty() ? overnightIndex_->fixingCalendar() : paymentCalendar_;
 
     swap_ = MakeOIS(swapTenor_, overnightIndex_, quote().empty() || !quote()->isValid() ? 0.0 : quote()->value())
                 .withSettlementDays(settlementDays_)
@@ -71,9 +73,12 @@ void OISRateHelper::initializeDates() {
                 .withPaymentLag(paymentLag_)
                 .withDiscountingTermStructure(discountRelinkableHandle_)
                 .withTelescopicValueDates(telescopicValueDates_)
-                .withFixedLegCalendar(fixedCalendar_)
+                .withFixedLegCalendar(fixedCalendar)
+                .withOvernightLegCalendar(overnightCalendar)
                 .withFixedLegConvention(fixedConvention_)
                 .withLockoutDays(rateCutoff_);
+    // TODO: patch QL?
+    //.withFixedAccrualConvention(fixedConvention_)
 
     earliestDate_ = swap_->startDate();
     maturityDate_ = swap_->maturityDate();

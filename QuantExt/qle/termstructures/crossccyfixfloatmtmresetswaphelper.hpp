@@ -72,7 +72,9 @@ public:
                                        QuantLib::ext::optional<Size> fixingDays = QuantLib::ext::nullopt,
                                        QuantLib::ext::optional<Size> rateCutoff = QuantLib::ext::nullopt,
                                        QuantLib::ext::optional<bool> isAveraged = QuantLib::ext::nullopt,
-                                       QuantLib::ext::optional<bool> observationShift = QuantLib::ext::nullopt);
+                                       QuantLib::ext::optional<bool> observationShift = QuantLib::ext::nullopt,
+                                       QuantLib::ext::optional<Natural> fixedPaymenyLag = QuantLib::ext::nullopt,
+                                       QuantLib::ext::optional<Natural> floatPaymentLag = QuantLib::ext::nullopt);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
@@ -118,6 +120,8 @@ protected:
     QuantLib::ext::optional<Size> rateCutoff_;
     QuantLib::ext::optional<bool> isAveraged_;
     QuantLib::ext::optional<bool> observationShift_;
+    QuantLib::ext::optional<Natural> fixedPaymentLag_;
+    QuantLib::ext::optional<Natural> floatPaymentLag_;
 
     QuantLib::ext::shared_ptr<CrossCcyFixFloatMtMResetSwap> swap_;
 

@@ -127,6 +127,13 @@ public:
                                  QuantLib::ext::shared_ptr<ore::data::DefaultCurveCalibrationInfo> dflt,
                                    std::string const& name, std::string const& label) = 0;
 
+    // Add FX rate data to array
+    void addFxRate(const QuantLib::Date& refdate, const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                   const std::string& name, const std::string& label);
+
+    virtual void addFxRateImpl(const QuantLib::Date& refdate, const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                           const std::string& name, const std::string& type) = 0;
+
     // populate the calibration reports
     virtual void populateReport(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
                                 const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
@@ -189,6 +196,10 @@ public:
     void addDefaultCurve(const QuantLib::Date& refdate,
                          QuantLib::ext::shared_ptr<ore::data::DefaultCurveCalibrationInfo> dflt, 
                         const std::string& name, const std::string& label) override;
+
+    // Add FX rate data to array
+    void addFxRateImpl(const QuantLib::Date& refdate, const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                       const std::string& name, const std::string& type) override;
 
 private:
      QuantLib::ext::shared_ptr<ore::data::Report> report_;

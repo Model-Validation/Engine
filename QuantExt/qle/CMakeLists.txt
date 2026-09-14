@@ -415,6 +415,7 @@ termstructures/flatcorrelation.cpp
 termstructures/flatforwarddividendcurve.cpp
 termstructures/futurepricehelper.cpp
 termstructures/fxblackvolsurface.cpp
+termstructures/fxforwardyieldtermstructure.cpp
 termstructures/fxvannavolgasmilesection.cpp
 termstructures/fxvoltimeweighting.cpp
 termstructures/generatordefaulttermstructure.cpp
@@ -427,6 +428,7 @@ termstructures/immfraratehelper.cpp
 termstructures/indexcdsvolstripper.cpp
 termstructures/inflation/constantcpivolatility.cpp
 termstructures/inflation/cpicurve.cpp
+termstructures/inflation/mixedinflationhelpers.cpp
 termstructures/inflation/cpivolatilitystructure.cpp
 termstructures/interpolateddiscountcurve2.cpp
 termstructures/oiscapfloorhelper.cpp
@@ -1047,6 +1049,7 @@ termstructures/flatcorrelation.hpp
 termstructures/flatforwarddividendcurve.hpp
 termstructures/futurepricehelper.hpp
 termstructures/fxblackvolsurface.hpp
+termstructures/fxforwardyieldtermstructure.hpp
 termstructures/fxsmilesection.hpp
 termstructures/fxvannavolgasmilesection.hpp
 termstructures/fxvoltimeweighting.hpp
@@ -1063,6 +1066,7 @@ termstructures/inflation/cpipricevolatilitysurface.hpp
 termstructures/inflation/cpivolatilitystructure.hpp
 termstructures/inflation/inflationtraits.hpp
 termstructures/inflation/interpolatedcpiinflationcurve.hpp
+termstructures/inflation/mixedinflationhelpers.hpp
 termstructures/inflation/piecewisecpiinflationcurve.hpp
 termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolatedcpivolatilitysurface.hpp

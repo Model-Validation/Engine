@@ -34,6 +34,7 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
+#include <ql/time/calendars/unitedstates.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -328,11 +329,11 @@ OisConvention::OisConvention(const string& id, const string& spotLag, const stri
                              const string& fixedDayCounter, const string& fixedCalendar, const string& paymentLag,
                              const string& eom, const string& fixedFrequency, const string& fixedConvention,
                              const string& fixedPaymentConvention, const string& rule, const string& paymentCal,
-                             const string& rateCutoff)
+                             const string& rateCutoff, const string& overnightCalendar)
     : Convention(id, Type::OIS), strSpotLag_(spotLag), strIndex_(index), strFixedDayCounter_(fixedDayCounter),
       strFixedCalendar_(fixedCalendar), strPaymentLag_(paymentLag), strEom_(eom), strFixedFrequency_(fixedFrequency),
       strFixedConvention_(fixedConvention), strFixedPaymentConvention_(fixedPaymentConvention), strRule_(rule),
-      strPaymentCal_(paymentCal), strRateCutoff_(rateCutoff) {
+      strPaymentCal_(paymentCal), strRateCutoff_(rateCutoff), strOvernightCalendar_(overnightCalendar) {
     build();
 }
 
@@ -350,6 +351,7 @@ void OisConvention::build() {
     rule_ = strRule_.empty() ? DateGeneration::Backward : parseDateGenerationRule(strRule_);
     paymentCal_ = strPaymentCal_.empty() ? Calendar() : parseCalendar(strPaymentCal_);
     rateCutoff_ = strRateCutoff_.empty() ? 0 : lexical_cast<Natural>(strRateCutoff_);
+    overnightCalendar_ = strOvernightCalendar_.empty() ? Calendar() : parseCalendar(strOvernightCalendar_);
 
 }
 
@@ -373,6 +375,7 @@ void OisConvention::fromXML(XMLNode* node) {
     strRule_ = XMLUtils::getChildValue(node, "Rule", false);
     strPaymentCal_ = XMLUtils::getChildValue(node, "PaymentCalendar", false);
     strRateCutoff_ = XMLUtils::getChildValue(node, "RateCutoff", false);
+    strOvernightCalendar_ = XMLUtils::getChildValue(node, "OvernightCalendar", false);
 
     build();
 }
@@ -402,6 +405,8 @@ XMLNode* OisConvention::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "PaymentCalendar", strPaymentCal_);
     if (!strRateCutoff_.empty())
         XMLUtils::addChild(doc, node, "RateCutoff", strRateCutoff_);
+    if (!strOvernightCalendar_.empty())
+        XMLUtils::addChild(doc, node, "OvernightCalendar", strOvernightCalendar_);
 
     return node;
 }
@@ -963,10 +968,11 @@ QuantLib::ext::shared_ptr<IborIndex> BMABasisSwapConvention::index() const { ret
 
 FXConvention::FXConvention(const string& id, const string& spotDays, const string& sourceCurrency,
                            const string& targetCurrency, const string& pointsFactor, const string& advanceCalendar,
-                           const string& spotRelative, const string& endOfMonth, const string& convention)
+                           const string& spotRelative, const string& endOfMonth, const string& convention,
+                           const string& tradingCalendar)
     : Convention(id, Type::FX), strSpotDays_(spotDays), strSourceCurrency_(sourceCurrency),
       strTargetCurrency_(targetCurrency), strPointsFactor_(pointsFactor), strAdvanceCalendar_(advanceCalendar),
-      strSpotRelative_(spotRelative), strEndOfMonth_(endOfMonth), strConvention_(convention) {
+      strSpotRelative_(spotRelative), strEndOfMonth_(endOfMonth), strConvention_(convention), strTradingCalendar_(tradingCalendar) {
     build();
 }
 
@@ -979,6 +985,8 @@ void FXConvention::build() {
     spotRelative_ = strSpotRelative_.empty() ? true : parseBool(strSpotRelative_);
     endOfMonth_ = strEndOfMonth_.empty() ? false : parseBool(strEndOfMonth_);
     convention_ = strConvention_.empty() ? Following : parseBusinessDayConvention(strConvention_);
+    tradingCalendar_ =
+        strTradingCalendar_.empty() ? UnitedStates(UnitedStates::FederalReserve) : parseCalendar(strTradingCalendar_);
 }
 
 void FXConvention::fromXML(XMLNode* node) {
@@ -996,6 +1004,7 @@ void FXConvention::fromXML(XMLNode* node) {
     strSpotRelative_ = XMLUtils::getChildValue(node, "SpotRelative", false);
     strEndOfMonth_ = XMLUtils::getChildValue(node, "EOM", false);
     strConvention_ = XMLUtils::getChildValue(node, "Convention", false);
+    strTradingCalendar_ = XMLUtils::getChildValue(node, "TradingCalendar", false);
 
     build();
 }
@@ -1017,6 +1026,8 @@ XMLNode* FXConvention::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "EOM", strEndOfMonth_);
     if (!strConvention_.empty())
         XMLUtils::addChild(doc, node, "Convention", strConvention_);
+    if (!strTradingCalendar_.empty())
+        XMLUtils::addChild(doc, node, "TradingCalendar", strTradingCalendar_);
 
     return node;
 }
@@ -1212,14 +1223,16 @@ CrossCcyFixFloatSwapConvention::CrossCcyFixFloatSwapConvention(
     const string& fixedConvention, const string& fixedDayCounter, const string& index, const string& eom,
     const std::string& strIsResettable, const std::string& strFloatIndexIsResettable, const string& strIncludeSpread,
     const string& strLookback, const string& strFixingDays, const string& strRateCutoff,
-    const string& strIsAveraged, const string& strObservationShift)
+    const string& strIsAveraged, const string& strObservationShift, const string& strFixedPaymentLag, 
+    const string& strFloatPaymentLag)
     : Convention(id, Type::CrossCcyFixFloat), strSettlementDays_(settlementDays),
       strSettlementCalendar_(settlementCalendar), strSettlementConvention_(settlementConvention),
       strFixedCurrency_(fixedCurrency), strFixedFrequency_(fixedFrequency), strFixedConvention_(fixedConvention),
       strFixedDayCounter_(fixedDayCounter), strIndex_(index), strEom_(eom), strIsResettable_(strIsResettable),
       strFloatIndexIsResettable_(strFloatIndexIsResettable), strIncludeSpread_(strIncludeSpread),
       strLookback_(strLookback), strFixingDays_(strFixingDays), strRateCutoff_(strRateCutoff),
-      strIsAveraged_(strIsAveraged), strObservationShift_(strObservationShift) {
+      strIsAveraged_(strIsAveraged), strObservationShift_(strObservationShift), strFixedPaymentLag_(strFixedPaymentLag), 
+      strFloatPaymentLag_(strFloatPaymentLag) {
 
     build();
 }
@@ -1248,6 +1261,8 @@ void CrossCcyFixFloatSwapConvention::build() {
         isAveraged_ = parseBool(strIsAveraged_);
     if (!strObservationShift_.empty())
         observationShift_ = parseBool(strObservationShift_);
+    fixedPaymentLag_ = strFixedPaymentLag_.empty() ? 0 : lexical_cast<Natural>(strFixedPaymentLag_);
+    floatPaymentLag_ = strFloatPaymentLag_.empty() ? 0 : lexical_cast<Natural>(strFloatPaymentLag_);
 }
 
 void CrossCcyFixFloatSwapConvention::fromXML(XMLNode* node) {
@@ -1269,6 +1284,8 @@ void CrossCcyFixFloatSwapConvention::fromXML(XMLNode* node) {
     strEom_ = XMLUtils::getChildValue(node, "EOM", false);
     strIsResettable_ = XMLUtils::getChildValue(node, "IsResettable", false);
     strFloatIndexIsResettable_ = XMLUtils::getChildValue(node, "FloatIndexIsResettable", false);
+    strFixedPaymentLag_ = XMLUtils::getChildValue(node, "FixedPaymentLag", false);
+    strFloatPaymentLag_ = XMLUtils::getChildValue(node, "FloatPaymentLag", false);
 
     // OIS specific conventions
     strIncludeSpread_ = XMLUtils::getChildValue(node, "IncludeSpread", false);
@@ -1309,7 +1326,11 @@ XMLNode* CrossCcyFixFloatSwapConvention::toXML(XMLDocument& doc) const {
     if (!strRateCutoff_.empty())
         XMLUtils::addChild(doc, node, "RateCutoff", strRateCutoff_);
     if (!strIsAveraged_.empty())
-        XMLUtils::addChild(doc, node, "IsAveraged", strIsAveraged_);
+        XMLUtils::addChild(doc, node, "SpreadIsAveraged", strIsAveraged_);
+    if (!strFixedPaymentLag_.empty())
+        XMLUtils::addChild(doc, node, "FixedPaymentLag", strFixedPaymentLag_);
+    if (!strFloatPaymentLag_.empty())
+        XMLUtils::addChild(doc, node, "FloatPaymentLag", strFloatPaymentLag_);
     if (!strObservationShift_.empty())
         XMLUtils::addChild(doc, node, "ObservationShift", strObservationShift_);
 

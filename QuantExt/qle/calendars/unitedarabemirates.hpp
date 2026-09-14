@@ -16,8 +16,8 @@ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#ifndef OREPLUS_UNITEDARABEMIRATES_HPP
-#define OREPLUS_UNITEDARABEMIRATES_HPP
+#ifndef quantext_unitedarabemirates_hpp
+#define quantext_unitedarabemirates_hpp
 
 #include <ql/time/calendar.hpp>
 
@@ -44,4 +44,4 @@ public:
 
 }
 
-#endif // OREPLUS_UNITEDARABEMIRATES_HPP
+#endif // quantext_unitedarabemirates_hpp

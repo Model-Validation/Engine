@@ -189,10 +189,11 @@ QuantLib::Handle<QuantExt::FxIndex> Market::fxIndex(const string& fxIndex, const
             // spot is always zero here as we use the fxRates, which give rate today
             Natural spotDays = 0;
             Calendar calendar = NullCalendar();
+            Calendar tradingCalendar = NullCalendar();
 
             if (source != target) {
                 try {
-                    auto [sDays, cal, _] = getFxIndexConventions(fxIndex);
+                    auto [sDays, cal, _, tradingCal] = getFxIndexConventions(fxIndex);
                     calendar = cal;
                 } catch (...) {
                     WLOG("Market::fxIndex Cannot find commodity conventions for " << fxIndex);   
@@ -200,7 +201,7 @@ QuantLib::Handle<QuantExt::FxIndex> Market::fxIndex(const string& fxIndex, const
             }
             fxInd = Handle<QuantExt::FxIndex>(QuantLib::ext::make_shared<QuantExt::FxIndex>(
                 fxIndexBase->familyName(), spotDays, fxIndexBase->sourceCurrency(), fxIndexBase->targetCurrency(),
-                calendar, spot, sorTS, tarTS));
+                calendar, spot, sorTS, tarTS, true, tradingCalendar));
             // add it to the cache
             fxIndicesCache_[make_pair(configuration, index)] = fxInd;
         } else {

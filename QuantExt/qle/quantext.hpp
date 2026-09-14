@@ -564,6 +564,7 @@
 #include <qle/termstructures/flatforwarddividendcurve.hpp>
 #include <qle/termstructures/futurepricehelper.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
+#include <qle/termstructures/fxforwardyieldtermstructure.hpp>
 #include <qle/termstructures/fxsmilesection.hpp>
 #include <qle/termstructures/fxvannavolgasmilesection.hpp>
 #include <qle/termstructures/fxvoltimeweighting.hpp>
@@ -580,6 +581,7 @@
 #include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
 #include <qle/termstructures/inflation/inflationtraits.hpp>
 #include <qle/termstructures/inflation/interpolatedcpiinflationcurve.hpp>
+#include <qle/termstructures/inflation/mixedinflationhelpers.hpp>
 #include <qle/termstructures/inflation/piecewisecpiinflationcurve.hpp>
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>

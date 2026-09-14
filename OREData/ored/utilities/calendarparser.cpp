@@ -215,7 +215,6 @@ void CalendarParser::reset() {
         {"BE", Belgium()},
         {"LU", Luxembourg()},
         {"ES", Spain()},
-        {"AT", QuantExt::Austria()},
 
         // ISO 3166-1 Alpha-3 code
         {"ARG", Argentina()},
@@ -333,6 +332,7 @@ void CalendarParser::reset() {
         {"AED", AmendedCalendar(UnitedArabEmirates(), "AED")},
         {"AE", AmendedCalendar(UnitedArabEmirates(), "AED")},
         {"ARE", AmendedCalendar(UnitedArabEmirates(), "AED")},
+        {"JOD", AmendedCalendar(IslamicWeekendsOnly(), "JOD")},
 
         // fallback to amended Mauritius calendar.
         {"MU", AmendedCalendar(Mauritius(), "MUR")},
@@ -350,6 +350,8 @@ void CalendarParser::reset() {
         {"OMR", AmendedCalendar(IslamicWeekendsOnly(), "OMR")},
         {"PKR", AmendedCalendar(WeekendsOnly(), "PKR")},
         {"QAR", AmendedCalendar(IslamicWeekendsOnly(), "QAR")},
+        {"SCR", AmendedCalendar(WeekendsOnly(), "SCR")},
+        {"SZL", AmendedCalendar(WeekendsOnly(), "SZL")},
         {"UYU", AmendedCalendar(WeekendsOnly(), "UYU")},
         {"TND", AmendedCalendar(WeekendsOnly(), "TND")},
         {"VND", AmendedCalendar(WeekendsOnly(), "VND")},

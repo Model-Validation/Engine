@@ -122,7 +122,8 @@ public:
         bool useBusinessDays = true, const std::string& tag = std::string(),
         QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>(), bool unrealisedQuantity = false,
         QuantLib::Natural lastNDays = QuantLib::Null<QuantLib::Natural>(), std::string fxIndex = std::string(),
-        QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>());
+        QuantLib::Natural avgPricePrecision = QuantLib::Null<QuantLib::Natural>(),
+        QuantLib::Natural spotLag = QuantLib::Null<QuantLib::Natural>());
 
     //! \name Inspectors
     //@{
@@ -155,6 +156,7 @@ public:
     std::string const& fxIndex() const { return fxIndex_; }
     QuantLib::Natural avgPricePrecision() const { return avgPricePrecision_; }
     std::string foreignCurrency() const { return foreignCurrency_; }
+    QuantLib::Natural spotLag() const { return spotLag_; }
     //@}
 
     void setForeignCurrency(std::string foreignCurrency);
@@ -195,6 +197,7 @@ private:
     std::string fxIndex_;
     QuantLib::Natural avgPricePrecision_;
     std::string foreignCurrency_;
+    QuantLib::Natural spotLag_;
 };
 
 //! Serializable Intraday Power Floating Leg Data

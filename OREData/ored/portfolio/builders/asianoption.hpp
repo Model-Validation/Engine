@@ -284,9 +284,12 @@
      virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                          const AssetClass& assetClassUnderlying,
                                                          const Date& expiryDate) override {
+         bool useAdjustedStrikeVol = parseBool(engineParameter("UseAdjustedStrikeVolatility", {}, false, "true"));
+         bool useAverageVol = parseBool(engineParameter("UseAverageVolatility", {}, false, "false"));
+
          QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
              getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
-         return QuantLib::ext::make_shared<TurnbullWakemanAsianEngine>(gbsp);
+         return QuantLib::ext::make_shared<TurnbullWakemanAsianEngine>(gbsp, useAdjustedStrikeVol, useAverageVol);
      }
  };
 

@@ -58,6 +58,7 @@ public:
     //@{
     //! Get the asof Date
     Date asofDate() const override { return asof_; }
+    QuantLib::ext::shared_ptr<FXTriangulation> fxTriangulation() const { return fx_; }
 
     //! Yield Curves
     Handle<YieldTermStructure> yieldCurve(const YieldCurveType& type, const string& ccy,

@@ -1242,6 +1242,23 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
 
     // set day counter
     DayCounter dc = parseDayCounter(data.dayCounter());
+    if (dc == ActualActual(ActualActual::ISMA)) {
+        if (schedule.hasTenor() && schedule.hasRule()) {
+            Schedule ismaNotionalPeriods = MakeSchedule()
+                                               .from(schedule.startDate())
+                                               .to(schedule.endDate())
+                                               .withTenor(schedule.tenor())
+                                               .withRule(schedule.rule())
+                                               .endOfMonth(schedule.endOfMonth())
+                                               .withFirstDate(schedule.firstDate())
+                                               .withNextToLastDate(schedule.nextToLastDate());
+            dc = ActualActual(ActualActual::ISMA, ismaNotionalPeriods);
+        } else {
+             WLOG("Schedule for leg with ISMA day count does not have tenor, first date and next to last date. "
+                  "Falling back to using simplified calculation for ISMA periods, which may lead to incorrect results.");
+        }
+    }
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
 
     // build standard schedules (for non-strict notional dates)
 
@@ -1350,6 +1367,12 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
         cpnDates.push_back(scheduleDates[i + 1]);
         Date paymentDate = !paymentDates.empty() ? paymentDates[i] :
             paymentCalendar.advance(scheduleDates[i + 1], paymentLagPeriod, paymentConvention);
+        
+        if (numDates == 2) {
+            Schedule compoundingSchedule =
+                MakeSchedule().from(scheduleDates.front()).to(scheduleDates.back()).withTenor(schedule.tenor()).backwards();
+            cpnDates = compoundingSchedule.dates();
+        }
         leg.push_back(ext::make_shared<ZeroFixedCoupon>(paymentDate, currentNotional, currentRate,
             dc, cpnDates, comp, zcFixedLegData->subtractNotional()));
     }
@@ -1360,7 +1383,7 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
 void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, const std::string& longIndexStr,
                             const std::string& roundingTypeStr, const std::string& roundingPrecisionStr,
                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                            const bool useOriginalIndexCurve, const Size accrualDays) {
+                            const bool useOriginalIndexCurve, const Size accrualDays, const Size fixingDays) {
     if (shortIndexStr.empty() && longIndexStr.empty()) {
         return;
     }
@@ -1382,6 +1405,7 @@ void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, c
         iborCpn = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(*c);
     }
     QL_REQUIRE(iborCpn, "applyStubInterpolation(): unable to unpack coupon to ibor coupon");
+    Size fDays = fixingDays == Null<Size>() ? iborCpn->fixingDays() : fixingDays;
     // ... replace it with an interpolated Ibor Coupon ...
     QuantLib::ext::shared_ptr<IborIndex> idx1, idx2;
     if (!shortIndexStr.empty())
@@ -1398,7 +1422,7 @@ void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, c
         // actually no interpolation, only one index is given effectively, so we can use an Ibor Coupon
         tmp = QuantLib::ext::make_shared<IborCoupon>(
             iborCpn->date(), iborCpn->nominal(), iborCpn->accrualStartDate(), iborCpn->accrualEndDate(),
-            iborCpn->fixingDays(),
+            fDays,
             useOriginalIndexCurve ? idx1->clone(iborCpn->iborIndex()->forwardingTermStructure()) : idx1,
             iborCpn->gearing(), iborCpn->spread(), iborCpn->referencePeriodStart(), iborCpn->referencePeriodEnd(),
             iborCpn->dayCounter(), iborCpn->isInArrears(), iborCpn->exCouponDate());
@@ -1416,7 +1440,7 @@ void applyStubInterpolation(Leg::iterator c, const std::string& shortIndexStr, c
             useOriginalIndexCurve ? iborCpn->iborIndex()->forwardingTermStructure() : Handle<YieldTermStructure>());
         tmp = QuantLib::ext::make_shared<InterpolatedIborCoupon>(
             iborCpn->date(), iborCpn->nominal(), iborCpn->accrualStartDate(), iborCpn->accrualEndDate(),
-            iborCpn->fixingDays(), interpolatedIndex, iborCpn->gearing(), iborCpn->spread(),
+            fDays, interpolatedIndex, iborCpn->gearing(), iborCpn->spread(),
             iborCpn->referencePeriodStart(), iborCpn->referencePeriodEnd(), iborCpn->dayCounter(),
             iborCpn->isInArrears(), iborCpn->exCouponDate(), iborCpn->iborIndex());
         DLOG("created InterpolatedIborIndex for accrual period "
@@ -1576,7 +1600,7 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
             // front / back stub interpolation
             applyStubInterpolation(leg.begin(), floatData->frontStubShortIndex(), floatData->frontStubLongIndex(),
                                    floatData->frontStubRoundingType(), floatData->frontStubRoundingPrecision(), engineFactory,
-                                   floatData->stubUseOriginalCurve());
+                                   floatData->stubUseOriginalCurve(), Null<Size>(), fixingDays);
             if (leg.size() == 1
                 && !floatData->frontStubShortIndex().empty() && !floatData->frontStubLongIndex().empty()
                 && !floatData->backStubShortIndex().empty() && !floatData->backStubLongIndex().empty()) {
@@ -1585,7 +1609,7 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
             } else {
                 applyStubInterpolation(leg.end() - 1, floatData->backStubShortIndex(), floatData->backStubLongIndex(),
                                        floatData->backStubRoundingType(), floatData->backStubRoundingPrecision(), engineFactory,
-                                       floatData->stubUseOriginalCurve());
+                                       floatData->stubUseOriginalCurve(), Null<Size>(), fixingDays);
             }
             return leg;
         }
@@ -1694,7 +1718,7 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
     // front / back stub interpolation
     applyStubInterpolation(tmpLeg.begin(), floatData->frontStubShortIndex(), floatData->frontStubLongIndex(),
                            floatData->frontStubRoundingType(), floatData->frontStubRoundingPrecision(), engineFactory,
-                           floatData->stubUseOriginalCurve());
+                           floatData->stubUseOriginalCurve(), Null<Size>(), fixingDays);
     if (tmpLeg.size() == 1
         && !floatData->frontStubShortIndex().empty() && !floatData->frontStubLongIndex().empty()
         && !floatData->backStubShortIndex().empty() && !floatData->backStubLongIndex().empty()) {
@@ -1703,7 +1727,7 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
     } else {
         applyStubInterpolation(tmpLeg.end() - 1, floatData->backStubShortIndex(), floatData->backStubLongIndex(),
                                floatData->backStubRoundingType(), floatData->backStubRoundingPrecision(), engineFactory,
-                               floatData->stubUseOriginalCurve());
+                               floatData->stubUseOriginalCurve(), Null<Size>(), fixingDays);
     }
 
     // return the leg
@@ -3193,7 +3217,7 @@ Real currentNotional(const Leg& leg) {
     
     for (auto cf : leg) {
         QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(cf);
-        if ((coupon) && coupon->accrualEndDate() > today) {
+        if ((coupon) && (coupon->accrualEndDate() > today || coupon->date() > today)) {
             return coupon->nominal();
         }
     }
