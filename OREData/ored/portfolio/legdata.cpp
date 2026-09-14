@@ -83,6 +83,7 @@
 #include <ql/errors.hpp>
 #include <ql/experimental/coupons/digitalcmsspreadcoupon.hpp>
 #include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 #include <ql/utilities/vectors.hpp>
 
 #include <boost/algorithm/string.hpp>
@@ -1258,7 +1259,6 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
                   "Falling back to using simplified calculation for ISMA periods, which may lead to incorrect results.");
         }
     }
-    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
 
     // build standard schedules (for non-strict notional dates)
 

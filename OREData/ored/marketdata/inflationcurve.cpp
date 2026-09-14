@@ -363,7 +363,6 @@ InflationCurve::CurveBuildResults
                                                      {index->currency().code(), index->currency().code()}, asof,
                                                      {*nominalTs, *nominalTs}, {1.0, 1.0}, {}, {});
                     }));
-                }
             }
         }
         QL_REQUIRE(index == nullptr || index->name() == convention->index()->name(),

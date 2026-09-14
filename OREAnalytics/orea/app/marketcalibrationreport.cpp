@@ -162,6 +162,7 @@ void MarketCalibrationReportBase::populateReport(const QuantLib::ext::shared_ptr
         for (auto const& c : calibrationInfo->defaultCurveCalibrationInfo) {
             addDefaultCurve(calibrationInfo->asof, c.second, c.first, label);
         }
+    }
 
     for (auto const& pair : t->fxTriangulation()->getInputPairs()) {
         addFxRate(market->asofDate(), market, pair, label);
