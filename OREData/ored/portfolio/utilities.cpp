@@ -17,7 +17,6 @@
 */
 
 #include <ored/portfolio/utilities.hpp>
-#include <ranges>
 
 namespace ore {
 namespace data {
