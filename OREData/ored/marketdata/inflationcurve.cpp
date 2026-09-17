@@ -365,49 +365,6 @@ InflationCurve::CurveBuildResults
                     }));
             }
         }
-        QL_REQUIRE(index == nullptr || index->name() == convention->index()->name(),
-                   "all segments must use the same zero inflation index");
-        index = convention->index();
-
-        for (const auto& q : segment.quotes()) {
-            auto md = loader.get(q, asof);
-            QL_REQUIRE(md, "MarketDatum " << md << " required to build inflation curve " << config->curveID()
-                                          << " not found in market data for date " << asof);
-            QL_REQUIRE(md->asofDate() == asof,
-                       "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
-            QL_REQUIRE(md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONSWAP,
-                       "MarketDatum " << md << " is not a valid inflation swap quote");
-            auto zcq = QuantLib::ext::dynamic_pointer_cast<ZcInflationSwapQuote>(md);
-            QL_REQUIRE(zcq, "Could not cast to ZcInflationSwapQuote, internal error.");
-            CPI::InterpolationType observationInterpolation = convention->interpolated() ? CPI::Linear : CPI::Flat;
-            Date maturity = swapStart + zcq->term();
-            results.latestMaturity =
-                results.latestMaturity == Date() ? maturity : std::max(results.latestMaturity, maturity);
-            results.observationLags[convention->observationLag()] = convention->observationLag();
-            DLOG("Zero inflation swap " << zcq->name() << " maturity " << maturity << " term " << zcq->term()
-                                        << " quote " << zcq->quote()->value());
-            auto instrument = QuantLib::ext::make_shared<ZeroCouponInflationSwapHelper>(
-                zcq->quote(), convention->observationLag(), swapStart, maturity, convention->fixCalendar(),
-                convention->fixConvention(), convention->dayCounter(), index, observationInterpolation,
-                Pillar::Choice::MaturityDate);
-
-            // Unregister with inflation index. See PR #326 on github for details.
-            instrument->unregisterWithAll();
-            instrument->registerWith(zcq->quote());
-
-            helpers.push_back(instrument);
-            results.pillarDates.push_back(instrument->pillarDate());
-            results.mdQuoteLabels.push_back(md->name());
-            results.mdQuoteValues.push_back(md->quote()->value());
-            results.rateHelperTypes.push_back("ZeroCouponInflation");
-            results.cashflowGenerators.push_back(
-                std::function<std::vector<TradeCashflowReportData>()>([instrument, index, asof, nominalTs]() {
-                    return getCashflowReportData(
-                        {instrument->swap()->leg(0), instrument->swap()->leg(1)}, {false, true}, {1.0, 1.0},
-                        index->currency().code(), {index->currency().code(), index->currency().code()}, asof,
-                        {*nominalTs, *nominalTs}, {1.0, 1.0}, {}, {}, {"Interest", ""}, {1.0E6, 1.0E6});
-                }));
-        }
     }
     // use longest lag from segments, only used to derive the base date of the curve if not used last fixing date
     auto maxObsLag = obsLagFromSegment != 0 * Days ? obsLagFromSegment : config->lag(); 
