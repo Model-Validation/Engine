@@ -37,6 +37,12 @@ class CalendarAdjustmentConfig {
 
     void addBaseCalendar(const std::string& calname, const std::string& d);
 
+    void addOverride(const std::string& calname, const Date& start, const Date& end);
+
+    bool isOverride(const std::string& calname) const;
+
+    std::pair<Date, Date> getOverrideWindow(const std::string& calname) const;
+
     const std::set<Date>& getHolidays(const std::string& calname);
 
     const std::set<Date>& getBusinessDays(const std::string& calname);

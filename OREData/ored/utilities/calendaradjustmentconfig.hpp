@@ -31,6 +31,7 @@
 #include <ql/utilities/dataparsers.hpp>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace ore {
@@ -55,6 +56,16 @@ public:
     //! This method adds s as a base calendar for cal name.
     void addBaseCalendar(const string& calname, const string& d);
 
+    /*! Marks cal name as overridden on [start, end]: within this window only the configured holidays (plus the
+        base calendar's weekends, unless configured as business days) are holidays. */
+    void addOverride(const string& calname, const Date& start, const Date& end);
+
+    //! Returns true if the holidays of cal name are overridden
+    bool isOverride(const string& calname) const;
+
+    //! Returns the override window [start, end] for cal name, a pair of null dates if not overridden
+    std::pair<Date, Date> getOverrideWindow(const string& calname) const;
+
     //! Returns all the holidays for a given cal name
     const set<Date>& getHolidays(const string& calname) const;
 
@@ -76,8 +87,10 @@ private:
     map<string, string> baseCalendars_;
     map<string, set<Date>> additionalHolidays_;
     map<string, set<Date>> additionalBusinessDays_;
+    map<string, std::pair<Date, Date>> overrideWindows_;
 
     string normalisedName(const string&) const;
+    void applyAdjustments(XMLNode* calnode, const string& calname, Calendar cal);
 };
 
 } // namespace data

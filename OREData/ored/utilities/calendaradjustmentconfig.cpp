@@ -39,6 +39,22 @@ void CalendarAdjustmentConfig::addBaseCalendar(const string& calname, const stri
     baseCalendars_[normalisedName(calname)] = s;
 }
 
+void CalendarAdjustmentConfig::addOverride(const string& calname, const Date& start, const Date& end) {
+    QL_REQUIRE(start != Date() && end != Date() && start <= end,
+               "CalendarAdjustmentConfig: invalid override window [" << start << ", " << end << "] for calendar "
+                                                                     << calname);
+    overrideWindows_[normalisedName(calname)] = std::make_pair(start, end);
+}
+
+bool CalendarAdjustmentConfig::isOverride(const string& calname) const {
+    return overrideWindows_.find(normalisedName(calname)) != overrideWindows_.end();
+}
+
+std::pair<Date, Date> CalendarAdjustmentConfig::getOverrideWindow(const string& calname) const {
+    auto it = overrideWindows_.find(normalisedName(calname));
+    return it != overrideWindows_.end() ? it->second : std::make_pair(Date(), Date());
+}
+
 const set<Date>& CalendarAdjustmentConfig::getHolidays(const string& calname) const {
     auto holidays = additionalHolidays_.find(normalisedName(calname));
     if (holidays != additionalHolidays_.end()) {
@@ -67,6 +83,9 @@ set<string> CalendarAdjustmentConfig::getCalendars() const {
     for (auto it : additionalBusinessDays_) {
         cals.insert(it.first);
     }
+    for (auto it : overrideWindows_) {
+        cals.insert(it.first);
+    }
     return cals;
 }
 
@@ -91,6 +110,10 @@ void CalendarAdjustmentConfig::append(const CalendarAdjustmentConfig& c) {
         for (auto b : c.getBusinessDays(it)) {
             addBusinessDays(it, b);
         }
+        if (c.isOverride(it)) {
+            auto w = c.getOverrideWindow(it);
+            addOverride(it, w.first, w.second);
+        }
     }
 };
 
@@ -98,6 +121,86 @@ void CalendarAdjustmentConfig::addCalendars() {
     for (auto cal : baseCalendars_) {
         string calname = cal.first;
         CalendarParser::instance().addCalendar(cal.second, calname);
+    }
+}
+
+void CalendarAdjustmentConfig::applyAdjustments(XMLNode* calnode, const string& calname, Calendar cal) {
+    set<Date> holidays, businessDays;
+    vector<string> holidayDates = XMLUtils::getChildrenValues(calnode, "AdditionalHolidays", "Date");
+    for (auto holiday : holidayDates) {
+        try {
+            Date h = parseDate(holiday);
+            addHolidays(calname, h);
+            holidays.insert(h);
+        } catch (std::exception&) {
+            ALOG("error parsing holiday " << holiday << " for calendar " << calname);
+        }
+    }
+    vector<string> businessDates = XMLUtils::getChildrenValues(calnode, "AdditionalBusinessDays", "Date");
+    for (auto businessDay : businessDates) {
+        try {
+            Date b = parseDate(businessDay);
+            addBusinessDays(calname, b);
+            businessDays.insert(b);
+        } catch (std::exception&) {
+            ALOG("error parsing business day " << businessDay << " for calendar " << calname);
+        }
+    }
+
+    bool overrideHolidays = XMLUtils::getChildValueAsBool(calnode, "Override", false, false);
+
+    if (!overrideHolidays) {
+        for (auto const& h : holidays)
+            cal.addHoliday(h);
+        for (auto const& b : businessDays)
+            cal.removeHoliday(b);
+        return;
+    }
+
+    // Override: within [start, end] the weekday holidays of the calendar are replaced by the given holidays, the
+    // weekends of the calendar are kept unless given as business days. Outside the window the calendar is unchanged.
+    Date start, end;
+    string startStr = XMLUtils::getChildValue(calnode, "OverrideStart", false);
+    string endStr = XMLUtils::getChildValue(calnode, "OverrideEnd", false);
+    if (!startStr.empty())
+        start = parseDate(startStr);
+    if (!endStr.empty())
+        end = parseDate(endStr);
+    if (start == Date() || end == Date()) {
+        set<Date> all(holidays);
+        all.insert(businessDays.begin(), businessDays.end());
+        QL_REQUIRE(!all.empty(), "CalendarAdjustmentConfig: Override for calendar "
+                                     << calname << " requires OverrideStart and OverrideEnd if no dates are given");
+        if (start == Date())
+            start = *all.begin();
+        if (end == Date())
+            end = *all.rbegin();
+    }
+    QL_REQUIRE(start <= end, "CalendarAdjustmentConfig: invalid override window [" << start << ", " << end
+                                                                                    << "] for calendar " << calname);
+    // validate before modifying the calendar, so that an invalid config does not leave it partially adjusted
+    for (auto const& h : holidays)
+        QL_REQUIRE(h >= start && h <= end, "CalendarAdjustmentConfig: holiday "
+                                               << h << " for calendar " << calname << " is outside the override window ["
+                                               << start << ", " << end << "]");
+    for (auto const& b : businessDays)
+        QL_REQUIRE(b >= start && b <= end, "CalendarAdjustmentConfig: business day "
+                                               << b << " for calendar " << calname << " is outside the override window ["
+                                               << start << ", " << end << "]");
+    addOverride(calname, start, end);
+
+    for (Date d = start; d <= end; ++d) {
+        bool isHoliday;
+        if (businessDays.count(d))
+            isHoliday = false;
+        else if (holidays.count(d))
+            isHoliday = true;
+        else
+            isHoliday = cal.isWeekend(d.weekday());
+        if (isHoliday && cal.isBusinessDay(d))
+            cal.addHoliday(d);
+        else if (!isHoliday && cal.isHoliday(d))
+            cal.removeHoliday(d);
     }
 }
 
@@ -114,28 +217,7 @@ void CalendarAdjustmentConfig::fromXML(XMLNode* node) {
             parseCalendar(baseCalendar);
             continue;
         }
-        Calendar cal = parseCalendar(calname);
-
-        vector<string> holidayDates = XMLUtils::getChildrenValues(calnode, "AdditionalHolidays", "Date");
-        for (auto holiday : holidayDates) {
-            try {
-                Date h = parseDate(holiday);
-                addHolidays(calname, h);
-                cal.addHoliday(h);
-            } catch(std::exception&) {
-                ALOG("error parsing holiday " << holiday << " for calendar " << calname);
-            }
-        }
-        vector<string> businessDates = XMLUtils::getChildrenValues(calnode, "AdditionalBusinessDays", "Date");
-        for (auto businessDay : businessDates) {
-            try {
-                Date b = parseDate(businessDay);
-                addBusinessDays(calname, b);
-                cal.removeHoliday(b);
-            } catch(std::exception&) {
-                ALOG("error parsing business day " << businessDay << " for calendar " << calname);
-            }
-        }
+        applyAdjustments(calnode, calname, parseCalendar(calname));
     }
     //then loop again adding the new calendars
     for (auto calnode : XMLUtils::getChildrenNodes(node, "Calendar")) {
@@ -144,29 +226,7 @@ void CalendarAdjustmentConfig::fromXML(XMLNode* node) {
         if (baseCalendar == "")
             continue;
         Calendar cal = CalendarParser::instance().addCalendar(baseCalendar, calname);
-
-        vector<string> holidayDates = XMLUtils::getChildrenValues(calnode, "AdditionalHolidays", "Date");
-        for (auto holiday : holidayDates) {
-            try {
-                Date h = parseDate(holiday);
-                addHolidays(calname, h);
-                cal.addHoliday(h);
-            } catch(std::exception&) {
-                ALOG("error parsing business day " << holiday << " for calendar " << calname);
-            }
-
-        }
-        vector<string> businessDates = XMLUtils::getChildrenValues(calnode, "AdditionalBusinessDays", "Date");
-        for (auto businessDay : businessDates) {
-            try {
-                Date b = parseDate(businessDay);
-                addBusinessDays(calname, b);
-                cal.removeHoliday(b);
-            } catch(std::exception&) {
-                ALOG("error parsing business day " << businessDay << " for calendar " << calname);
-            }
-        }
-
+        applyAdjustments(calnode, calname, cal);
         addBaseCalendar(calname, baseCalendar);
     }
 
@@ -179,6 +239,12 @@ XMLNode* CalendarAdjustmentConfig::toXML(XMLDocument& doc) const {
         XMLUtils::addAttribute(doc, calendarNode, "name", cal);
         if (getBaseCalendar(cal) != "")
             XMLUtils::addChild(doc, calendarNode, "BaseCalendar", getBaseCalendar(cal));
+        if (isOverride(cal)) {
+            auto w = getOverrideWindow(cal);
+            XMLUtils::addChild(doc, calendarNode, "Override", true);
+            XMLUtils::addChild(doc, calendarNode, "OverrideStart", to_string(w.first));
+            XMLUtils::addChild(doc, calendarNode, "OverrideEnd", to_string(w.second));
+        }
         XMLNode* ahd = XMLUtils::addChild(doc, calendarNode, "AdditionalHolidays");
         for (auto hol : getHolidays(cal)) {
             XMLUtils::addChild(doc, ahd, "Date", to_string(hol));
