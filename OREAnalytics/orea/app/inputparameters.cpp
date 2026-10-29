@@ -113,7 +113,15 @@ void SetupVariables::loadVariablesImpl(const QuantLib::ext::shared_ptr<InputPara
         curveConfigs_.setOverride(ccOverride);
 
     inputs->loadParameterXML<CurrencyConfig>(currencyConfig_, "setup", "currencyConfiguration");
-    inputs->loadParameterXML<CalendarAdjustmentConfig>(calendarAdjustment_, "setup", "calendarAdjustment");
+    // a calendar adjustment that is given but fails to load (e.g. an override date outside the window) must stop the
+    // run, otherwise the calendars would silently be left unadjusted or only partially adjusted
+    bool calendarAdjustmentGiven = false;
+    try {
+        calendarAdjustmentGiven = !inputs->loadParameterString("setup", "calendarAdjustment", false).empty();
+    } catch (...) {
+    }
+    inputs->loadParameterXML<CalendarAdjustmentConfig>(calendarAdjustment_, "setup", "calendarAdjustment",
+                                                       calendarAdjustmentGiven);
 
     // Convention loading
     conventions_ = ext::make_shared<Conventions>();
